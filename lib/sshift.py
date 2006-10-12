@@ -11,6 +11,8 @@ shifted.
 
 import pyfits
 
+__version__ = '1.4 (2004-Sep-21)'
+
 def shiftimage(infile, outfile, shift=0):
 
     """

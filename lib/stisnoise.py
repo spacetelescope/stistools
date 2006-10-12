@@ -6,6 +6,9 @@ import numarray.fft
 import numarray.convolve
 import math
 
+
+__version__ = '5.3 (2003-Sep-09)'
+
 def _median(arg):
     return numarray.sort(arg)[arg.getshape()[0]/2]
 
