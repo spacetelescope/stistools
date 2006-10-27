@@ -1,0 +1,388 @@
+#!/usr/bin/env python
+"""
+Refine a STIS trace table.
+
+- A trace is generated from the science file and a trace
+  center is computed.
+- The two traces bracketing the trace center are extracted
+  from the trace table and interpolated
+- The correction is computed as the difference between the
+  linear fit to the science and interpolated traces
+- The correction is applied to all traces in the trace file
+  for that particular OPT_ELEM and CENWAVE
+- A new trace table is written to the current directory and
+  the relevant keywords are updates in the header of the input file.
+
+Usage:
+>>>import tracegen
+>>>tracegen.tracegen('file.fits', [tracecen=509.4], [weights=[(x1,x2),(x3,x4)])
+
+Author (IDL): Linda Dressel
+Python version: Nadia Dencheva
+
+"""
+import numarray as N
+import pyfits
+import os.path
+from numarray import mlab as ml
+from numarray import nd_image as ni
+from numarray import convolve as conv
+import gfit, linefit
+import fileutil as fu
+
+__version__ = '0.1'
+__vdate__ = '2006-10-25'
+
+
+def tracegen(fname, tracecen=0.0, weights=None):
+    """
+    Refine a stis spectroscopic trace.
+    """
+    import time
+    
+    start=time.time()
+    
+    try:
+        hdulist = pyfits.open(fname)
+    except IOError:
+        print "\nUNABLE TO OPEN FITS FILE: %s \n" % fname
+        return
+
+    data = hdulist[1].data
+    hdulist.close()
+
+    kwinfo = getKWInfo(fname)
+    if kwinfo['instrument'] != 'STIS':
+        print "This trace tool works only on STIS spectroscopic observations.\n"
+        print "Not processing file %s.\n" %fname
+        return
+
+    sizex, sizey = data.shape
+    if weights == None:
+        wei = N.ones(sizey)
+    else:
+        if not iterable(weights) or not iterable(weights[0]):
+            print "Weights must be a list of tuples, for example:\n"
+            print "weights=[(23,45),(300,670)] \n"
+            return
+        wei = N.zeros(sizey)
+
+        for i in N.arange(len(weights)):
+            for j in N.arange(weights[i][0], weights[i][1]):
+                wei[j] = 1
+
+    #wind are weights indices in the image frame
+    wind = N.nonzero(wei)[0]
+    
+    tr = Trace(fname, kwinfo)
+    a2center, trace1024 = tr.generateTrace(data,kwinfo, tracecen=tracecen, wind=wind)
+    tr_ind, a2disp_ind = tr.getTraceInd(a2center)
+    tr2 = tr.readTrace(tr_ind)
+    if tr_ind != a2disp_ind[0]:
+        tr1 = tr.readTrace(tr_ind -1)
+        interp_trace = trace_interp(tr1, tr2, a2center)
+    else:
+        interp_trace = tr2
+        
+    #convert the weights array into full frame
+    ind = N.nonzero(wei)[0] * kwinfo['binaxis2']
+    w = N.zeros(1024)
+    w[ind] = 1
+
+    X = N.arange(1024).astype(N.Float)
+    sparams = linefit.linefit(X, trace1024, weights=w)
+    rparams = linefit.linefit(X, interp_trace, weights=w)
+    sciline = sparams[0] + sparams[1] * X
+    refline = rparams[0] + rparams[1] * X
+    
+    deltaline = sciline - refline
+
+    #create a complete trace similar to a row in a _1dt file
+    #used only for debugging
+    tr._a2displ = trace1024
+    tr._a1center = tr1['a1center']
+    tr._a2center = a2center
+    tr._nelem = tr1['nelem']
+    tr._pedigree = tr1['pedigree']
+    tr._snr_thresh = tr1['snr_thresh']
+    
+    tr.writeTrace(fname, sciline, refline, interp_trace, trace1024, tr_ind, a2disp_ind)
+
+    print 'time', time.time()-start
+    #the minus sign is for consistency withthe way x2d reports the rotation
+    print "Traces were rotated by %f degrees" % (-(sparams[1]-rparams[1])*180 / N.pi)
+    return tr
+
+
+def iterable(v):
+    try:
+        len(v)
+        return True
+    except TypeError:
+        return False
+
+
+def interp(y,n):
+    """
+    Given a 1D array of size m, interpolates it to a size n (m<n).
+    """
+    m = float(len(y))
+    x = N.arange(m)
+    i = N.arange(n,type=N.Float)
+    xx = i * (m-1)/n
+    xind=N.searchsorted(x,xx)-1
+    yy=y[xind]+(xx-x[xind])*(y[xind+1]-y[xind])/(x[xind+1]-x[xind])
+
+    return yy
+
+def trace_interp(tr1, tr2, cen):
+
+    a2disp1 = tr1['a2displ']
+    a2disp2 = tr2['a2displ']
+    za2disp1 = a2disp1 - a2disp1[512]
+    za2disp2 = a2disp2 -a2disp2[512]
+    high = tr2['a2center']
+    low = tr1['a2center']
+    n2 = (cen - low) / (high - low)
+    n1 = 1.0 -n2
+    interp_trace = n1 * za2disp1 + n2 * za2disp2
+
+    return interp_trace
+
+
+
+def getKWInfo(fname):
+    kwinfo = {}
+    kwinfo['instrument'] = fu.getKeyword(fname, 'INSTRUME')
+    kwinfo['detector'] = fu.getKeyword(fname, 'DETECTOR')
+    if kwinfo['detector'] == "CCD":
+        kwinfo['binaxis2'] = fu.getKeyword(fname, 'binaxis2')
+    else:
+        kwinfo['binaxis2'] = 1
+    kwinfo['crpix2'] = fu.getKeyword(fname, 'CRPIX2')
+    kwinfo['ltv2'] = fu.getKeyword(fname, 'LTV2')
+    kwinfo['sizaxis2'] = fu.getKeyword(fname, 'sizaxis2')
+    kwinfo['opt_elem'] = fu.getKeyword(fname, 'OPT_ELEM')
+    kwinfo['cenwave'] = fu.getKeyword(fname, 'CENWAVE')
+    kwinfo['sporder'] = fu.getKeyword(fname, 'SPORDER')
+    kwinfo['sptrctab'] = fu.getKeyword(fname, 'SPTRCTAB')
+
+    return kwinfo
+
+
+class Trace:
+    """
+    tr=Trace(file)
+    file is a crj or flt file.
+
+    opt_elem, cenwave, sporder are read from the header of the science file
+    a2center is a2center of the trace generated from the science file
+
+    tr_ind= tr.getTraceInd(a2center)
+
+    tr_ind is the index of the row in the trace file which brackets
+    from below a2center as computed fro the generated trace
+
+    tr.readTrace(tr_ind)
+
+    a2center = tr.generateTrace(...)
+
+    """
+    def __init__(self, file, kwinfo):
+        self._opt_elem = kwinfo['opt_elem']
+        self._cenwave = kwinfo['cenwave']
+        self._sporder = kwinfo['sporder']
+        self._nelem = None
+        self._a2displ = None
+        self._a1center = None
+        self._a2center = None
+        self._snr_thresh = None
+        self._pedigree = None
+        self.sptrctabname = fu.getKeyword(file, 'SPTRCTAB')
+        self.sptrctab = self.openTraceFile(fu.osfn(self.sptrctabname))
+
+
+
+    def openTraceFile(self,filename):
+        """
+        Returns a spectrum trace table
+        """
+        if filename != None:
+            try:
+                f = pyfits.open(filename)
+            except IOError:
+                print "Could not open file %s.\n" %filename
+                return
+
+            tab = f[1].data
+            f.close()
+            return tab
+        else:
+            print "A valid 1-D SPECTRUM TRACE TABLE is required.\n"
+            return None
+
+    def getTraceInd(self, a2center):
+        """
+
+        Finds the first trace in the trace table whose A2CENTER is larger
+than the specified a2center
+
+        """
+        opt_ind = self.sptrctab.field('OPT_ELEM') == self._opt_elem
+        cen_ind = self.sptrctab.field('CENWAVE') == self._cenwave
+        sp_ind = self.sptrctab.field('SPORDER') == self._sporder
+        a2disp_ind = opt_ind & cen_ind & sp_ind
+        ind = N.nonzero(a2disp_ind)
+        i = N.nonzero(self.sptrctab.field('A2CENTER') > a2center)[0][0] + ind[0][0]
+
+        return i, a2disp_ind
+
+    def readTrace(self, tr_ind):
+        """
+        reads the specified row from the 1dttab.fits
+        """
+
+        tr = {}
+        tr['nelem'] = self.sptrctab[tr_ind].field('NELEM')
+        tr['a2displ'] = self.sptrctab[tr_ind].field('A2DISPL')
+        tr['a1center'] = self.sptrctab[tr_ind].field('A1CENTER')
+        tr['a2center'] = self.sptrctab[tr_ind].field('A2CENTER')
+        tr['snr_thresh'] = self.sptrctab[tr_ind].field('SNR_THRESH')
+        tr['pedigree'] = self.sptrctab[tr_ind].field('PEDIGREE')
+
+        return tr
+
+
+        #def writeTrace(self, fname, sciline, refline, tr_ind, a2disp_ind):
+    def writeTrace(self, fname, sciline, refline, interp_trace, trace1024, tr_ind, a2disp_ind):
+        """
+
+        Adds sciline-refline to all traces with the relevent OPT_ELEM,
+        CENWAVE and SPORDER.
+        Writes the new trace table to the current directory.
+        Updates the SPTRCTAB keyword in the header to point to the new table.
+        Writes out fits files with the
+        science trace - '_sci'
+        the fit to the science trace - '_scifit'
+        the interpolated trace - '_interp'
+        the linear fit to the interpolated trace - '_interpfit'
+
+        """
+        fpath = fu.osfn(self.sptrctabname)
+        infile = fname.split('.')
+        newname = infile[0] + '_1dt.' + infile[1]
+
+        #refine all traces for this CENWAVE, OPT_ELEM
+        fu.copyFile(fpath, newname)
+        hdulist = pyfits.open(newname, mode='update')
+        tab = hdulist[1].data
+        ind = N.nonzero(a2disp_ind)[0]
+        for i in N.arange(ind[0], ind[-1]+1):
+            tab[i].setfield('A2DISPL', tab[i].field('A2DISPL') + (sciline-refline))
+            tab[i].setfield('DEGPERYR', 0.0)
+        hdulist.flush()
+        fu.updateKeyword(fname, 'SPTRCTAB', './'+newname)
+        fu.updateKeyword(fname+'[0]', 'SPTRCTAB', './'+newname)
+        hdulist.close()
+
+        #write out the fit to the interpolated trace ('_interpfit' file)
+        refhdu = pyfits.PrimaryHDU(refline)
+        refname=infile[0] + '_1dt_interpfit.' + infile[1]
+        if os.path.exists(refname):
+            os.remove(refname)
+        refhdu.writeto(refname)
+
+        #write out the interpolated trace ('_interp' file)
+        inthdu = pyfits.PrimaryHDU(interp_trace)
+        intname=infile[0] + '_1dt_interp.' + infile[1]
+        if os.path.exists(intname):
+            os.remove(intname)
+        inthdu.writeto(intname)
+
+        #write out the the fit to the science trace ('_scifit' file)
+        scihdu = pyfits.PrimaryHDU(sciline)
+        sciname = infile[0] + '_1dt_scifit.' + infile[1]
+        if os.path.exists(sciname):
+            os.unlink(sciname)
+        scihdu.writeto(sciname)
+
+        #write out the science trace ('_sci' file)
+        trhdu = pyfits.PrimaryHDU(trace1024)
+        trname = infile[0] + '_1dt_sci.' + infile[1]
+        if os.path.exists(trname):
+            os.unlink(trname)
+        trhdu.writeto(trname)
+
+
+
+
+    def generateTrace(self, data, kwinfo, tracecen=0.0, wind=None):
+        """
+        Generates a trace from a science file.
+        """
+        if kwinfo['sizaxis2'] != None and kwinfo['sizaxis2'] < 1023:
+            subarray = True
+        else: subarray = False
+
+        if tracecen == 0:
+            if subarray:
+                _tracecen = kwinfo['sizaxis2']/2.0
+            else:
+                _tracecen = kwinfo['crpix2']
+        else:
+            _tracecen = tracecen
+
+        sizex,sizey = data.shape
+        subim_size = 40
+        y1 = int(_tracecen - subim_size/2.)
+        y2 = int(_tracecen + subim_size/2.)
+        if y1 < 0: y1 = 0
+        if y2 > (sizex -1): y2 = sizex - 1
+        specimage = data[y1:y2+1,:]
+        smoytrace = self.gFitTrace(specimage, y1, y2)
+        yshift = int(ml.median(smoytrace) - 20)
+        y1 = y1 + yshift
+        y2 = y2 + yshift
+        if (y1 < 0): y1 = 0
+        if y2 > sizex: y2 = sizex
+        specimage = data[y1:y2+1,:]
+        smoytrace = self.gFitTrace(specimage, y1, y2)
+        med11smoytrace = ni.median_filter(smoytrace,11)
+        med11smoytrace[0] = med11smoytrace[2]
+        diffmed = abs(smoytrace - med11smoytrace)
+        tolerence = 3 * ml.median(abs(smoytrace[wind] - med11smoytrace[wind]))
+        if tolerence < 0.1: tolerence = 0.1
+        badpoint = N.where(diffmed > tolerence)[0]
+        if len(badpoint) != 0:
+            N.put(smoytrace, badpoint, med11smoytrace[badpoint])
+
+        #convolve with a gaussian to smooth it
+        fwhm = 10.
+        sigma = fwhm/2.355
+        gaussconvxsmoytrace = ni.gaussian_filter1d(smoytrace, sigma)
+
+        #compute the trace center as the median of the pixels with nonzero weights
+        tracecen = ml.median(gaussconvxsmoytrace[wind])
+        gaussconvxsmoytrace = gaussconvxsmoytrace - tracecen
+        trace1024 = interp(gaussconvxsmoytrace,1024) * kwinfo['binaxis2']
+        tracecen = tracecen + y1 +1.0
+        if subarray:
+            tracecen = tracecen - kwinfo['ltv2']
+        self.trace1024 = trace1024
+        return tracecen, trace1024
+
+    def gFitTrace(self, specimage, y1, y2):
+        """
+        Fit a gaussian to each column of an image.
+        """
+
+        sizex,sizey = specimage.shape
+        smoytrace = N.zeros(sizey).astype(N.Float)
+        for c in N.arange(sizey):
+            col = specimage[:,c]
+            col = col - ml.median(col)
+            smcol = conv.boxcar(col, (3,)).astype(N.Float)
+            fit = gfit.gfit1d(smcol, quiet=1, maxiter=15)
+            smoytrace[c] = fit.params[1]
+
+        return N.array(smoytrace)
