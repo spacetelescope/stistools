@@ -38,9 +38,9 @@ def tracegen(fname, tracecen=0.0, weights=None):
     """
     Refine a stis spectroscopic trace.
     """
-    import time
+    #import time
     
-    start=time.time()
+    #start=time.time()
     
     try:
         hdulist = pyfits.open(fname)
@@ -49,9 +49,11 @@ def tracegen(fname, tracecen=0.0, weights=None):
         return
 
     data = hdulist[1].data
+    hdr0 = hdulist[0].header
+    hdr1 = hdulist[1].header
     hdulist.close()
 
-    kwinfo = getKWInfo(fname)
+    kwinfo = getKWInfo(hdr0, hdr1)
     if kwinfo['instrument'] != 'STIS':
         print "This trace tool works only on STIS spectroscopic observations.\n"
         print "Not processing file %s.\n" %fname
@@ -108,7 +110,7 @@ def tracegen(fname, tracecen=0.0, weights=None):
     
     tr.writeTrace(fname, sciline, refline, interp_trace, trace1024, tr_ind, a2disp_ind)
 
-    print 'time', time.time()-start
+    #print 'time', time.time()-start
     #the minus sign is for consistency withthe way x2d reports the rotation
     print "Traces were rotated by %f degrees" % (-(sparams[1]-rparams[1])*180 / N.pi)
     return tr
@@ -151,23 +153,24 @@ def trace_interp(tr1, tr2, cen):
 
 
 
-def getKWInfo(fname):
+def getKWInfo(hdr0, hdr1):
     kwinfo = {}
-    kwinfo['instrument'] = fu.getKeyword(fname, 'INSTRUME')
-    kwinfo['detector'] = fu.getKeyword(fname, 'DETECTOR')
+    kwinfo['instrument'] = hdr0['INSTRUME']
+    kwinfo['detector'] = hdr0['DETECTOR']
     if kwinfo['detector'] == "CCD":
-        kwinfo['binaxis2'] = fu.getKeyword(fname, 'binaxis2')
+        kwinfo['binaxis2'] = hdr0['binaxis2']
     else:
         kwinfo['binaxis2'] = 1
-    kwinfo['crpix2'] = fu.getKeyword(fname, 'CRPIX2')
-    kwinfo['ltv2'] = fu.getKeyword(fname, 'LTV2')
-    kwinfo['sizaxis2'] = fu.getKeyword(fname, 'sizaxis2')
-    kwinfo['opt_elem'] = fu.getKeyword(fname, 'OPT_ELEM')
-    kwinfo['cenwave'] = fu.getKeyword(fname, 'CENWAVE')
-    kwinfo['sporder'] = fu.getKeyword(fname, 'SPORDER')
-    kwinfo['sptrctab'] = fu.getKeyword(fname, 'SPTRCTAB')
+    kwinfo['crpix2'] = hdr1['CRPIX2']
+    kwinfo['ltv2'] = hdr1['LTV2']
+    kwinfo['sizaxis2'] = hdr0['sizaxis2']
+    kwinfo['opt_elem'] = hdr0['OPT_ELEM']
+    kwinfo['cenwave'] = hdr0['CENWAVE']
+    kwinfo['sporder'] = hdr1['SPORDER']
+    kwinfo['sptrctab'] = hdr0['SPTRCTAB']
 
     return kwinfo
+
 
 
 class Trace:
@@ -198,7 +201,7 @@ class Trace:
         self._a2center = None
         self._snr_thresh = None
         self._pedigree = None
-        self.sptrctabname = fu.getKeyword(file, 'SPTRCTAB')
+        self.sptrctabname = kwinfo['sptrctab'] 
         self.sptrctab = self.openTraceFile(fu.osfn(self.sptrctabname))
 
 
@@ -253,7 +256,6 @@ than the specified a2center
         return tr
 
 
-        #def writeTrace(self, fname, sciline, refline, tr_ind, a2disp_ind):
     def writeTrace(self, fname, sciline, refline, interp_trace, trace1024, tr_ind, a2disp_ind):
         """
 
@@ -280,11 +282,16 @@ than the specified a2center
         for i in N.arange(ind[0], ind[-1]+1):
             tab[i].setfield('A2DISPL', tab[i].field('A2DISPL') + (sciline-refline))
             tab[i].setfield('DEGPERYR', 0.0)
+
         hdulist.flush()
-        fu.updateKeyword(fname, 'SPTRCTAB', './'+newname)
-        fu.updateKeyword(fname+'[0]', 'SPTRCTAB', './'+newname)
         hdulist.close()
 
+        #update SPTRCTAB keyword in the science file primary header 
+        hdulist = pyfits.open(fname, mode='update')
+        hdr0 = hdulist[0].header
+        hdr0['SPTRCTAB'] = newname
+        hdulist.close()
+        
         #write out the fit to the interpolated trace ('_interpfit' file)
         refhdu = pyfits.PrimaryHDU(refline)
         refname=infile[0] + '_1dt_interpfit.' + infile[1]
@@ -312,8 +319,6 @@ than the specified a2center
         if os.path.exists(trname):
             os.unlink(trname)
         trhdu.writeto(trname)
-
-
 
 
     def generateTrace(self, data, kwinfo, tracecen=0.0, wind=None):
