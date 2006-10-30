@@ -22,7 +22,7 @@ setup(name = "stistools",
       author_email = "help@stsci.edu",
       license = "http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE",
       platforms = ["Linux","Solaris","Mac OS X","Win"],
-      py_modules = ['sshift', 'stisnoise', 'gettable', 'r_util', 'wavelen', 'evaldisp', 'radialvel', 'tracegen', 'wx2d'],
+      py_modules = ['sshift', 'stisnoise', 'gettable', 'r_util', 'wavelen', 'evaldisp', 'radialvel', 'mktrace', 'wx2d'],
       package_dir={'':'lib'},
       )
 

@@ -14,8 +14,8 @@ Refine a STIS trace table.
   the relevant keywords are updates in the header of the input file.
 
 Usage:
->>>import tracegen
->>>tracegen.tracegen('file.fits', [tracecen=509.4], [weights=[(x1,x2),(x3,x4)])
+>>>import mktrace
+>>>mktrace.mktrace('file.fits', [tracecen=509.4], [weights=[(x1,x2),(x3,x4)])
 
 Author (IDL): Linda Dressel
 Python version: Nadia Dencheva
@@ -30,11 +30,11 @@ from numarray import convolve as conv
 import gfit, linefit
 import fileutil as fu
 
-__version__ = '0.1'
+__version__ = '1.0'
 __vdate__ = '2006-10-25'
 
 
-def tracegen(fname, tracecen=0.0, weights=None):
+def mktrace(fname, tracecen=0.0, weights=None):
     """
     Refine a stis spectroscopic trace.
     """
@@ -112,7 +112,8 @@ def tracegen(fname, tracecen=0.0, weights=None):
 
     #print 'time', time.time()-start
     #the minus sign is for consistency withthe way x2d reports the rotation
-    print "Traces were rotated by %f degrees" % (-(sparams[1]-rparams[1])*180 / N.pi)
+    print "Traces were rotated by %f degrees \n" % (-(sparams[1]-rparams[1])*180 / N.pi)
+    print 'trace is centered on row %f' % tr._a2center 
     return tr
 
 
@@ -281,7 +282,9 @@ than the specified a2center
         ind = N.nonzero(a2disp_ind)[0]
         for i in N.arange(ind[0], ind[-1]+1):
             tab[i].setfield('A2DISPL', tab[i].field('A2DISPL') + (sciline-refline))
-            tab[i].setfield('DEGPERYR', 0.0)
+        if 'DEGPERYR' in tab.names:
+            for i in N.arange(ind[0], ind[-1]+1):
+                tab[i].setfield('DEGPERYR', 0.0)
 
         hdulist.flush()
         hdulist.close()
