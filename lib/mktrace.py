@@ -127,12 +127,14 @@ def iterable(v):
 
 def interp(y,n):
     """
+
     Given a 1D array of size m, interpolates it to a size n (m<n).
+
     """
     m = float(len(y))
     x = N.arange(m)
     i = N.arange(n,type=N.Float)
-    xx = i * (m-1)/n
+    xx = i * (m-1)/(n-1)
     xind=N.searchsorted(x,xx)-1
     yy=y[xind]+(xx-x[xind])*(y[xind+1]-y[xind])/(x[xind+1]-x[xind])
 
