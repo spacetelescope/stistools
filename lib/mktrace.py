@@ -87,7 +87,7 @@ def mktrace(fname, tracecen=0.0, weights=None):
         interp_trace = tr2
         
     #convert the weights array into full frame
-    ind = N.nonzero(wei)[0] * kwinfo['binaxis2']
+    ind = N.nonzero(wei)[0] * kwinfo['binaxis1']
     w = N.zeros(1024)
     w[ind] = 1
 
@@ -127,14 +127,12 @@ def iterable(v):
 
 def interp(y,n):
     """
-
     Given a 1D array of size m, interpolates it to a size n (m<n).
-
     """
     m = float(len(y))
     x = N.arange(m)
     i = N.arange(n,type=N.Float)
-    xx = i * (m-1)/(n-1)
+    xx = i * (m-1)/n
     xind=N.searchsorted(x,xx)-1
     yy=y[xind]+(xx-x[xind])*(y[xind+1]-y[xind])/(x[xind+1]-x[xind])
 
@@ -161,9 +159,10 @@ def getKWInfo(hdr0, hdr1):
     kwinfo['instrument'] = hdr0['INSTRUME']
     kwinfo['detector'] = hdr0['DETECTOR']
     if kwinfo['detector'] == "CCD":
-        kwinfo['binaxis2'] = hdr0['binaxis2']
+        kwinfo['binaxis2'] = hdr0['BINAXIS2']
     else:
         kwinfo['binaxis2'] = 1
+    kwinfo['binaxis1'] = hdr0['BINAXIS1']
     kwinfo['crpix2'] = hdr1['CRPIX2']
     kwinfo['ltv2'] = hdr1['LTV2']
     kwinfo['sizaxis2'] = hdr0['sizaxis2']
