@@ -160,9 +160,10 @@ def getKWInfo(hdr0, hdr1):
     kwinfo['detector'] = hdr0['DETECTOR']
     if kwinfo['detector'] == "CCD":
         kwinfo['binaxis2'] = hdr0['BINAXIS2']
+        kwinfo['binaxis1'] = hdr0['BINAXIS1']
     else:
         kwinfo['binaxis2'] = 1
-    kwinfo['binaxis1'] = hdr0['BINAXIS1']
+        kwinfo['binaxis1'] = 1
     kwinfo['crpix2'] = hdr1['CRPIX2']
     kwinfo['ltv2'] = hdr1['LTV2']
     kwinfo['sizaxis2'] = hdr0['sizaxis2']
