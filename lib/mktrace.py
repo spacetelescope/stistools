@@ -79,6 +79,7 @@ def mktrace(fname, tracecen=0.0, weights=None):
     tr = Trace(fname, kwinfo)
     a2center, trace1024 = tr.generateTrace(data,kwinfo, tracecen=tracecen, wind=wind)
     tr_ind, a2disp_ind = tr.getTraceInd(a2center)
+    #print 'tr_ind', tr_ind
     tr2 = tr.readTrace(tr_ind)
     if tr_ind != a2disp_ind[0]:
         tr1 = tr.readTrace(tr_ind -1)
@@ -239,7 +240,7 @@ than the specified a2center
         sp_ind = self.sptrctab.field('SPORDER') == self._sporder
         a2disp_ind = opt_ind & cen_ind & sp_ind
         ind = N.nonzero(a2disp_ind)
-        i = N.nonzero(self.sptrctab.field('A2CENTER') > a2center)[0][0] + ind[0][0]
+        i = N.nonzero(self.sptrctab[ind].field('A2CENTER') > a2center)[0][0] + ind[0][0]
 
         return i, a2disp_ind
 
