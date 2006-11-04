@@ -73,17 +73,19 @@ def mktrace(fname, tracecen=0.0, weights=None):
             for j in N.arange(weights[i][0], weights[i][1]):
                 wei[j] = 1
 
-    #wind are weights indices in the image frame
+    #wind are weights indices in the image frame which may be a subarray
     wind = N.nonzero(wei)[0]
     
     tr = Trace(fname, kwinfo)
     a2center, trace1024 = tr.generateTrace(data,kwinfo, tracecen=tracecen, wind=wind)
-    tr_ind, a2disp_ind = tr.getTraceInd(a2center)
+    #compute the full frame a2center
+    ffa2center = a2center*kwinfo['binaxis2'] 
+    tr_ind, a2disp_ind = tr.getTraceInd(ffa2center)
     #print 'tr_ind', tr_ind
     tr2 = tr.readTrace(tr_ind)
     if tr_ind != a2disp_ind[0]:
         tr1 = tr.readTrace(tr_ind -1)
-        interp_trace = trace_interp(tr1, tr2, a2center)
+        interp_trace = trace_interp(tr1, tr2, ffa2center)
     else:
         interp_trace = tr2
         
