@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
-import pyfits
-import numarray
-import numarray.fft
-import numarray.convolve
 import math
 
+import pyfits
+import numpy
+import convolve
 
-__version__ = '5.3 (2003-Sep-09)'
+
+__version__ = '5.4 (2007-Feb-07)'
 
 def _median(arg):
-    return numarray.sort(arg)[arg.getshape()[0]/2]
+    return numpy.sort(arg)[arg.shape[0]/2]
 
 def medianfilter(time_series, width):
     tlen = time_series.shape[0]
@@ -38,30 +38,29 @@ def wipefilter(time_series, image_type, sst, freqmin, freqmax, scale):
         ntimep = ntime+14
     else:
         ntimep = ntime+7
-    t2    = numarray.zeros(ntimep, numarray.Float64)
+    t2    = numpy.zeros(ntimep, numpy.float64)
     t2[:ntime] = time_series
-    freq  = numarray.arange(ntimep)/(ntimep*sst*1.0e-6)
+    freq  = numpy.arange(ntimep)/(ntimep*sst*1.0e-6)
     freq[ntimep/2+1:ntimep] = freq[1:ntimep/2][::-1]
-    tran  = numarray.fft.fft(t2)/len(t2)
+    tran  = convolve.fft.fft(t2)/len(t2)
     # apply filter
-    ind   = numarray.nonzero((freq > freqmin)*(freq < freqmax))
+    ind   = numpy.nonzero((freq > freqmin)*(freq < freqmax))
     tran[ind] = tran[ind]*scale
     # inverse transform
-    time_series = numarray.fft.inverse_fft(tran).real[:ntime+2]
+    time_series = convolve.fft.ifft(tran).real[:ntime+2]
     time_series *= time_series.shape[0]
     return time_series
 
 
 def gauss(x, x0, dx, ymax):
     if dx > 0.:
-        arg = numarray.clip(numarray.abs((x-x0)/dx), 0., 9.)
-        y = numarray.exp(-arg*arg/2.)*(arg < 9.)
+        arg = numpy.clip(numpy.abs((x-x0)/dx), 0., 9.)
+        y = numpy.exp(-arg*arg/2.)*(arg < 9.)
     else:
         y = (0.*x)*(x != x0)+(x == x0)
     return y*ymax
 
 def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
-    import numarray.convolve
     ntime = time_series.shape[0]
     # if ntime is an odd number the fft will take forever so make
     # it even with a small prime factor sum (not as quick as power
@@ -73,14 +72,14 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
         ntimep = ntime+14
     else:
         ntimep = ntime+7
-    t2    = numarray.zeros(ntimep, numarray.Float64)
+    t2    = numpy.zeros(ntimep, numpy.float64)
     t2[:ntime] = time_series
-    freq  = numarray.arange(ntimep)/(ntimep*sst*1.0e-6)
+    freq  = numpy.arange(ntimep)/(ntimep*sst*1.0e-6)
     freq[ntimep/2+1:ntimep] = freq[1:ntimep/2][::-1]
-    tran  = numarray.fft.fft(t2)/len(t2)
+    tran  = convolve.fft.fft(t2)/len(t2)
     # apply filter
-    filter = numarray.ones(ntimep, numarray.Float64)
-    ind   = numarray.nonzero((freq > (freqpeak-width/2.0)) * \
+    filter = numpy.ones(ntimep, numpy.float64)
+    ind   = numpy.nonzero((freq > (freqpeak-width/2.0)) * \
                              (freq < (freqpeak+width/2.0)))
     filter[ind] = 0.0
     freqstep = 1.0/(ntimep*sst*1.0e-6)
@@ -89,13 +88,13 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
     kernw = int(5*sigma)         # make kernel have width of 5 sigma
     if kernw%2 == 0:
         kernw = kernw+1          # make kernel odd
-    kernx = numarray.arange(kernw)
+    kernx = numpy.arange(kernw)
     kerny = gauss(kernx, kernw/2, sigma, 1.0)  # gaussian kernel
-    kerny = kerny/numarray.sum(kerny)
-    filterc = numarray.convolve.correlate(filter, kerny, numarray.convolve.SAME)
+    kerny = kerny/numpy.sum(kerny)
+    filterc = convolve.correlate(filter, kerny, convolve.SAME)
     tran  = tran*filterc
     # inverse transform
-    time_series = numarray.fft.inverse_fft(tran).real[:ntime+2]
+    time_series = convolve.fft.ifft(tran).real[:ntime+2]
     time_series *= time_series.shape[0]
     return time_series
 
@@ -185,6 +184,7 @@ Python version:
     # 02/25/2002 JAV - version 5.2 added verbose option & output header
     #                  float type spec.
     # 05/21/2002 PEB - version 5.3 padded extra pixel with median of row.
+    # 02/07/2007 PEH - version 5.4 convert from numarray to numpy
 
     # Check filter options
     if ((boxcar > 0) + (wipe != None) + (window != None)) > 1:
@@ -215,7 +215,7 @@ Python version:
         raise RuntimeError, \
               'You should only run this on a SCI extension, not %s.'%extname
 
-    nr, nc = inimage.getshape()
+    nr, nc = inimage.shape
     if   (nr, nc) == (nr0, nc0):
         image_type = 'raw'
     elif (nr, nc) == (fltxy, fltxy):
@@ -226,7 +226,7 @@ Python version:
 
     # Pad data with fake "OVERSCAN" if data have been overscan trimmed
     if image_type == 'flt':
-        temp = numarray.zeros((fltxy, nc0), numarray.Float32)
+        temp = numpy.zeros((fltxy, nc0), numpy.float32)
         for row in range(fltxy):
             temp[row,:] = _median(inimage[row,:])
         temp[:,nos:nc0-nos] = inimage
@@ -248,8 +248,8 @@ Python version:
 
     # Convert 2-D array to 1-D time series
     nx = nc + pps
-    time_series = numarray.zeros(int(nx*nr), numarray.Float64)
-    ds = numarray.zeros(int(pps), numarray.Float64)
+    time_series = numpy.zeros(int(nx*nr), numpy.float64)
+    ds = numpy.zeros(int(pps), numpy.float64)
     for i in range(nr):
         k = int(i*nx)
         # (note that non-integer nx prevents phase wandering)
@@ -265,7 +265,7 @@ Python version:
     #if median != None:
     #    time_series = medianfilter(time_series, median)
     if boxcar > 0:
-        time_series = numarray.convolve.boxcar(time_series, (boxcar,))
+        time_series = convolve.boxcar(time_series, (boxcar,))
 
     elif wipe != None:
         time_series = wipefilter(time_series, image_type, sst,
@@ -278,7 +278,7 @@ Python version:
     # End filtering options ***************
 
     # Recreate 2-D image from time series
-    outimage = numarray.zeros((nr, nc), numarray.Float32)
+    outimage = numpy.zeros((nr, nc), numpy.float32)
     for i in range(nr):
         outimage[i,:] = time_series[int(i*nx):int(i*nx+nc)]
     if image_type == 'flt':
@@ -302,9 +302,9 @@ Python version:
     time_series = time_series[:n_ts]
 
     # Perform FFT and return first half
-    fft_output = numarray.fft.fft(time_series)/len(time_series)
-    magnitude = numarray.abs(fft_output)[:n_ts/2]
-    freq = numarray.arange(n_ts/2)/(n_ts*sst*1.0e-6)
+    fft_output = convolve.fft.fft(time_series)/len(time_series)
+    magnitude = numpy.abs(fft_output)[:n_ts/2]
+    freq = numpy.arange(n_ts/2)/(n_ts*sst*1.0e-6)
     if dc == 1:
         # set first bin in power spectrum to zero if dc == 1
         magnitude[0] = 0
@@ -317,4 +317,3 @@ Python version:
         fout.writeto(outfile)
     
     return (freq, magnitude)
-
