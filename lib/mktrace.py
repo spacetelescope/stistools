@@ -21,12 +21,15 @@ Author (IDL): Linda Dressel
 Python version: Nadia Dencheva
 
 """
-import numarray as N
+import numpy as N
 import pyfits
 import os.path
-from numarray import mlab as ml
-from numarray import nd_image as ni
-from numarray import convolve as conv
+#from numarray import mlab as ml
+#from numarray import nd_image as ni
+#from numarray import convolve as conv
+import ndimage as ni
+import convolve as conv
+
 import gfit, linefit
 import fileutil as fu
 
@@ -353,7 +356,7 @@ than the specified a2center
         if y2 > (sizex -1): y2 = sizex - 1
         specimage = data[y1:y2+1,:]
         smoytrace = self.gFitTrace(specimage, y1, y2)
-        yshift = int(ml.median(smoytrace) - 20)
+        yshift = int(N.median(smoytrace) - 20)
         y1 = y1 + yshift
         y2 = y2 + yshift
         if (y1 < 0): y1 = 0
@@ -363,7 +366,7 @@ than the specified a2center
         med11smoytrace = ni.median_filter(smoytrace,11)
         med11smoytrace[0] = med11smoytrace[2]
         diffmed = abs(smoytrace - med11smoytrace)
-        tolerence = 3 * ml.median(abs(smoytrace[wind] - med11smoytrace[wind]))
+        tolerence = 3 * N.median(abs(smoytrace[wind] - med11smoytrace[wind]))
         if tolerence < 0.1: tolerence = 0.1
         badpoint = N.where(diffmed > tolerence)[0]
         if len(badpoint) != 0:
@@ -375,7 +378,7 @@ than the specified a2center
         gaussconvxsmoytrace = ni.gaussian_filter1d(smoytrace, sigma)
 
         #compute the trace center as the median of the pixels with nonzero weights
-        tracecen = ml.median(gaussconvxsmoytrace[wind])
+        tracecen = N.median(gaussconvxsmoytrace[wind])
         gaussconvxsmoytrace = gaussconvxsmoytrace - tracecen
         trace1024 = interp(gaussconvxsmoytrace,1024) * kwinfo['binaxis2']
         tracecen = tracecen + y1 +1.0
@@ -393,7 +396,7 @@ than the specified a2center
         smoytrace = N.zeros(sizey).astype(N.Float)
         for c in N.arange(sizey):
             col = specimage[:,c]
-            col = col - ml.median(col)
+            col = col - N.median(col)
             smcol = conv.boxcar(col, (3,)).astype(N.Float)
             fit = gfit.gfit1d(smcol, quiet=1, maxiter=15)
             smoytrace[c] = fit.params[1]
