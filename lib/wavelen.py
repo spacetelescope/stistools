@@ -1,8 +1,6 @@
 import os
 
-# import numarray (temporarily delete numpy option)
-import numarray as N
-FLOAT64 = N.Float64
+import numpy as N
 
 import evaldisp
 import gettable
@@ -29,7 +27,7 @@ def compute_wavelengths (shape, phdr, hdr, helcorr):
 
     @return:  an array of wavelengths, of the same shape (nrows, ncols) as
         the output image
-    @rtype:  Float64
+    @rtype:  float64
     """
 
     REF_ANGLE = 0.315                           # degrees
@@ -111,8 +109,8 @@ def compute_wavelengths (shape, phdr, hdr, helcorr):
     filter = {"opt_elem": opt_elem, "cenwave": cenwave, "sporder": 1}
     inang_info = gettable.getTable (inangtab, filter, exactly_one=True)
 
-    wavelengths = N.zeros ((nrows, ncols), dtype=FLOAT64)
-    image_pixels = N.arange (ncols, dtype=FLOAT64)
+    wavelengths = N.zeros ((nrows, ncols), dtype=N.float64)
+    image_pixels = N.arange (ncols, dtype=N.float64)
     # Convert from image pixels to reference pixels (but zero indexed).
     pixels = (image_pixels - ltv1) * binaxis1
     for j in range (nrows):
@@ -171,7 +169,7 @@ def adjust_disp (ncoeff, coeff, delta_offset1, shifta1, inang_info,
     @type ncoeff:  int
 
     @param coeff:  array of dispersion coefficients, modified in-place
-    @type coeff:  Float64
+    @type coeff:  float64
 
     @param delta_offset1:  incidence angle offset in degrees
     @type delta_offset1:  float

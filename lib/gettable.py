@@ -1,10 +1,7 @@
 import os
 import math
 
-# import numarray (temporarily delete numpy option)
-import numarray as N
-import numarray.strings
-FLOAT64 = N.Float64
+import numpy as N
 
 import pyfits
 
@@ -73,9 +70,9 @@ def getTable (table, filter, sortcol=None,
 
         # Test for for wildcards in the table.
         wild = None
-        if isinstance (column, N.strings.CharArray):
+        if isinstance (column, N.chararray):
             wild = (column == STRING_WILDCARD)
-        elif isinstance (column.type(), N.IntegralType):
+        elif isinstance (column[0], N.integer):
             wild = (column == INT_WILDCARD)
         if wild is not None:
             selected = N.logical_or (selected, wild)
@@ -90,15 +87,17 @@ def getTable (table, filter, sortcol=None,
     else:
         newdata = fd[1].data.copy()
 
-    nselect = len (newdata)
-
     fd.close()
 
+    nselect = len (newdata)
+    if nselect < 1:
+        newdata = None
+
     if (exactly_one or at_least_one) and nselect < 1:
-        print "Table has no matching row;"
-        print "  table name is", table
-        print "  row selection is", repr (filter)
-        raise RuntimeError, "Table has no matching row."
+        message = "Table has no matching row;\n" + \
+                  "table name is " + table + "\n" + \
+                  "row selection is " + repr (filter)
+        raise RuntimeError, message
 
     if exactly_one and nselect > 1:
         print "Table has more than one matching row;"
@@ -135,7 +134,7 @@ def rotateTrace (trace_info, expstart):
     @type trace_info:  record array (a pyfits table data object)
 
     @param expstart:  exposure start time (MJD)
-    @type expstart:  double
+    @type expstart:  float
     """
 
     if expstart < 0:
@@ -153,6 +152,6 @@ def rotateTrace (trace_info, expstart):
     for i in range (len (trace_info)):
         angle = (degperyr[i] * (expstart - mjd[i]) / 365.25)
         tan_angle = math.tan (angle * math.pi / 180.)
-        x = N.arange (nelem[i], dtype=FLOAT64)
+        x = N.arange (nelem[i], dtype=N.float64)
         x -= (nelem[i] // 2)
         a2displ[i][:] -= (x * tan_angle)

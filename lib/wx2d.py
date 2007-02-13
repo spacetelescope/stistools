@@ -3,22 +3,17 @@
 import sys
 import os
 import os.path
-import types
 import math
 
-# import numarray (temporarily delete numpy option)
-import numarray as N
+import numpy as N
 from numarray import convolve
-INT16 = N.Int16
-INT32 = N.Int32
-FLOAT32 = N.Float32
 
 import pyfits
 import gettable
 import wavelen
 import r_util
 
-__version__ = "1.0 (2006 October 24)"
+__version__ = "1.1 (2007 February 13)"
 
 def wx2d (input, output, wavelengths=None, helcorr="",
           algorithm="wavelet",
@@ -26,22 +21,44 @@ def wx2d (input, output, wavelengths=None, helcorr="",
           subsampled=None, convolved=None):
     """Resample the input, correcting for geometric distortion.
 
-    arguments:
-    input             name of input file containing an image set
-    output            name of the output file
-    wavelengths       name of the output file for wavelengths
-    helcorr = ""      specify "perform" or "omit" to override header keyword
-    algorithm         "wavelet" or "kd"
-    trace = None      trace array, or name of FITS table containing trace(s)
-    order = 7         polynomial order (an odd number, e.g. 5 or 7)
-    subdiv = 8        number of subpixels (a power of 2, e.g. 8 or 16)
-    psf_width = 0.    width of PSF for convolution (e.g. 1.3);
-                        0 means no convolution
-    rows = None       a tuple giving the slice of rows to process; output
-                        values in all other rows will be set to zero.
-                        None means all rows, same as (0, 1024)
-    subsampled        name of the output file with the subsampled image
-    convolved         name of the output file with the convolved image
+    @param input: name of input file containing an image set
+    @type input: string
+
+    @param output: name of the output file
+    @type output: string
+
+    @param wavelengths: name of the output file for wavelengths
+    @type wavelengths: string, or None
+
+    @param helcorr": specify "perform" or "omit" to override header keyword
+    @type helcorr": string
+
+    @param algorithm: "wavelet" or "kd"
+    @type algorithm: string
+
+    @param trace: trace array, or name of FITS table containing trace(s)
+    @type trace: string or array, or None
+
+    @param order: polynomial order (an odd number, e.g. 5 or 7)
+    @type order: int
+
+    @param subdiv: number of subpixels (a power of 2, e.g. 8 or 16)
+    @type subdiv: int
+
+    @param psf_width: width of PSF for convolution (e.g. 1.3);
+        0 means no convolution
+    @type psf_width: float
+
+    @param rows: a tuple giving the slice of rows to process; output values
+        in all other rows will be set to zero.
+        The default of None means all rows, same as (0, 1024)
+    @type rows: tuple, or None
+
+    @param subsampled: name of the output file with the subsampled image
+    @type subsampled: string, or None
+
+    @param convolved: name of the output file with the convolved image
+    @type convolved: string, or None
     """
 
     if algorithm != "wavelet" and algorithm != "kd":
@@ -65,7 +82,7 @@ def wx2d (input, output, wavelengths=None, helcorr="",
 
     phdu = ft[0]                # primary header/data unit
 
-    # If trace was not specified, get the file name and selection criteria
+    # If trace was not specified, get the file name and selection keywords
     # from the header.
     tracefile = trace_name (trace, phdu.header)
 
@@ -73,7 +90,7 @@ def wx2d (input, output, wavelengths=None, helcorr="",
     phdu.header.update ("WX2DCORR", "COMPLETE",
                         comment="this file is output from wx2d",
                         before="X2DCORR")
-    is_an_array = isinstance (tracefile, N.NumArray)
+    is_an_array = isinstance (tracefile, N.ndarray)
     if is_an_array:
         phdu.header.add_history ("trace array was specified explicitly")
     else:
@@ -111,20 +128,44 @@ def wx2d_imset (ft, imset, output, wavelengths, helcorr,
                 subsampled, convolved):
     """Resample one image set, and append to output file(s).
 
-    arguments:
-    ft                pyfits HDUList object for the input file
-    imset             one-indexed image set number
-    output            name of the output file
-    wavelengths       name of the output file for wavelengths
-    helcorr           specify "perform" or "omit" to override header keyword
-    algorithm         "wavelet" or "kd"
-    tracefile         trace array, or name of FITS table containing trace(s)
-    order             polynomial order
-    subdiv            number of subpixels
-    psf_width         width of PSF for convolution; 0 means no convolution
-    rows              a tuple giving the slice of rows to process
-    subsampled        name of the output file with the subsampled image
-    convolved         name of the output file with the convolved image
+    @param ft: pyfits HDUList object for the input file
+    @type input: HDUList
+
+    @param imset: one-indexed image set number
+    @type imset: int
+
+    @param output: name of the output file
+    @type output: string
+
+    @param wavelengths: name of the output file for wavelengths
+    @type wavelengths: string, or None
+
+    @param helcorr": specify "perform" or "omit" to override header keyword
+    @type helcorr": string
+
+    @param algorithm: "wavelet" or "kd"
+    @type algorithm: string
+
+    @param tracefile: trace array, or name of FITS table containing trace(s)
+    @type tracefile: string or array
+
+    @param order: polynomial order
+    @type order: int
+
+    @param subdiv: number of subpixels
+    @type subdiv: int
+
+    @param psf_width: width of PSF for convolution
+    @type psf_width: float
+
+    @param rows: a tuple giving the slice of rows to process
+    @type rows: tuple
+
+    @param subsampled: name of the output file with the subsampled image
+    @type subsampled: string, or None
+
+    @param convolved: name of the output file with the convolved image
+    @type convolved: string, or None
     """
 
     hdu = ft[("SCI",imset)]
@@ -199,7 +240,7 @@ def wx2d_imset (ft, imset, output, wavelengths, helcorr,
     hdu = ft[("DQ",imset)]
     im3 = hdu.data[rows[0]:rows[1]]
     nrows, ncols = im3.shape
-    image3 = N.zeros ((subdiv*nrows,ncols), dtype=im3.type())
+    image3 = N.zeros ((subdiv*nrows,ncols), dtype=im3.dtype)
     for j in range(subdiv):
         image3[j::subdiv,:] = im3
     del im3
@@ -220,10 +261,67 @@ def wavelet_resampling (hdu, img, errimg,
                         imset, order, subdiv, psf_width,
                         subsampled, convolved):
 
-    """Resample img and errimg using wavelets."""
+    """Resample img and errimg using wavelets.
 
-    sub5 = N.zeros((nrows*subdiv, ncols), dtype=FLOAT32)
-    err5 = N.zeros((nrows*subdiv, ncols), dtype=FLOAT32)
+    @param hdu: header/data unit for a SCI extension
+    @type hdu: pyfits header/data unit object
+
+    @param img: SCI image array (could be a subset of full image)
+    @type img: array
+
+    @param errimg: ERR image array (could be a subset of full image)
+    @type errimg: array
+
+    @param original_nrows: number of image lines (NAXIS2) in input image
+    @type original_nrows: int
+
+    @param nrows: number of image lines in subset
+    @type nrows: int
+
+    @param ncols: number of image columns (NAXIS1)
+    @type ncols: int
+
+    @param rows: tuple giving the slice of rows to process
+    @type rows: tuple
+
+    @param a2center: 1-D array of Y locations
+    @type a2center: array
+
+    @param a2displ: array of traces, one for each a2center; the length of each
+        trace must be the same as the number of columns in the input image
+    @type a2displ: array
+
+    @param offset: offset of the first row in 'image' from the beginning of
+        the data block in the original file, needed for trace
+    @type offset: float
+
+    @param shifta2: offset of the row from nominal (from shifta2 keyword)
+    @type shifta2: float
+
+    @param imset: number of the current image set (keyword EXTVER)
+    @type imset: int
+
+    @param order: polynomial order
+    @type order: int
+
+    @param subdiv: number of subpixels per input pixel
+    @type subdiv: int
+
+    @param psf_width: width of PSF for convolution (e.g. 1.3);
+    @type psf_width: float
+
+    @param subsampled: name of the output file with the subsampled image
+    @type subsampled: string, or None
+
+    @param convolved: name of the output file with the convolved image
+    @type convolved: string, or None
+
+    @return: the image and error arrays (to replace the input img and errimg)
+    @rtype: tuple
+    """
+
+    sub5 = N.zeros((nrows*subdiv, ncols), dtype=N.float32)
+    err5 = N.zeros((nrows*subdiv, ncols), dtype=N.float32)
     for j in range(0, subdiv):
         sub5[j::subdiv] = img
         err5[j::subdiv] = errimg
@@ -246,7 +344,7 @@ def wavelet_resampling (hdu, img, errimg,
     step = subdiv
     while step > 1:
 
-        tmp = N.zeros ((nrows*2*subdiv/step, ncols), dtype=FLOAT32)
+        tmp = N.zeros ((nrows*2*subdiv//step, ncols), dtype=N.float32)
         err = tmp.copy()
         tmp[::2] = sub5[::step]
         tmp[1::2] = inv_avg_interp(order, tmp[::2])
@@ -276,7 +374,7 @@ def wavelet_resampling (hdu, img, errimg,
     #  Optional PSF convolution
 
     if psf_width > 0.:
-        cnv = N.zeros(sub5.shape, dtype=FLOAT32)
+        cnv = N.zeros(sub5.shape, dtype=N.float32)
         krn = N.array([stis_psf(float (j), psf_width*subdiv) \
                        for j in range(-32, 32)])
         krn = krn/N.sum(krn)
@@ -292,8 +390,8 @@ def wavelet_resampling (hdu, img, errimg,
         cnv = sub5
 
     if original_nrows > nrows:
-        result = N.zeros ((original_nrows, ncols), dtype=FLOAT32)
-        err_result = N.zeros ((original_nrows, ncols), dtype=FLOAT32)
+        result = N.zeros ((original_nrows, ncols), dtype=N.float32)
+        err_result = N.zeros ((original_nrows, ncols), dtype=N.float32)
         result[rows[0]:rows[1]] = apply_trace (cnv, a2center, a2displ,
                                   subdiv, offset, shifta2, "SCI")
         err_result[rows[0]:rows[1]] = apply_trace (err5, a2center, a2displ,
@@ -309,17 +407,53 @@ def wavelet_resampling (hdu, img, errimg,
 def kd_resampling (img, errimg,
                    original_nrows, nrows, ncols, rows,
                    a2center, a2displ, offset, shifta2):
-    """Apply Kris Davidson's resampling method."""
+    """Apply Kris Davidson's resampling method.
+
+    @param img: SCI image array (could be a subset of full image)
+    @type img: array
+
+    @param errimg: ERR image array (could be a subset of full image)
+    @type errimg: array
+
+    @param original_nrows: number of image lines (NAXIS2) in input image
+    @type original_nrows: int
+
+    @param nrows: number of image lines in subset
+    @type nrows: int
+
+    @param ncols: number of image columns (NAXIS1)
+    @type ncols: int
+
+    @param rows: tuple giving the slice of rows to process
+    @type rows: tuple
+
+    @param a2center: 1-D array of Y locations
+    @type a2center: array
+
+    @param a2displ: array of traces, one for each a2center; the length of each
+        trace must be the same as the number of columns in the input image
+    @type a2displ: array
+
+    @param offset: offset of the first row in 'image' from the beginning of
+        the data block in the original file, needed for trace
+    @type offset: float
+
+    @param shifta2: offset of the row from nominal (from shifta2 keyword)
+    @type shifta2: float
+
+    @return: the image and error arrays (to replace the input img and errimg)
+    @rtype: tuple
+    """
 
     # image2 is for the error image
     subdiv = 8
-    image2 = N.zeros ((subdiv*nrows,ncols), dtype=FLOAT32)
+    image2 = N.zeros ((subdiv*nrows,ncols), dtype=N.float32)
     for j in range (subdiv):
         image2[j::subdiv,:] = errimg
 
     if original_nrows > nrows:
-        result = N.zeros ((original_nrows, ncols), dtype=FLOAT32)
-        err_result = N.zeros ((original_nrows, ncols), dtype=FLOAT32)
+        result = N.zeros ((original_nrows, ncols), dtype=N.float32)
+        err_result = N.zeros ((original_nrows, ncols), dtype=N.float32)
         result[rows[0]:rows[1]] = kd_apply_trace (img, a2center, a2displ,
                                   offset, shifta2)
         err_result[rows[0]:rows[1]] = apply_trace (image2, a2center, a2displ,
@@ -334,22 +468,30 @@ def kd_resampling (img, errimg,
 def kd_apply_trace (image, a2center, a2displ, offset=0., shifta2=0.):
     """Kris Davidson's resampling algorithm, following the trace.
 
-    arguments:
-    image           input 2-D image array
-    a2center        array of Y locations
-    a2displ         array of traces, one for each a2center; the length of
-                    each trace must be the same as the number of columns
-                    in the input image
-    offset = 0.     offset of the first row in 'image' from the beginning
-                    of the data block in the original file, needed for trace
-    shifta2 = 0.    offset of the row from nominal (from shifta2 keyword)
+    @param image: input 2-D image array
+    @type image: array
 
-    The function value is a 2-D array containing the resampled image.
+    @param a2center: array of Y locations
+    @type a2center: array
+
+    @param a2displ: array of traces, one for each a2center; the length of
+        each trace must be the same as the number of columns in 'image'
+    @type a2displ: array
+
+    @param offset: offset of the first row in 'image' from the beginning
+                    of the data block in the original file, needed for trace
+    @type offset: float
+
+    @param shifta2: offset of the row from nominal (from shifta2 keyword)
+    @type shifta2: float
+
+    @return: 2-D array containing the resampled image
+    @rtype: array
     """
 
     shape = image.shape
     x2d_shape = N.array (shape)
-    x2d = N.zeros (x2d_shape, dtype=FLOAT32)
+    x2d = N.zeros (x2d_shape, dtype=N.float32)
     total = shape[0] * shape[1]
 
     flat_im = N.ravel (image)
@@ -362,8 +504,8 @@ def kd_apply_trace (image, a2center, a2displ, offset=0., shifta2=0.):
 
         nint_y = N.around (y)
         s = y - nint_y
-        n = nint_y.astype (INT32)
-        col_range = N.arange (x2d_shape[1], dtype=INT32)
+        n = nint_y.astype (N.int32)
+        col_range = N.arange (x2d_shape[1], dtype=N.int32)
 
         # These are indices into the flattened image.
         nm2 = (n-2) * x2d_shape[1] + col_range
@@ -396,23 +538,50 @@ def kd_apply_trace (image, a2center, a2displ, offset=0., shifta2=0.):
     return x2d
 
 def stis_psf(x, a):
+
+    """Evaluate the cross-dispersion PSF at x.
+
+    @param x: offset in pixels from the center of the profile
+    @type x: float
+
+    @param a: a measure of the width of the PSF
+    @type a: float
+
+    @return: the PSF evaluated at x
+    @rtype: float
+    """
+
     return (1. + (x/float(a))**2)**-2
 
 def apply_trace (image, a2center, a2displ, subdiv,
                  offset=0., shifta2=0., extname="SCI"):
     """Add together 'subdiv' rows of 'image', following the trace.
 
-    arguments:
-    image            input array, oversampled by 'subdiv' in axis 0
-    a2center         array of Y locations
-    a2displ          array of traces, one for each a2center; the length of
-                     each trace must be the same as the number of columns
-                     in the input image
-    subdiv           number of rows to add together
-    offset = 0.      offset of the first row in 'image' from the beginning
-                     of the data block in the original file, needed for trace
-    shifta2 = 0.     offset of the row from nominal (from shifta2 keyword)
-    extname = "SCI"  which type of extension (SCI, ERR, DQ)?
+    @param image: input 2-D image array, oversampled by 'subdiv' in axis 0
+    @type image: array
+
+    @param a2center: 1-D array of Y locations
+    @type a2center: array
+
+    @param a2displ: array of traces, one for each a2center; the length of each
+        trace must be the same as the number of columns in the input image
+    @type a2displ: array
+
+    @param subdiv: number of rows to add together
+    @type subdiv: int
+
+    @param offset: offset of the first row in 'image' from the beginning of
+        the data block in the original file, needed for trace
+    @type offset: float
+
+    @param shifta2: offset of the row from nominal (from shifta2 keyword)
+    @type shifta2: float
+
+    @param extname: which type of extension (SCI, ERR, DQ)?
+    @type extname: string
+
+    @return: resampled 2-D image array
+    @rtype: array
 
     The function value is a 2-D array containing the resampled image.
     This is binned by subdiv in Y (axis 0), after shifting by trace
@@ -424,7 +593,7 @@ def apply_trace (image, a2center, a2displ, subdiv,
     (2) the values are combined as the average of the sum of the squares
 
     For extname = "DQ" the result differs in these ways:
-    (1) the output is type Int16
+    (1) the output is type int16
     (2) the output values are nominally the same as the input, while
         for SCI the output are subdiv times larger than the input
     (3) fractions of pixels at the endpoints of the extraction region
@@ -436,9 +605,9 @@ def apply_trace (image, a2center, a2displ, subdiv,
     x2d_shape = N.array (shape)
     x2d_shape[0] /= subdiv
     if extname == "DQ":
-        x2d = N.zeros (x2d_shape, dtype=INT16)
+        x2d = N.zeros (x2d_shape, dtype=N.int16)
     else:
-        x2d = N.zeros (x2d_shape, dtype=FLOAT32)
+        x2d = N.zeros (x2d_shape, dtype=N.float32)
 
     for i in range (x2d_shape[0]):
         # y is the location in the output, binned image (x2d), while
@@ -459,16 +628,19 @@ def apply_trace (image, a2center, a2displ, subdiv,
 def extract (image, locn, subdiv):
     """Add together 'subdiv' rows of 'image', centered on 'locn'.
 
-    arguments:
-    image              input array, oversampled by 'subdiv' in axis 0
-    locn               a 1-D array giving the location at which to extract
-                         (see below)
-    subdiv             number of rows to add together
+    @param image: input array, oversampled by 'subdiv' in axis 0
+    @type image: array
 
-    The function value is a 1-D array containing the extracted row.
+    @param locn: a 1-D array giving the location at which to extract; an
+        integer value corresponds to the center of the pixel.  The length
+        must be the same as the number of columns in the input image.
+    @type locn: array
 
-    The length of 'locn' must be the same as the number of columns in the
-    input image.  An integer value corresponds to the center of the pixel.
+    @param subdiv: number of rows to add together
+    @type subdiv: int
+
+    @return: a 1-D array containing the extracted row
+    @rtype: array
     """
 
     # Shift the zero point so the edges of a pixel have integer coordinates.
@@ -482,28 +654,43 @@ def extract (image, locn, subdiv):
     fhigh = locn0 + fhw
     flow = locn0 - fhw
     # integer endpoints of range of whole pixels
-    high = N.floor (fhigh).astype (INT32)
-    low = N.ceil (flow).astype (INT32)
+    high = N.floor (fhigh).astype (N.int32)
+    low = N.ceil (flow).astype (N.int32)
     # fractions of pixels at upper and lower edges
     dhigh = fhigh - high
     dlow = low - flow
 
-    spec = N.zeros(shape[1], dtype=FLOAT32)
+    spec = N.zeros(shape[1], dtype=N.float32)
     for j in range(shape[1]):
-        if low[j] < 1 or high[j] > shape[0]-1:
+        s_low = low.item(j)
+        s_high = high.item(j)
+        if s_low < 1 or s_high > shape[0]-1:
             continue
-        spec[j] = N.sum(image[low[j]:high[j],j])
-        spec[j] += image[high[j],j] * dhigh[j]
-        spec[j] += image[low[j]-1,j] * dlow[j]
+        spec[j] = N.sum(image[s_low:s_high,j])
+        spec[j] += image.item(s_high,j) * dhigh.item(j)
+        spec[j] += image.item(s_low-1,j) * dlow.item(j)
 
     return spec
 
 def extract_err (image, locn, subdiv):
     """Average 'subdiv' rows of 'image', centered on 'locn'.
 
-    This takes the square root of the average of the squares,
-    intended to be used for interpolating the ERR array.  Fractions
-    of pixels at the upper and lower edges are excluded.
+    @param image: input array, oversampled by 'subdiv' in axis 0
+    @type image: array
+
+    @param locn: a 1-D array giving the location at which to extract; an
+        integer value corresponds to the center of the pixel
+    @type locn: array
+
+    @param subdiv: number of rows to add together
+    @type subdiv: int
+
+    @return: a 1-D array containing the extracted row
+    @rtype: array
+
+    This takes the square root of the average of the squares, intended to be
+    used for interpolating the ERR array.  Fractions of pixels at the upper
+    and lower edges are excluded.
     """
 
     # Shift the zero point so the edges of a pixel have integer coordinates.
@@ -517,23 +704,40 @@ def extract_err (image, locn, subdiv):
     fhigh = locn0 + fhw
     flow = locn0 - fhw
     # integer endpoints of range of whole pixels
-    high = N.floor (fhigh).astype (INT32)
-    low = N.ceil (flow).astype (INT32)
+    high = N.floor (fhigh).astype (N.int32)
+    low = N.ceil (flow).astype (N.int32)
 
-    spec = N.zeros (shape[1], dtype=FLOAT32)
+    spec = N.zeros (shape[1], dtype=N.float32)
     for j in range (shape[1]):
-        if low[j] < 1 or high[j] > shape[0]-1:
+        s_low = low.item(j)
+        s_high = high.item(j)
+        if s_low < 1 or s_high > shape[0]-1:
             continue
         sum = 0.
-        for i in range (low[j], high[j]+1):
-            sum += (image[i,j] * image[i,j])
-        sum /= (high[j] - low[j] + 1)
+        for i in range (s_low, s_high+1):
+            s_image = image.item(i,j)
+            sum += s_image**2
+        sum /= (s_high - s_low + 1)
         spec[j] = math.sqrt (sum)
 
     return spec
 
 def extract_i16 (image, locn, subdiv):
-    """Bitwise OR 'subdiv' rows of 'image', centered on 'locn'."""
+    """Bitwise OR 'subdiv' rows of 'image', centered on 'locn'.
+
+    @param image: input array, oversampled by 'subdiv' in axis 0
+    @type image: array
+
+    @param locn: a 1-D array giving the location at which to extract; an
+        integer value corresponds to the center of the pixel
+    @type locn: array
+
+    @param subdiv: number of rows to add together
+    @type subdiv: int
+
+    @return: a 1-D array containing the extracted row
+    @rtype: array
+    """
 
     # Shift the zero point so the edges of a pixel have integer coordinates.
     locn0 = locn + 0.5
@@ -546,16 +750,18 @@ def extract_i16 (image, locn, subdiv):
     fhigh = locn0 + fhw
     flow = locn0 - fhw
     # integer endpoints of range of whole pixels
-    high = N.floor (fhigh).astype (INT32)
-    low = N.ceil (flow).astype (INT32)
+    high = N.floor (fhigh).astype (N.int32)
+    low = N.ceil (flow).astype (N.int32)
 
-    spec = N.zeros (shape[1], dtype=INT16)
+    spec = N.zeros (shape[1], dtype=N.int16)
     for j in range (shape[1]):
-        if low[j] < 1 or high[j] > shape[0]-1:
+        s_low = low.item(j)
+        s_high = high.item(j)
+        if s_low < 1 or s_high > shape[0]-1:
             continue
         sum = 0
-        for i in range (low[j], high[j]+1):
-            sum |= image[i,j]
+        for i in range (s_low, s_high+1):
+            sum |= image.item(i,j)
         spec[j] = sum
 
     return spec
@@ -563,15 +769,21 @@ def extract_i16 (image, locn, subdiv):
 def interpolate_trace (a2center, a2displ, y, length):
     """Interpolate within the array of traces, and return a trace.
 
-    arguments:
-    a2center        array of Y locations
-    a2displ         array of traces, one trace for each element of a2center
-    y               Y location on the detector
-    length          length of a trace; needed only if traces is empty
+    @param a2center: array of Y locations
+    @type a2center: array
+
+    @param a2displ: array of traces, one trace for each element of a2center
+    @type a2displ: array
+
+    @param y: Y location on the detector
+    @type y: float
+
+    @param length: length of a trace; needed only if traces is empty
+    @type length: int
     """
 
     if len (a2displ) < 1:
-        trace = N.zeros (length, dtype=FLOAT32)
+        trace = N.zeros (length, dtype=N.float32)
     else:
         # interpolate to get the trace at y
         trace = r_util.interpolate (a2center, a2displ, y)
@@ -579,7 +791,21 @@ def interpolate_trace (a2center, a2displ, y, length):
     return trace
 
 def trace_name (trace, phdr):
-    """Return the 1dt table name."""
+    """Return the 1dt table name or array.
+
+    @param trace: if trace is None the header keyword SPTRCTAB will be
+        gotten from phdr; else if this is a string it should be the name
+        of a trace file (possibly using an environment variable); otherwise,
+        it should be a trace, in which case it will be returned unchanged
+    @type trace: string or array, or None
+
+    @param phdr: primary header, used only if trace is None
+    @type phdr: pyfits Header object
+
+    @return: name of a trace file (with environment variable expanded),
+        or an actual trace array
+    @rtype: string or array
+    """
 
     if trace is None:
         try:
@@ -587,7 +813,7 @@ def trace_name (trace, phdr):
         except KeyError:
             raise "Keyword SPTRCTAB not found; specify trace explicitly."
         tracefile = r_util.expandFileName (tracefile)
-    elif isinstance (trace, types.StringType):
+    elif isinstance (trace, str):
         tracefile = r_util.expandFileName (trace)
     else:
         # trace could already be an array object
@@ -598,13 +824,19 @@ def trace_name (trace, phdr):
 def get_trace (tracefile, phdr, hdr):
     """Read 1-D traces from the 1dt table (sptrctab).
 
-    arguments:
-    tracefile       either a trace array or the name of a FITS 1dt table
-    phdr            primary header of input file
-    hdr             extension header of input image
-                      (for binning info and time of exposure)
-    The function value will be a pair of arrays, one is the Y location
-    at the middle column, and the other is an array of trace arrays.
+    @param tracefile: either a trace array or the name of a FITS 1dt table
+    @type tracefile: string or array
+
+    @param phdr: primary header of input file
+    @type phdr: pyfits Header object
+
+    @param hdr: extension header of input image (for binning info and
+        time of exposure)
+    @type hdr: pyfits Header object
+
+    @return: a pair of arrays, one is the Y location at the middle column,
+        and the other is an array of trace arrays
+    @rtype: tuple of two arrays
 
     If 'tracefile' is already a trace array, it will just be returned,
     together with an arbitrary Y location of 0 (because that will
@@ -618,7 +850,7 @@ def get_trace (tracefile, phdr, hdr):
 
     # If the input is already an array object, return a2center
     # (arbitrarily set to 0) and the trace array.
-    is_an_array = isinstance (tracefile, N.NumArray)
+    is_an_array = isinstance (tracefile, N.ndarray)
     if is_an_array:
         a2center = [0.]
         a2displ = [tracefile]
@@ -651,13 +883,18 @@ def get_trace (tracefile, phdr, hdr):
 def bin_traces (a2displ, binaxis1, ltv):
     """bin the traces by the factor binaxis1
 
-    arguments:
-    a2displ      an array of one or more arrays of Y displacements (traces)
-    binaxis1     binning factor in the dispersion axis
-    ltv          offset in the dispersion axis (one indexing)
+    @param a2displ: an array of one or more arrays of Y displacements (traces)
+    @type a2displ: array
 
-    The function value will be an array of traces (a2displ), but with
-    the trace arrays binned and shorter by the factor binaxis1.
+    @param binaxis1: binning factor in the dispersion axis
+    @type binaxis1: int
+
+    @param ltv: offset in the dispersion axis (one indexing)
+    @type ltv: float
+
+    @return: an array of traces (a2displ), but with the trace arrays binned
+        and shorter by the factor binaxis1
+    @rtype: array
     """
 
     if len (a2displ) < 1 or binaxis1 == 1:
@@ -684,7 +921,7 @@ def bin_traces (a2displ, binaxis1, ltv):
     offset = int (round (offset))
 
     for trace in a2displ:
-        newtrace = N.zeros (newlen, dtype=FLOAT32)
+        newtrace = N.zeros (newlen, dtype=N.float32)
         for i in range (binaxis1):
             # this slice can be longer than newlen
             temp = trace[i+offset:oldlen:binaxis1]
@@ -701,28 +938,43 @@ def inv_haar(image):
 
 def inv_avg_interp(order, image):
 
-    side, j0, j1 = (order-1)/2, (order-1)/2, (order+1)/2
+    side, j0, j1 = (order-1)//2, (order-1)//2, (order+1)//2
     rows, cols = image.shape
 
-    x = range(order+1)
-    y = N.zeros((order+1, cols), dtype=FLOAT32)
-    d = N.zeros((rows, cols), dtype=FLOAT32)
+    order_2 = float (order) / 2.
+    n = order + 1
+
+    x = N.arange(n, dtype=N.float64)
+    y = N.zeros((n, cols), dtype=N.float64)
+    d = N.zeros((rows, cols), dtype=N.float32)  # single precision result
 
     for j in range(side, rows-side):
         y[1:] = N.cumsum(image[j-side:j+side+1], axis=0)
-        for k in range(cols):
-            d[j,k] = -((y[j1,k] + y[j0,k]) - \
-                       2. * polynomial(x, y[:,k], order/2.))
+        d[j] = -((y[j1] + y[j0]) - 2. * polynomial(x, y, order_2, n))
     return d
 
-def polynomial(x, y, z):
+def polynomial(x, y, z, n):
+    """used for interpolation
 
-    n = len(x)
-    t = n*[0]
+    @param x: the integer values from 0 through n-1 inclusive (but float64)
+    @type x: array of float64
+
+    @param y: a 2-D array, axis 0 of length n
+    @type y: array of float64
+
+    @param z: n / 2.
+    @type z: float
+
+    @param n: 1 + order of polynomial fit
+    @type n: int
+    """
+
+    t = n*[0.]
     for k in range(n):
         t[k] = y[k]
         for j in range(k-1, -1, -1):
-            t[j] = t[j+1] + (t[j+1]-t[j])/((z-x[j])/(z-x[k])-1.)
+            t[j] = t[j+1] + (t[j+1] - t[j]) / \
+                            ((z - x.item(j)) / (z - x.item(k)) - 1.)
     return t[0]
 
 if __name__ == "__main__":

@@ -1,8 +1,6 @@
 import os
 
-# import numarray (temporarily delete numpy option)
-import numarray as N
-FLOAT64 = N.Float64
+import numpy as N
 
 DEG_RAD = N.pi / 180.                   # degrees to radians
 ARCSEC_RAD = N.pi / (180.*3600.)        # arcseconds to radians
@@ -34,7 +32,7 @@ def radialVel (ra_targ, dec_targ, mjd):
     # Convert target position to rectangular coordinate unit vector.
     ra = ra_targ * DEG_RAD
     dec = dec_targ * DEG_RAD
-    target = N.zeros (3, dtype=FLOAT64)
+    target = N.zeros (3, dtype=N.float64)
     target[0] = N.cos (dec) * N.cos (ra)
     target[1] = N.cos (dec) * N.sin (ra)
     target[2] = N.sin (dec)
@@ -93,7 +91,7 @@ def earthVel (mjd):
 
     @return:  the velocity vector of the Earth around the Sun, in
         celestial coordinates
-    @rtype:  array object of type Float64 and shape (3,)
+    @rtype:  array object of type float64 and shape (3,)
     """
 
     # All angular values are in radians.
@@ -134,7 +132,7 @@ def earthVel (mjd):
                 radius * N.sin (eps) * N.cos (elong) * elong_dot
 
     # Convert to km/sec with Sun as origin.
-    velocity = N.zeros (3, dtype=FLOAT64)
+    velocity = N.zeros (3, dtype=N.float64)
     velocity[0] = -x_dot * KM_AU / SEC_DAY
     velocity[1] = -y_dot * KM_AU / SEC_DAY
     velocity[2] = -z_dot * KM_AU / SEC_DAY
@@ -162,11 +160,11 @@ def precess (mjd, target):
     @type target:  list, tuple, or array object
 
     @return:  the target vector (or matrix) precessed to mjd
-    @rtype:  array object of type Float64 and the same shape as target,
+    @rtype:  array object of type float64 and the same shape as target,
         i.e. either (3,) or (n,3)
     """
 
-    target_j2000 = N.array (target, dtype=FLOAT64)
+    target_j2000 = N.array (target, dtype=N.float64)
     target_mjd = target_j2000.copy()
 
     dt = (mjd - REFDATE) / 36525.
@@ -187,7 +185,7 @@ def precess (mjd, target):
     sin_theta = N.sin (theta)
 
     # Create the rotation matrix.
-    a = N.identity (3, dtype=FLOAT64)
+    a = N.identity (3, dtype=N.float64)
 
     a[0,0] =  cos_z * cos_theta * cos_zeta - sin_z * sin_zeta
     a[0,1] = -cos_z * cos_theta * sin_zeta - sin_z * cos_zeta
@@ -201,6 +199,11 @@ def precess (mjd, target):
     a[2,1] =         -sin_theta * sin_zeta
     a[2,2] =          cos_theta
 
-    target_mjd = N.matrixmultiply (a, target_j2000)
+    # Convert to a matrix object.
+    m_a = N.matrix (a)
 
-    return target_mjd
+    # The prefix "m_" indicates that the product is actually a matrix.
+    m_target_mjd = m_a * target_j2000
+
+    # Return a simple array (rather than a matrix).
+    return m_target_mjd.A[0]

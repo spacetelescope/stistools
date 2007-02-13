@@ -1,17 +1,21 @@
 import os
 import os.path
+import copy
 
 def expandFileName (filename):
     """Expand environment variable in a file name.
 
-If the input file name begins with either a Unix-style or IRAF-style
-environment variable (e.g. $lref/name_dqi.fits or lref$name_dqi.fits
-respectively), this routine expands the variable and returns a complete
-path name for the file.
+    If the input file name begins with either a Unix-style or IRAF-style
+    environment variable (e.g. $lref/name_dqi.fits or lref$name_dqi.fits
+    respectively), this routine expands the variable and returns a complete
+    path name for the file.
 
-argument:
-filename      a file name, possibly including an environment variable
-"""
+    @param filename:  a file name, possibly including an environment variable
+    @type filename:  string
+
+    @return:  the file name with environment variable expanded
+    @rtype:  string
+    """
 
     n = filename.find ("$")
     if n == 0:
@@ -52,18 +56,18 @@ def interpolate (x, values, xp):
 
     nvalues = len (values)
 
-    if nvalues == 1 or xp <= x[0]:
-        value = values[0]
-    elif xp >= x[nvalues-1]:
-        value = values[nvalues-1]
+    if nvalues == 1 or xp <= x.item(0):
+        value = copy.deepcopy (values[0])
+    elif xp >= x.item(nvalues-1):
+        value = copy.deepcopy (values[nvalues-1])
     else:
         # search for independent variable values that bracket the specified xp
         for i in range (nvalues-1):
-            x0 = x[i]
-            x1 = x[i+1]
+            x0 = x.item(i)
+            x1 = x.item(i+1)
             if xp >= x0 and xp <= x1:
                 if x0 == x1:
-                    value = values[i]
+                    value = copy.deepcopy (values[i])
                 else:
                     p = float (x1 - xp)
                     q = float (xp - x0)
