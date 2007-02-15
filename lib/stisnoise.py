@@ -4,10 +4,11 @@ import math
 
 import pyfits
 import numpy
+import numpy.fft as fft
 import convolve
 
 
-__version__ = '5.4 (2007-Feb-07)'
+__version__ = '5.4 (2007-Feb-15)'
 
 def _median(arg):
     return numpy.sort(arg)[arg.shape[0]/2]
@@ -28,8 +29,8 @@ def medianfilter(time_series, width):
 
 def wipefilter(time_series, image_type, sst, freqmin, freqmax, scale):
     ntime = time_series.shape[0]
-    # if ntime is an odd number the fft will take forever so make
-    # it even with a small prime factor sum (not as quick as power
+    # if ntime is a prime number the fft will take forever, so make
+    # it factorable with small prime factors (not as quick as power
     # of 2 but still much quicker).
     # Note that padding data out to next power of two is too much
     # padding (number of elements is just a bit over 2^20 for STIS
@@ -42,12 +43,12 @@ def wipefilter(time_series, image_type, sst, freqmin, freqmax, scale):
     t2[:ntime] = time_series
     freq  = numpy.arange(ntimep)/(ntimep*sst*1.0e-6)
     freq[ntimep/2+1:ntimep] = freq[1:ntimep/2][::-1]
-    tran  = convolve.fft.fft(t2)/len(t2)
+    tran  = fft.fft(t2)/len(t2)
     # apply filter
     ind   = numpy.nonzero((freq > freqmin)*(freq < freqmax))
     tran[ind] = tran[ind]*scale
     # inverse transform
-    time_series = convolve.fft.ifft(tran).real[:ntime+2]
+    time_series = fft.ifft(tran).real[:ntime+2]
     time_series *= time_series.shape[0]
     return time_series
 
@@ -62,8 +63,8 @@ def gauss(x, x0, dx, ymax):
 
 def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
     ntime = time_series.shape[0]
-    # if ntime is an odd number the fft will take forever so make
-    # it even with a small prime factor sum (not as quick as power
+    # if ntime is a prime number the fft will take forever, so make
+    # it factorable with small prime factors (not as quick as power
     # of 2 but still much quicker).
     # Note that padding data out to next power of two is too much
     # padding (number of elements is just a bit over 2^20 for STIS
@@ -76,7 +77,7 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
     t2[:ntime] = time_series
     freq  = numpy.arange(ntimep)/(ntimep*sst*1.0e-6)
     freq[ntimep/2+1:ntimep] = freq[1:ntimep/2][::-1]
-    tran  = convolve.fft.fft(t2)/len(t2)
+    tran  = fft.fft(t2)/len(t2)
     # apply filter
     filter = numpy.ones(ntimep, numpy.float64)
     ind   = numpy.nonzero((freq > (freqpeak-width/2.0)) * \
@@ -94,7 +95,7 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
     filterc = convolve.correlate(filter, kerny, convolve.SAME)
     tran  = tran*filterc
     # inverse transform
-    time_series = convolve.fft.ifft(tran).real[:ntime+2]
+    time_series = fft.ifft(tran).real[:ntime+2]
     time_series *= time_series.shape[0]
     return time_series
 
@@ -184,7 +185,7 @@ Python version:
     # 02/25/2002 JAV - version 5.2 added verbose option & output header
     #                  float type spec.
     # 05/21/2002 PEB - version 5.3 padded extra pixel with median of row.
-    # 02/07/2007 PEH - version 5.4 convert from numarray to numpy
+    # 02/15/2007 PEH - version 5.4 convert from numarray to numpy
 
     # Check filter options
     if ((boxcar > 0) + (wipe != None) + (window != None)) > 1:
@@ -302,7 +303,7 @@ Python version:
     time_series = time_series[:n_ts]
 
     # Perform FFT and return first half
-    fft_output = convolve.fft.fft(time_series)/len(time_series)
+    fft_output = fft.fft(time_series)/len(time_series)
     magnitude = numpy.abs(fft_output)[:n_ts/2]
     freq = numpy.arange(n_ts/2)/(n_ts*sst*1.0e-6)
     if dc == 1:
