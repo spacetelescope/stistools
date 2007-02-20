@@ -97,7 +97,7 @@ def mktrace(fname, tracecen=0.0, weights=None):
     w = N.zeros(1024)
     w[ind] = 1
 
-    X = N.arange(1024).astype(N.Float)
+    X = N.arange(1024).astype(N.float)
     sparams = linefit.linefit(X, trace1024, weights=w)
     rparams = linefit.linefit(X, interp_trace, weights=w)
     sciline = sparams[0] + sparams[1] * X
@@ -137,7 +137,7 @@ def interp(y,n):
     """
     m = float(len(y))
     x = N.arange(m)
-    i = N.arange(n,type=N.Float)
+    i = N.arange(n,type=N.float)
     xx = i * (m-1)/n
     xind=N.searchsorted(x,xx)-1
     yy=y[xind]+(xx-x[xind])*(y[xind+1]-y[xind])/(x[xind+1]-x[xind])
@@ -393,11 +393,11 @@ than the specified a2center
         """
 
         sizex,sizey = specimage.shape
-        smoytrace = N.zeros(sizey).astype(N.Float)
+        smoytrace = N.zeros(sizey).astype(N.float)
         for c in N.arange(sizey):
             col = specimage[:,c]
             col = col - N.median(col)
-            smcol = conv.boxcar(col, (3,)).astype(N.Float)
+            smcol = conv.boxcar(col, (3,)).astype(N.float)
             fit = gfit.gfit1d(smcol, quiet=1, maxiter=15)
             smoytrace[c] = fit.params[1]
 
