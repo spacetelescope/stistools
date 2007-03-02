@@ -21,20 +21,20 @@ Author (IDL): Linda Dressel
 Python version: Nadia Dencheva
 
 """
+import numerixenv
+numerixenv.check()
+
 import numpy as N
 import pyfits
 import os.path
-#from numarray import mlab as ml
-#from numarray import nd_image as ni
-#from numarray import convolve as conv
 import ndimage as ni
 import convolve as conv
 
 import gfit, linefit
 import fileutil as fu
 
-__version__ = '1.0'
-__vdate__ = '2006-10-25'
+__version__ = '1.1'
+__vdate__ = '2007-03-02'
 
 
 def mktrace(fname, tracecen=0.0, weights=None):
@@ -137,7 +137,7 @@ def interp(y,n):
     """
     m = float(len(y))
     x = N.arange(m)
-    i = N.arange(n,type=N.float)
+    i = N.arange(n,dtype=N.float)
     xx = i * (m-1)/n
     xind=N.searchsorted(x,xx)-1
     yy=y[xind]+(xx-x[xind])*(y[xind+1]-y[xind])/(x[xind+1]-x[xind])
