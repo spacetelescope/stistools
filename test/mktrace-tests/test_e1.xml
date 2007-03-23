@@ -1,0 +1,90 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE RegTest [
+<!ELEMENT RegTest    (title, taskname, pfile, level, output+,
+                      pre-exec?, post-exec?)>
+<!ELEMENT title      (#PCDATA)>
+<!ELEMENT taskname   (#PCDATA)>
+<!ELEMENT pfile      (#PCDATA)>
+<!ELEMENT level      (#PCDATA)>
+<!ELEMENT output     (val+)>
+<!ELEMENT val        (file, reference, comparator)>
+<!ELEMENT file       (#PCDATA)>
+<!ELEMENT reference  (#PCDATA)>
+<!ELEMENT comparator (#PCDATA)>
+<!ELEMENT pre-exec   (command*)>
+<!ELEMENT post-exec  (command*)>
+<!ELEMENT command    (#PCDATA)>
+]>
+
+<!--
+##
+## This test uses E1 aperture position and places the 
+## target near row 900. Originally there was a problem 
+## with the interpolated trace due to incorrect determination  
+## of the index of the trace inthe trace table.
+##
+-->
+
+<RegTest>
+
+<pre-exec>
+    <command>from pyraf.iraf import hst_calib</command>
+    <command>from pyraf.iraf import stis</command>
+    <command>iraf.delete('o*',ver=no,go_ahead=yes)</command>
+    <command>iraf.copy('orig/o8pp31020_crj.fits','.')</command>
+</pre-exec>
+
+<title>STIS: mktrace - E1 aperture</title>
+<taskname>mktrace</taskname>
+<pfile>mktrace_e1.par</pfile>
+<level>1</level>
+
+<output>
+  <val>
+    <comparator>ascii</comparator>
+    <file>STDOUT</file>
+    <reference>ref_e1.stdout</reference>
+    <ignore_wend>_msk.fits</ignore_wend>
+  </val>
+
+  <val>
+    <file>o8pp31020_crj_1dt.fits</file>
+    <reference>ref_o8pp31020_crj_1dt.fits</reference>
+    <comparator>image</comparator>	
+    <ignorekeys></ignorekeys>
+  </val>
+
+  <val>
+    <file>o8pp31020_crj_1dt_interp.fits</file>
+    <reference>ref_o8pp31020_crj_1dt_interp.fits</reference>
+    <comparator>image</comparator>	
+    <ignorekeys></ignorekeys>
+  </val>
+
+  <val>
+    <file>o8pp31020_crj_1dt_interpfit.fits</file>
+    <reference>ref_o8pp31020_crj_1dt_interpfit.fits</reference>
+    <comparator>image</comparator>	
+    <ignorekeys></ignorekeys>
+  </val>
+
+  <val>
+    <file>o8pp31020_crj_1dt_sci.fits</file>
+    <reference>ref_o8pp31020_crj_1dt_sci.fits</reference>
+    <comparator>image</comparator>	
+    <ignorekeys></ignorekeys>
+  </val>
+
+  <val>
+    <file>o8pp31020_crj_1dt_scifit.fits</file>
+    <reference>ref_o8pp31020_crj_1dt_scifit.fits</reference>
+    <comparator>image</comparator>	
+    <ignorekeys></ignorekeys>
+  </val>
+
+</output>
+
+<post-exec>
+</post-exec>
+
+</RegTest>

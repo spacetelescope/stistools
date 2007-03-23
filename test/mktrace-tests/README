@@ -1,0 +1,7 @@
+These tests use regtest to run but take a long time and there's no
+need to run them every day.
+
+If the tests fail, the scripts plot_results*.py can be run to 
+plot the differencies. The last plot (the generated one trace) 
+is in red.
+
