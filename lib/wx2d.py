@@ -6,7 +6,7 @@ import os.path
 import math
 
 import numpy as N
-from numarray import convolve
+import convolve
 
 import pyfits
 import gettable
