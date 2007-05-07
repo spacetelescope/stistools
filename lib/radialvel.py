@@ -1,5 +1,3 @@
-import os
-
 import numpy as N
 
 DEG_RAD = N.pi / 180.                   # degrees to radians
@@ -199,11 +197,12 @@ def precess (mjd, target):
     a[2,1] =         -sin_theta * sin_zeta
     a[2,2] =          cos_theta
 
-    # Convert to a matrix object.
+    # Convert to matrix objects.
     m_a = N.matrix (a)
+    m_target_j2000 = N.matrix (target_j2000)
 
     # The prefix "m_" indicates that the product is actually a matrix.
-    m_target_mjd = m_a * target_j2000
+    m_target_mjd = m_a * m_target_j2000.T
 
     # Return a simple array (rather than a matrix).
-    return m_target_mjd.A[0]
+    return m_target_mjd.T.A[0]
