@@ -30,8 +30,8 @@ def wx2d (input, output, wavelengths=None, helcorr="",
     @param wavelengths: name of the output file for wavelengths
     @type wavelengths: string, or None
 
-    @param helcorr": specify "perform" or "omit" to override header keyword
-    @type helcorr": string
+    @param helcorr: specify "perform" or "omit" to override header keyword
+    @type helcorr: string
 
     @param algorithm: "wavelet" or "kd"
     @type algorithm: string
