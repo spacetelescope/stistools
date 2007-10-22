@@ -21,7 +21,7 @@ Author (IDL): Linda Dressel
 Python version: Nadia Dencheva
 
 """
-import numerixenv
+from pytools import numerixenv
 numerixenv.check()
 
 import numpy as N
@@ -30,8 +30,8 @@ import os.path
 import ndimage as ni
 import convolve as conv
 
-import gfit, linefit
-import fileutil as fu
+from pytools import gfit, linefit
+from pytools import fileutil as fu
 
 __version__ = '1.1'
 __vdate__ = '2007-03-02'
