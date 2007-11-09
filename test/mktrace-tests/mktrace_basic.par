@@ -1,3 +1,0 @@
-input,s,a,"o45a03010_flt_crj.fits",,,"Input FITS files"
-tracecen,r,h,0.0,,,"Trace center"
-weights,s,h,"",,,"Weights for ranges of good and bad spectrum columns"
