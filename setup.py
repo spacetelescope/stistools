@@ -18,12 +18,12 @@ for a in args:
 setup(name = "stistools",
       version = "1.0.0",
       description = "Python Tools for STIS Data",
-      author = "Paul Barrett",
+      author = "Paul Barrett, Phil Hodge",
       author_email = "help@stsci.edu",
       license = "http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE",
       platforms = ["Linux","Solaris","Mac OS X","Win"],
-      py_modules = ['sshift', 'stisnoise', 'gettable', 'r_util', 'wavelen', 'evaldisp', 'radialvel', 'mktrace', 'wx2d'],
-      package_dir={'':'lib'},
+      packages = ['stistools'],
+      package_dir = {'stistools':'lib'}
       )
 
 
