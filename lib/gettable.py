@@ -141,10 +141,13 @@ def rotateTrace (trace_info, expstart):
         return
 
     # If these columns are not in the table, just return.
-    try:
+    names = []
+    for name in trace_info.names:
+        names.append (name.lower())
+    if "degperyr" in names and "mjd" in names:
         degperyr = trace_info.field ("degperyr")
         mjd = trace_info.field ("mjd")
-    except NameError:
+    else:
         return
 
     a2displ = trace_info.field ("a2displ")

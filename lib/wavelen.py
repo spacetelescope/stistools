@@ -96,11 +96,16 @@ def compute_wavelengths (shape, phdr, hdr, helcorr):
 
     apdes_info = gettable.getTable (apdestab, {"aperture": aperture},
                    exactly_one=True)
-    try:
+    # Check whether ANGLE is a column in this table.
+    names = []
+    for name in apdes_info.names:
+        names.append (name.lower())
+    if "angle" in names:
         angle = apdes_info.field ("angle")[0]
-    except NameError:
+    else:
         print "Warning:  Column ANGLE not found in", apdestab
         angle = REF_ANGLE
+    del names
 
     delta_tan = N.tan (angle * DEG_RAD) - N.tan (REF_ANGLE * DEG_RAD);
 
