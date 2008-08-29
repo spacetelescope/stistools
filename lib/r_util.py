@@ -26,11 +26,9 @@ def expandFileName (filename):
         # IRAF-style file name.
         temp = "$" + filename[0:n] + os.sep + filename[n+1:]
         filename = os.path.expandvars (temp)
-        # If filename contains "//", delete one of them.
+        # If filename contains "//", delete all of them.
         double_sep = os.sep + os.sep
-        i = filename.find (double_sep)
-        if i != -1:
-            filename = filename[:i+1] + filename[i+2:]
+        filename = filename.replace(double_sep,os.sep)
 
     return filename
 
