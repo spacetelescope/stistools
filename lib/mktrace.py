@@ -21,6 +21,7 @@ Author (IDL): Linda Dressel
 Python version: Nadia Dencheva
 
 """
+from __future__ import division # confidence high 
 from pytools import numerixenv
 numerixenv.check()
 
