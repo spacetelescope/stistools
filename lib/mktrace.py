@@ -22,8 +22,6 @@ Python version: Nadia Dencheva
 
 """
 from __future__ import division # confidence high 
-from pytools import numerixenv
-numerixenv.check()
 
 import numpy as N
 import pyfits
