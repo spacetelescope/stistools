@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+from __future__ import division         # confidence unknown
 import sys
 import os
 import os.path
@@ -13,7 +14,7 @@ import gettable
 import wavelen
 import r_util
 
-__version__ = "1.1 (2007 February 13)"
+__version__ = "1.2 (2010 April 27)"
 
 def wx2d (input, output, wavelengths=None, helcorr="",
           algorithm="wavelet",
@@ -354,7 +355,7 @@ def wavelet_resampling (hdu, img, errimg,
         err_tmp1 = N.maximum (tmp[1::2], minerr)
         err[0::2] = N.sqrt (2.*err_tmp0 / (err_tmp0 + err_tmp1)) * err5[::step]
         err[1::2] = N.sqrt (2.*err_tmp1 / (err_tmp0 + err_tmp1)) * err5[::step]
-        step /= 2
+        step //= 2
 
         sub5[::step] = tmp
         err5[::step] = err
@@ -603,7 +604,7 @@ def apply_trace (image, a2center, a2displ, subdiv,
 
     shape = image.shape
     x2d_shape = N.array (shape)
-    x2d_shape[0] /= subdiv
+    x2d_shape[0] //= subdiv
     if extname == "DQ":
         x2d = N.zeros (x2d_shape, dtype=N.int16)
     else:
@@ -717,7 +718,7 @@ def extract_err (image, locn, subdiv):
         for i in range (s_low, s_high+1):
             s_image = image.item(i,j)
             sum += s_image**2
-        sum /= (s_high - s_low + 1)
+        sum /= (s_high - s_low + 1.)
         spec[j] = math.sqrt (sum)
 
     return spec

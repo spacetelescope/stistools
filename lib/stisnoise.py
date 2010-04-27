@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import division         # confidence unknown
 import math
 
 import pyfits
@@ -8,17 +9,17 @@ import numpy.fft as fft
 import convolve
 
 
-__version__ = '5.4 (2007-Feb-15)'
+__version__ = '5.5 (2010-Apr-27)'
 
 def _median(arg):
-    return numpy.sort(arg)[arg.shape[0]/2]
+    return numpy.sort(arg)[arg.shape[0]//2]
 
 def medianfilter(time_series, width):
     tlen = time_series.shape[0]
     res = time_series.copy()
     res[:] = 0
     res[0] = time_series[0]
-    beg, end = width/2, (width+1)/2
+    beg, end = width//2, (width+1)//2
     for j in xrange(beg):
         res[j] = _median(time_series[:j+end])
     for j in xrange(beg, tlen-end):
@@ -42,8 +43,8 @@ def wipefilter(time_series, image_type, sst, freqmin, freqmax, scale):
     t2    = numpy.zeros(ntimep, numpy.float64)
     t2[:ntime] = time_series
     freq  = numpy.arange(ntimep)/(ntimep*sst*1.0e-6)
-    freq[ntimep/2+1:ntimep] = freq[1:ntimep/2][::-1]
-    tran  = fft.fft(t2)/len(t2)
+    freq[ntimep//2+1:ntimep] = freq[1:ntimep//2][::-1]
+    tran  = fft.fft(t2) / float(len(t2))
     # apply filter
     ind   = numpy.nonzero((freq > freqmin)*(freq < freqmax))
     tran[ind] = tran[ind]*scale
@@ -75,9 +76,9 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
         ntimep = ntime+7
     t2    = numpy.zeros(ntimep, numpy.float64)
     t2[:ntime] = time_series
-    freq  = numpy.arange(ntimep)/(ntimep*sst*1.0e-6)
-    freq[ntimep/2+1:ntimep] = freq[1:ntimep/2][::-1]
-    tran  = fft.fft(t2)/len(t2)
+    freq  = numpy.arange(ntimep, dtype=numpy.float64) / (ntimep*sst*1.0e-6)
+    freq[ntimep//2+1:ntimep] = freq[1:ntimep//2][::-1]
+    tran  = fft.fft(t2) / float(len(t2))
     # apply filter
     filter = numpy.ones(ntimep, numpy.float64)
     ind   = numpy.nonzero((freq > (freqpeak-width/2.0)) * \
@@ -90,8 +91,8 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
     if kernw%2 == 0:
         kernw = kernw+1          # make kernel odd
     kernx = numpy.arange(kernw)
-    kerny = gauss(kernx, kernw/2, sigma, 1.0)  # gaussian kernel
-    kerny = kerny/numpy.sum(kerny)
+    kerny = gauss(kernx, kernw/2., sigma, 1.0)  # gaussian kernel
+    kerny = kerny / float(numpy.sum(kerny))
     filterc = convolve.correlate(filter, kerny, convolve.SAME)
     tran  = tran*filterc
     # inverse transform
@@ -186,6 +187,9 @@ Python version:
     #                  float type spec.
     # 05/21/2002 PEB - version 5.3 padded extra pixel with median of row.
     # 02/15/2007 PEH - version 5.4 convert from numarray to numpy
+    # 04/27/2010 PEH - version 5.5 changed '/' to '//' for integer division;
+    #                  used explicit float() in some other cases.  Added:
+    #                  from __future__ import division
 
     # Check filter options
     if ((boxcar > 0) + (wipe != None) + (window != None)) > 1:
@@ -303,9 +307,9 @@ Python version:
     time_series = time_series[:n_ts]
 
     # Perform FFT and return first half
-    fft_output = fft.fft(time_series)/len(time_series)
-    magnitude = numpy.abs(fft_output)[:n_ts/2]
-    freq = numpy.arange(n_ts/2)/(n_ts*sst*1.0e-6)
+    fft_output = fft.fft(time_series) / float(len(time_series))
+    magnitude = numpy.abs(fft_output)[:n_ts//2]
+    freq = numpy.arange(n_ts//2, dtype=numpy.float64) / (n_ts*sst*1.0e-6)
     if dc == 1:
         # set first bin in power spectrum to zero if dc == 1
         magnitude[0] = 0

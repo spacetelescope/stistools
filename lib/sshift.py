@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from __future__ import division         # confidence unknown
+
+import pyfits
 
 """
 A Python module for aligning the spectra in different flat-fielded
@@ -9,9 +12,7 @@ POSTARG2 keyword is used to determine the number of rows to be
 shifted.
 """
 
-import pyfits
-
-__version__ = '1.4 (2004-Sep-21)'
+__version__ = '1.7 (2010-Apr-27)'
 
 def shiftimage(infile, outfile, shift=0):
 
@@ -156,6 +157,8 @@ Python version:
         if platescale is None:
             #platescale = phdr['PLATESC']
             platescale = 0.05077
+        else:
+            platescale = float(platescale)
         
         if phdr['FLATCORR'].upper() != 'COMPLETE':
             raise ValueError, \
@@ -225,7 +228,7 @@ Python version:
                 ishift = -int(dypos+0.5)
             if ishift % binaxis2:
                 raise ValueError, 'Non-integral pixel shift for binned data'
-            shifts.append(ishift/binaxis2)
+            shifts.append(ishift//binaxis2)
     
     #  Process each file using corresponding pixel shift.
     print 'input-file        pixel-shift'
