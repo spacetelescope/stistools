@@ -91,8 +91,8 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
     if kernw%2 == 0:
         kernw = kernw+1          # make kernel odd
     kernx = numpy.arange(kernw)
-    kerny = gauss(kernx, kernw/2., sigma, 1.0)  # gaussian kernel
-    kerny = kerny / float(numpy.sum(kerny))
+    kerny = gauss(kernx, kernw//2, sigma, 1.0)  # gaussian kernel
+    kerny = kerny/numpy.sum(kerny)
     filterc = convolve.correlate(filter, kerny, convolve.SAME)
     tran  = tran*filterc
     # inverse transform
