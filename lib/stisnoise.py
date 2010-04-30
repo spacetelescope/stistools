@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import division         # confidence unknown
+from __future__ import division         # confidence medium
 import math
 
 import pyfits

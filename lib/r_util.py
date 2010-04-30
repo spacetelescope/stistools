@@ -1,4 +1,4 @@
-from __future__ import division         # confidence unknown
+from __future__ import division         # confidence high
 import os
 import os.path
 import copy

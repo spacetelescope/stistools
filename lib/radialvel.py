@@ -1,4 +1,4 @@
-from __future__ import division         # confidence unknown
+from __future__ import division         # confidence high
 import numpy as N
 
 DEG_RAD = N.pi / 180.                   # degrees to radians

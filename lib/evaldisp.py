@@ -1,4 +1,4 @@
-from __future__ import division         # confidence unknown
+from __future__ import division         # confidence high
 
 def newton (x, coeff, cenwave, niter=4):
     """Return the wavelength corresponding to pixel x.
