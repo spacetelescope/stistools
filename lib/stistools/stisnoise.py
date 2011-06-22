@@ -6,7 +6,7 @@ import math
 import pyfits
 import numpy
 import numpy.fft as fft
-import convolve
+import stsci.convolve as convolve
 
 
 __version__ = '5.5 (2010-Apr-27)'

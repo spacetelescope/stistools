@@ -21,16 +21,15 @@ Author (IDL): Linda Dressel
 Python version: Nadia Dencheva
 
 """
-from __future__ import division # confidence high 
+from __future__ import division # confidence high
 
 import numpy as N
 import pyfits
 import os.path
-import ndimage as ni
-import convolve as conv
+import stsci.convolve as conv
 
-from pytools import gfit, linefit
-from pytools import fileutil as fu
+from stsci.tools import gfit, linefit
+from stsci.tools import fileutil as fu
 
 __version__ = '1.1'
 __vdate__ = '2007-03-02'
@@ -41,9 +40,9 @@ def mktrace(fname, tracecen=0.0, weights=None):
     Refine a stis spectroscopic trace.
     """
     #import time
-    
+
     #start=time.time()
-    
+
     try:
         hdulist = pyfits.open(fname)
     except IOError:
@@ -77,11 +76,11 @@ def mktrace(fname, tracecen=0.0, weights=None):
 
     #wind are weights indices in the image frame which may be a subarray
     wind = N.nonzero(wei)[0]
-    
+
     tr = Trace(fname, kwinfo)
     a2center, trace1024 = tr.generateTrace(data,kwinfo, tracecen=tracecen, wind=wind)
     #compute the full frame a2center
-    ffa2center = a2center*kwinfo['binaxis2'] 
+    ffa2center = a2center*kwinfo['binaxis2']
     tr_ind, a2disp_ind = tr.getTraceInd(ffa2center)
     #print 'tr_ind', tr_ind
     tr2 = tr.readTrace(tr_ind)
@@ -90,7 +89,7 @@ def mktrace(fname, tracecen=0.0, weights=None):
         interp_trace = trace_interp(tr1, tr2, ffa2center)
     else:
         interp_trace = tr2
-        
+
     #convert the weights array into full frame
     ind = N.nonzero(wei)[0] * kwinfo['binaxis1']
     w = N.zeros(1024)
@@ -101,7 +100,7 @@ def mktrace(fname, tracecen=0.0, weights=None):
     rparams = linefit.linefit(X, interp_trace, weights=w)
     sciline = sparams[0] + sparams[1] * X
     refline = rparams[0] + rparams[1] * X
-    
+
     deltaline = sciline - refline
 
     #create a complete trace similar to a row in a _1dt file
@@ -112,13 +111,13 @@ def mktrace(fname, tracecen=0.0, weights=None):
     tr._nelem = tr1['nelem']
     tr._pedigree = tr1['pedigree']
     tr._snr_thresh = tr1['snr_thresh']
-    
+
     tr.writeTrace(fname, sciline, refline, interp_trace, trace1024, tr_ind, a2disp_ind)
 
     #print 'time', time.time()-start
     #the minus sign is for consistency withthe way x2d reports the rotation
     print "Traces were rotated by %f degrees \n" % (-(sparams[1]-rparams[1])*180 / N.pi)
-    print 'trace is centered on row %f' % tr._a2center 
+    print 'trace is centered on row %f' % tr._a2center
     return tr
 
 
@@ -209,7 +208,7 @@ class Trace:
         self._a2center = None
         self._snr_thresh = None
         self._pedigree = None
-        self.sptrctabname = kwinfo['sptrctab'] 
+        self.sptrctabname = kwinfo['sptrctab']
         self.sptrctab = self.openTraceFile(fu.osfn(self.sptrctabname))
 
 
@@ -296,12 +295,12 @@ than the specified a2center
         hdulist.flush()
         hdulist.close()
 
-        #update SPTRCTAB keyword in the science file primary header 
+        #update SPTRCTAB keyword in the science file primary header
         hdulist = pyfits.open(fname, mode='update')
         hdr0 = hdulist[0].header
         hdr0['SPTRCTAB'] = newname
         hdulist.close()
-        
+
         #write out the fit to the interpolated trace ('_interpfit' file)
         refhdu = pyfits.PrimaryHDU(refline)
         refname=infile[0] + '_1dt_interpfit.' + infile[1]

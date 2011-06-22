@@ -7,7 +7,7 @@ import os.path
 import math
 
 import numpy as N
-import convolve
+import stsci.convolve as convolve
 
 import pyfits
 import gettable
