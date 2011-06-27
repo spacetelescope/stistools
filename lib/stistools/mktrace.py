@@ -27,6 +27,7 @@ import numpy as N
 import pyfits
 import os.path
 import stsci.convolve as conv
+import stsci.ndimage as ni
 
 from stsci.tools import gfit, linefit
 from stsci.tools import fileutil as fu
