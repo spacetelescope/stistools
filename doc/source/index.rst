@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to drizzlepac's documentation!
+Welcome to stistool's documentation!
 ========================================
 This package provides data processing tools for working with STIS data.
 
