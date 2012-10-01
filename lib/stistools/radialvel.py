@@ -17,15 +17,19 @@ def radialVel (ra_targ, dec_targ, mjd):
     just the negative of the component of the Earth's orbital velocity
     in the direction toward the target.
 
-    @param ra_targ:  right ascension of the target (degrees)
-    @type ra_targ:  float
-    @param dec_targ:  declination of the target (degrees)
-    @type dec_targ:  float
-    @param mjd:  Modified Julian Date at the time of observation
-    @type mjd:  float
+    Parameters
+    -----------
+    ra_targ : float
+        right ascension of the target (degrees)
+    dec_targ : float
+        declination of the target (degrees)
+    mjd : float
+        Modified Julian Date at the time of observation
 
-    @return:  the radial velocity in km/s
-    @rtype:  float
+    Returns
+    --------
+    radial_vel : float
+        the radial velocity in km/s
     """
 
     # Convert target position to rectangular coordinate unit vector.
@@ -57,40 +61,48 @@ def earthVel (mjd):
     the velocity of the Sun relative to the Earth, then we'll convert to
     km per sec and change the sign to get the velocity of the Earth.
 
+    Notes
+    -----
     We get the velocity of the Sun relative to the Earth as follows:
 
     The velocity in the ecliptic plane with the X-axis aligned with the
     radius vector is:
 
-      Vx = radius_dot,
-      Vy = radius * elong_dot,
-      Vz = 0
+      - Vx = radius_dot,
+      - Vy = radius * elong_dot,
+      - Vz = 0
 
-      radius is the radial distance from Earth to Sun
-      elong is the ecliptic longitude of the Sun
-      eps is the obliquity of the ecliptic
-      _dot means the time derivative
+    where:
+
+      - radius is the radial distance from Earth to Sun
+      - elong is the ecliptic longitude of the Sun
+      - eps is the obliquity of the ecliptic
+      - _dot means the time derivative
 
     Rotate in the XY-plane by elong to get the velocity in ecliptic
-    coordinates:
+    coordinates::
 
       radius_dot * cos (elong) - radius * elong_dot * sin (elong)
       radius_dot * sin (elong) + radius * elong_dot * cos (elong)
       0
 
     Rotate in the YZ-plane by eps to get the velocity in equatorial
-    coordinates:
+    coordinates::
 
        radius_dot * cos (elong) - radius * elong_dot * sin (elong)
-      (radius_dot * sin (elong) + radius * elong_dot * cos (elong)) * cos (eps)
-      (radius_dot * sin (elong) + radius * elong_dot * cos (elong)) * sin (eps)
+       (radius_dot * sin (elong) + radius * elong_dot * cos (elong)) * cos (eps)
+       (radius_dot * sin (elong) + radius * elong_dot * cos (elong)) * sin (eps)
 
-    @param mjd:  time, Modified Julian Date
-    @type mjd:  float
+    Parameters
+    ----------
+    mjd : float
+        time, Modified Julian Date
 
-    @return:  the velocity vector of the Earth around the Sun, in
-        celestial coordinates
-    @rtype:  array object of type float64 and shape (3,)
+    Returns
+    -------
+    vel :  ndarray
+        the velocity vector of the Earth around the Sun, in
+        celestial coordinates (shape=(3,),ndtype=float64)
     """
 
     # All angular values are in radians.
@@ -141,25 +153,35 @@ def earthVel (mjd):
 def precess (mjd, target):
     """Precess target coordinates from J2000 to the date mjd.
 
+    Notes
+    -----
     target can be a single vector, e.g. [x0, y0, z0], or it can be
-    a 2-D array; in the latter case, the shape should be (n,3):
+    a 2-D array; in the latter case, the shape should be (n,3)::
 
         target = [[x0, x1, x2, x3, x4],
                   [y0, y1, y2, y3, y4],
                   [z0, z1, z2, z3, z4]]
 
-    References:
-         IAU 1976:  Lieske, et al. 1976, Astron & Astrophys vol 58, p 1.;
-                    J.H. Lieske, 1979, Astron & Astrophys vol 73, 282-284.
+    The algorithm used in this function was based on [1]_ and [2]_.
 
-    @param mjd:  time, Modified Julian Date
-    @type mjd:  float
+    References
+    ----------
+    .. [1] Lieske, et al. 1976, Astron & Astrophys vol 58, p 1.
 
-    @param target:  unit vector pointing toward the target, J2000 coordinates
-    @type target:  list, tuple, or array object
+    .. [2] J.H. Lieske, 1979, Astron & Astrophys vol 73, 282-284.
 
-    @return:  the target vector (or matrix) precessed to mjd
-    @rtype:  array object of type float64 and the same shape as target,
+    Parameters
+    -----------
+    mjd : float
+        time, Modified Julian Date
+    target : array_like object
+        unit vector pointing toward the target, J2000 coordinates
+
+    Returns
+    -------
+    vector : ndarray
+        the target vector (or matrix) precessed to mjd as an
+        array object of type float64 and the same shape as target,
         i.e. either (3,) or (n,3)
     """
 

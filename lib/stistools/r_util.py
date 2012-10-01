@@ -11,11 +11,15 @@ def expandFileName (filename):
     respectively), this routine expands the variable and returns a complete
     path name for the file.
 
-    @param filename:  a file name, possibly including an environment variable
-    @type filename:  string
+    Parameters
+    -----------
+    filename : string
+        a file name, possibly including an environment variable
 
-    @return:  the file name with environment variable expanded
-    @rtype:  string
+    Returns
+    --------
+    fullname : string
+        the file name with environment variable expanded
     """
 
     n = filename.find ("$")
@@ -40,17 +44,20 @@ def interpolate (x, values, xp):
     value xp is outside the range of the array x, the first (or last)
     value in values will be returned.
 
-    @param x:  array of independent variable values
-    @type x:  a sequence object, e.g. an array, int or float
+    Parameters
+    -----------
+    x : a sequence object, e.g. an array, int or float
+        array of independent variable values
+    values :  a sequence object, e.g. an array (not character)
+        array of dependent variable values
+    xp : int or float
+        independent variable value at which to interpolate
 
-    @param values:  array of dependent variable values
-    @type values:  a sequence object, e.g. an array (not character)
+    Returns
+    -------
+    interp_vals : the same type as one element of values
+        linearly interpolated value
 
-    @param xp:  independent variable value at which to interpolate
-    @type xp:  int or float
-
-    @return:  linearly interpolated value
-    @rtype:  the same type as one element of values
     """
 
     nvalues = len (values)

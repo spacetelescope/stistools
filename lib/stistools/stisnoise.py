@@ -104,73 +104,64 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
 def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
               boxcar=0, wipe=None, window=None):
 
-    """
-Description:
+    """ Computes an FFT on STIS CCD frames to evaluate fixed pattern noise.
 
-    Computes an FFT on STIS CCD frames to evaluate fixed pattern
-    noise.  Fixed pattern noise is most obvious in a FFT of bias
+    Fixed pattern noise is most obvious in a FFT of bias
     frames.  Optional filtering to correct the fixed pattern noise is
     provided through keywords boxcar, wipe, and window.  Filtered data
     can be saved as an output file.
 
-Input:
+    Parameters
+    -----------
+    infile : string
+        STIS FITS file
+    exten : int, optional
+        fits extension to be read
+    dc : int, optional
+        the power in the first freq bin is set to zero for better
+        plotting of the power spectrum.
+    verbose : int, optional [Default: 1]
+        set to 0 if you do not want brief information about each image.
+    boxcar : int
+        width of boxcar smoothing to be applied.
+    wipe : ndarray
+        a 3-element array, specifying how to modify the data in
+        frequency space. If set, the image is converted to a 1-D time
+        series, fourier transformed to frequency space, modified, inverse
+        transformed back to time space, and converted back to a 2-D image.
+        The first and second elements specify the range in frequencies to
+        be scaled (in hz), and the third element specifies the scaling
+        factor (should be 0-1).
+    window : ndarray
+        a 3 element array, specifying how to modify the data in
+        frequency space.  The first element is the center of the window
+        (in hz). The second element is the width of the window (in hz).
+        The third element controls the tapering of the window - it is the
+        scale (in hz) of the tapering width.  Specifically, a square
+        bandstop is convolved with a gaussian having the FWHM given by the
+        third parameter.
+    outfile : string,optional
+        name of filtered image file
 
-    infile = STIS FITS file
+    Returns
+    -------
+    noise_terms : tuple of arrays
+        A tuple containing the arrays; namely, the arrays::
 
-Optional input (keywords):
+            freq  = frequency in power spectrum (hz)
+            magn  = magnitude in power spectrum
 
-    exten = fits extension to be read
+    Notes
+    ---------
+    Authors:
+      - Original algorithm: Thomas M. Brown (STScI)
+      - Python version: Paul Barrett (STScI)
 
-    dc    = the power in the first freq bin is set to zero for better
-    plotting of the power spectrum.
-
-    verbose = set to 0 if you do not want brief information about each
-    image.  Default is 1.
-
-    Filtering options:
-
-    boxcar = width of boxcar smoothing to be applied.
-
-    wipe   = a 3-element array, specifying how to modify the data in
-    frequency space. If set, the image is converted to a 1-D time
-    series, fourier transformed to frequency space, modified, inverse
-    transformed back to time space, and converted back to a 2-D image.
-    The first and second elements specify the range in frequencies to
-    be scaled (in hz), and the third element specifies the scaling
-    factor (should be 0-1).
-
-    window = a 3 element array, specifying how to modify the data in
-    frequency space.  The first element is the center of the window
-    (in hz). The second element is the width of the window (in hz).
-    The third element controls the tapering of the window - it is the
-    scale (in hz) of the tapering width.  Specifically, a square
-    bandstop is convolved with a gaussian having the FWHM given by the
-    third parameter.
-
-Output:
-
-    A tuple containing the arrays
-
-    freq  = frequency in power spectrum (hz)
-    magn  = magnitude in power spectrum
-
-Optional output (keyword):
-
-    outfile = filtered image
-
-Author:
-
-    Thomas M. Brown (STScI)
-
-Python version:
-
-    Paul Barrett (STScI)
-
-"""
+    """
 
     # history:
     # 11/5/2001  TMB - version 1.  Basic idea comes from ACS analysis software
-    #                  used for analyzing read noise 
+    #                  used for analyzing read noise
     #                  (dino.pro; W.J. McCann & G. Hartig)
     # 11/6/2001  TMB - version 2 added other amps, error checking
     # 11/6/2001  TMB - version 2.1 added check on sci ext
@@ -209,7 +200,7 @@ Python version:
     extname = fin[exten].header['EXTNAME']
     inimage = fin[exten].data
     himage  = fin[0].data
-    
+
     amp  = fin[0].header['CCDAMP']
     if verbose == 1:
         print 'Target: %s, Amp: %s, Gain: %d' % \
@@ -238,7 +229,7 @@ Python version:
         nc = nc0
     else:
         temp = inimage
-    
+
     # Translate frame so that it is in readout order
     if   amp == 'A':
         image = temp             # amp A data -> leave as is
@@ -299,7 +290,7 @@ Python version:
     elif amp == 'D':
         outimage = outimage[::-1,::-1]  # amp D data -> rotate by 180 degrees
 
-    # Trim vector to power of 2 for FFT 
+    # Trim vector to power of 2 for FFT
     # (this is the fastest fft calculation but it doesn't preserve all
     # data, as needed in scale routine above)
     p2 = int(math.log(nx*nr)/math.log(2))
@@ -320,5 +311,5 @@ Python version:
         fout.append(pyfits.PrimaryHDU(header=fin[0].header))
         fout.append(pyfits.ImageHDU(header=fin[1].header, data=outimage))
         fout.writeto(outfile)
-    
+
     return (freq, magnitude)

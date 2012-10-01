@@ -28,29 +28,30 @@ def getTable (table, filter, sortcol=None,
     matches the filter.  A warning will be printed if exactly_one is True
     but more than one row matches the filter.
 
-    @param table:  name of the reference table
-    @type table:  string
-
-    @param filter:  each key is a column name, and the corresponding value
+    Parameters
+    -----------
+    table : string
+        name of the reference table
+    filter : dict
+        each key is a column name, and the corresponding value
         is a possible table value in that column
-    @type filter:  dictionary
-
-    @param sortcol:  the name of a column on which to sort the table rows
+    sortcol : string
+        the name of a column on which to sort the table rows
         (if there is more than one matching row), or None to disable sorting
-    @type sortcol:  string
-
-    @param exactly_one:  set this to True if there must be one and only one
+    exactly_one : bool
+        set this to True if there must be one and only one
         matching row
-    @type exactly_one:  boolean
-
-    @param at_least_one:  set this to True if there must be at least one
+    at_least_one : bool
+        set this to True if there must be at least one
         matching row
-    @type at_least_one:  boolean
 
-    @return:  an array of the rows of the table that match the filter;
+    Returns
+    -------
+    match_rows : rec_array
+        an array of the rows of the table that match the filter;
         note that if only one row matches the filter, the function value
         will still be an array
-    @rtype:  record array (a pyfits table data object)
+
     """
 
     fd = pyfits.open (table, mode="readonly")
@@ -129,13 +130,14 @@ def sortrows (rowdata, sortcol, ascend=True):
 def rotateTrace (trace_info, expstart):
     """Rotate a2displ, if MJD and DEGPERYR are in the trace table.
 
-    @param trace_info:  an array of the relevant rows of the table;
+    Parameters
+    -----------
+    trace_info : rec_array
+        an array of the relevant rows of the table;
         the A2DISPL column will be modified in-place if the MJD and
         DEGPERYR columns are present
-    @type trace_info:  record array (a pyfits table data object)
-
-    @param expstart:  exposure start time (MJD)
-    @type expstart:  float
+    expstart : float
+        exposure start time (MJD)
     """
 
     if expstart < 0:

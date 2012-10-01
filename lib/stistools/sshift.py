@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-
-from __future__ import division         # confidence high
-
-import pyfits
-
 """
 A Python module for aligning the spectra in different flat-fielded
 images of an IMSET.  These files can then be combined with
@@ -11,6 +6,10 @@ along-the-slit dithering to reject hot pixels and cosmic rays.  The
 POSTARG2 keyword is used to determine the number of rows to be
 shifted.
 """
+from __future__ import division         # confidence high
+
+import pyfits
+
 
 __version__ = '1.7 (2010-Apr-27)'
 
@@ -22,7 +21,7 @@ new image extension to the output file.
 """
 
     fin  = pyfits.open(infile)           #  flat-fielded file
-    
+
     fout = pyfits.HDUList()              #  shifted flat-field file
     phdr = fin[0].header
     phdr.add_history('SSHIFT complete ...')
@@ -39,58 +38,46 @@ new image extension to the output file.
         else:
             image[:] = exten.data[:]
         fout.append(pyfits.ImageHDU(header=exten.header, data=image))
-    
+
     fout.writeto(outfile)
 
 
 def sshift(input, output=None, shifts=None, platescale=None,
            tolerance=None):
 
-    """
-Description:
+    """ Align spectra from different images of an imset.
 
-    Align spectra from different images of an imset.
-
-Input:
-
-    input = A list of input filenames.  These must be STIS flat-
+Parameters
+----------
+input : list
+    A list of input filenames.  These must be STIS flat-
     fielded (_flt) image FITS files.  This argument will accept a
     single filename or a list of filenames.
-
-Optional input (keywords):
-
-    shifts = A list of integers indicating the number of rows to shift
+shifts : list, optional
+    A list of integers indicating the number of rows to shift
     each image of each file in the cross-dispersion (Y-) direction.
-
-    platescale = The size of a pixel in arcseconds.  Used to convert
+platescale : float, optional
+    The size of a pixel in arcseconds.  Used to convert
     the value of the POSTARG2 keyword to pixels.
-
-    tolerance = The allowed difference between calculated shifts and
+tolerance : float, optional
+    The allowed difference between calculated shifts and
     integer pixel shifts (fraction of pixel).
 
-    help = this message.
-
-Output:
-
-    None
-
-Optional output (keywords):
-
-    output = A list of output filenames. The number of output
+Returns
+-------
+output : list, optional
+    A list of output filenames. The number of output
     filenames must match the number of input filenames.  If no output
     is given, then the _flt substring of the input file is replace by
     the _sfl substring to create an output file.  This option will
     accept a single filename or a list of filenames.
 
+Notes
+------
 Author:
+  - Paul Barrett (STScI)
 
-    Paul Barrett (STScI)
-
-Python version:
-
-    Paul Barrett (STScI)
-
-"""
+    """
 
     # History:
     # 2003/09/22  PEB - version 1.0
@@ -159,7 +146,7 @@ Python version:
             platescale = 0.05077
         else:
             platescale = float(platescale)
-        
+
         if phdr['FLATCORR'].upper() != 'COMPLETE':
             raise ValueError, \
                   'Input file has not been flat-fielded corrected.'
@@ -187,14 +174,14 @@ Python version:
         elif propaper != phdr['PROPAPER'] or opt_elem != phdr['OPT_ELEM'] or \
                  cenwave != phdr['CENWAVE']:
             raise ValueError, 'Different observing configurations have been used.'
-        
+
         #  Check that BINAXIS1 and BINAXIS2 are the same.
         if binaxis1 is None:
             binaxis1 = phdr['BINAXIS1']
             binaxis2 = phdr['BINAXIS2']
         elif binaxis1 != phdr['BINAXIS1'] or binaxis2 != phdr['BINAXIS2']:
             raise ValueError, 'Different binnings have been used.'
-        
+
         #  Check that all POSTARG1 values are the same (within reason).
         xpos  = phdr['POSTARG1']
         if xpos0 is None:
@@ -209,7 +196,7 @@ Python version:
             ypos0 = ypos
 
         yposs.append(ypos)
-    
+
     #  Check for non-integral POSTARG2 values and calculate array of
     #  pixel shifts.
     if shifts is None:
@@ -229,7 +216,7 @@ Python version:
             if ishift % binaxis2:
                 raise ValueError, 'Non-integral pixel shift for binned data'
             shifts.append(ishift//binaxis2)
-    
+
     #  Process each file using corresponding pixel shift.
     print 'input-file        pixel-shift'
     for infile, outfile, npixel in zip(input, output, shifts):

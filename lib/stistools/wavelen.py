@@ -14,21 +14,23 @@ SPEED_OF_LIGHT = 299792.458             # km / s
 def compute_wavelengths (shape, phdr, hdr, helcorr):
     """Compute a 2-D array of wavelengths, one value for each image pixel.
 
-    @param shape:  the number of rows and columns in the output image
-    @type shape:  tuple of two ints
+    Parameters
+    ----------
+    shape : tuple of two ints
+        the number of rows and columns in the output image
+    phdr :  pyfits Header object
+        primary header
+    hdr : pyfits Header object
+        extension header
+    helcorr : string
+        "PERFORM" if heliocentric correction should be done
 
-    @param phdr:  primary header
-    @type phdr:  pyfits Header object
-
-    @param hdr:  extension header
-    @type hdr:  pyfits Header object
-
-    @param helcorr:  "PERFORM" if heliocentric correction should be done
-    @type helcorr:  string
-
-    @return:  an array of wavelengths, of the same shape (nrows, ncols) as
+    Returns
+    -------
+    wavelengths : ndarray of float64
+        an array of wavelengths, of the same shape (nrows, ncols) as
         the output image
-    @rtype:  float64
+
     """
 
     REF_ANGLE = 0.315                           # degrees
@@ -136,18 +138,21 @@ def compute_wavelengths (shape, phdr, hdr, helcorr):
 def get_delta_offset1 (apdestab, aperture, ref_aper):
     """Get the incidence angle offset.
 
-    @param apdestab:  name of the aperture description table
-    @type apdestab:  string
-
-    @param aperture:  aperture (slit) name
-    @type aperture:  string
-
-    @param ref_aper:  name of the reference aperture, the one that was
+    Parameters
+    ----------
+    apdestab : string
+        name of the aperture description table
+    aperture : string
+        aperture (slit) name
+    ref_aper : string
+        name of the reference aperture, the one that was
         used to calculate the dispersion relation
-    @type ref_aper:  string
 
-    @return:  incidence angle offset in degrees
-    @rtype:  float
+    Returns
+    -------
+    angle : float
+        incidence angle offset in degrees
+
     """
 
     # Get the offset for the aperture that was used for the observation.
@@ -171,29 +176,25 @@ def adjust_disp (ncoeff, coeff, delta_offset1, shifta1, inang_info,
     correction, the offset from the SHIFTA1 keyword, and the tilt
     of the slit.  The coefficients will be modified in-place.
 
-    @param ncoeff:  number of dispersion coefficients
-    @type ncoeff:  int
+    Parameters
+    ----------
+    ncoeff : int
+        number of dispersion coefficients
+    coeff : ndarray of float64
+        array of dispersion coefficients, modified in-place
+    delta_offset1 : float
+        incidence angle offset in degrees
+    shifta1 : float
+        MSM offset (ref. pixels) in the dispersion direction
+    delta_tan : float
+        difference in tangents of slit angle and ref angle
+    delta_row : float
+        difference between current row number and CRPIX2
+    binaxis1 : float
+        binning factor in dispersion direction
+    inang_info : rec_array
+        rows from the incidence-angle table
 
-    @param coeff:  array of dispersion coefficients, modified in-place
-    @type coeff:  float64
-
-    @param delta_offset1:  incidence angle offset in degrees
-    @type delta_offset1:  float
-
-    @param shifta1:  MSM offset (ref. pixels) in the dispersion direction
-    @type shifta1:  float
-
-    @param delta_tan:  difference in tangents of slit angle and ref angle
-    @type delta_tan:  float
-
-    @param delta_row:  difference between current row number and CRPIX2
-    @type delta_row:  float
-
-    @param binaxis1:  binning factor in dispersion direction
-    @type binaxis1:  float
-
-    @param inang_info:  rows from the incidence-angle table
-    @type inang_info:  record array
     """
 
     iac_ncoeff1 = inang_info.field ("ncoeff1")[0]

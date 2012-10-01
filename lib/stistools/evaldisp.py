@@ -8,22 +8,23 @@ def newton (x, coeff, cenwave, niter=4):
     difference in wavelength of one Angstrom.  Note that the evalDisp
     in this file assumes that the grating is first order.
 
-    @param x:  a single pixel number or an array of pixel numbers
-    @type x:  float or array of Float64
-
-    @param coeff:  a list of eight elements containing the
+    Parameters
+    -----------
+    x : float or ndarray
+        a single pixel number or an array of pixel numbers
+    coeff : array_like object
+        a list of eight elements containing the
         dispersion coefficients as read from a STIS _dsp.fits table
-    @type coeff:  either a list of float or a numarray of Float64
+    cenwave : int or float
+        central wavelength, in Angstroms
+    niter : int
+        number of iterations
 
-    @param cenwave:  central wavelength, in Angstroms
-    @type cenwave:  int or float
-
-    @param niter:  number of iterations
-    @type niter:  int
-
-    @return:  a single wavelength or an array (numarray) of wavelengths,
+    Returns
+    -------
+    wavelength : float or ndarray
+        a single wavelength or an array (numarray) of wavelengths,
         in Angstroms
-    @rtype:  either a float or a numarray of Float64
     """
 
     wl = cenwave
@@ -41,33 +42,39 @@ def newton (x, coeff, cenwave, niter=4):
 def evalDisp (coeff, wl):
     """Return the pixel corresponding to wavelength wl.
 
-    The expression in the calstis code is:
+    Notes
+    -----
+    The expression in the calstis code is::
 
-    x = coeff[0] +
-        coeff[1] * m * wl +
-        coeff[2] * m**2 * wl**2 +
-        coeff[3] * m +
-        coeff[4] * wl +
-        coeff[5] * m**2 * wl +
-        coeff[6] * m * wl**2 +
-        coeff[7] * m**3 * wl**3
+      x = coeff[0] +
+          coeff[1] * m * wl +
+          coeff[2] * m**2 * wl**2 +
+          coeff[3] * m +
+          coeff[4] * wl +
+          coeff[5] * m**2 * wl +
+          coeff[6] * m * wl**2 +
+          coeff[7] * m**3 * wl**3
 
     This version of the function to evaluate the dispersion relation
     assumes that the grating is first order, i.e. m = 1.  The dispersion
     coefficients give one-indexed pixel coordinates (reference pixels),
     but this function converts to zero-indexed pixels.
 
-    @param coeff:  a list of eight elements containing the
+    Parameters
+    -----------
+    coeff : array_like object
+        a list of eight elements containing the
         dispersion coefficients as read from a STIS _dsp.fits table
-    @type coeff:  either a list of float or a numarray of Float64
 
-    @param wl:  a single wavelength or an array (numarray) of wavelengths,
+    wl : float or ndarray
+        a single wavelength or an array (numarray) of wavelengths,
         in Angstroms
-    @type wl:  either a float or a numarray of Float64
 
-    @return:  the pixel number (or array of pixel numbers) corresponding
+    Returns
+    --------
+    pix_number : float or ndarray
+        the pixel number (or array of pixel numbers) corresponding
         to the input wavelength(s); note that these are zero indexed
-    @rtype:  either a float or a numarray of Float64
     """
 
     c = [0., 0., 0., 0.]

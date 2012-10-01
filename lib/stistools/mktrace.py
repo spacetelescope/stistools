@@ -13,12 +13,17 @@ Refine a STIS trace table.
 - A new trace table is written to the current directory and
   the relevant keywords are updates in the header of the input file.
 
-Usage:
->>>import mktrace
->>>mktrace.mktrace('file.fits', [tracecen=509.4], [weights=[(x1,x2),(x3,x4)])
+:Usage:
 
-Author (IDL): Linda Dressel
-Python version: Nadia Dencheva
+Simple example of running mktrace on a STIS file named 'file.fits':
+  >>>import mktrace
+  >>>mktrace.mktrace('file.fits', [tracecen=509.4], [weights=[(x1,x2),(x3,x4)])
+
+
+:Authors:
+
+- Author (IDL): Linda Dressel
+- Python version: Nadia Dencheva
 
 """
 from __future__ import division # confidence high
@@ -182,7 +187,10 @@ def getKWInfo(hdr0, hdr1):
 
 
 class Trace:
-    """
+    """ Trace class for a crj or flt file.
+
+    Notes
+    -----
     tr=Trace(file)
     file is a crj or flt file.
 
@@ -234,10 +242,8 @@ class Trace:
 
     def getTraceInd(self, a2center):
         """
-
         Finds the first trace in the trace table whose A2CENTER is larger
-than the specified a2center
-
+        than the specified a2center
         """
         opt_ind = self.sptrctab.field('OPT_ELEM') == self._opt_elem
         cen_ind = self.sptrctab.field('CENWAVE') == self._cenwave
@@ -266,16 +272,18 @@ than the specified a2center
 
     def writeTrace(self, fname, sciline, refline, interp_trace, trace1024, tr_ind, a2disp_ind):
         """
+        The 'writeTrace' method performs the following steps:
 
-        Adds sciline-refline to all traces with the relevent OPT_ELEM,
-        CENWAVE and SPORDER.
-        Writes the new trace table to the current directory.
-        Updates the SPTRCTAB keyword in the header to point to the new table.
-        Writes out fits files with the
-        science trace - '_sci'
-        the fit to the science trace - '_scifit'
-        the interpolated trace - '_interp'
-        the linear fit to the interpolated trace - '_interpfit'
+          - Adds sciline-refline to all traces with the relevent OPT_ELEM,
+            CENWAVE and SPORDER.
+          - Writes the new trace table to the current directory.
+          - Updates the SPTRCTAB keyword in the header to point to the new table.
+          - Writes out fits files with the
+
+            - science trace - '_sci'
+            - the fit to the science trace - '_scifit'
+            - the interpolated trace - '_interp'
+            - the linear fit to the interpolated trace - '_interpfit'
 
         """
         fpath = fu.osfn(self.sptrctabname)
