@@ -13,6 +13,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   basic2d
+   calstis
    sshift
    stisnoise
    mktrace
@@ -29,6 +31,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
- 
- 

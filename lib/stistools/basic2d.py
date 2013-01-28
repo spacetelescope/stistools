@@ -1,11 +1,48 @@
 #! /usr/bin/env python
 
+"""
+Calibrate STIS data.
+
+Examples
+--------
+
+In Python without TEAL:
+
+>>> import stistools
+>>> stistools.basic2d.basic2d("o66p01020_raw.fits", verbose=True,
+...                           trailer="o66p01020.trl")
+
+In Python with TEAL:
+
+>>> from stistools import basic2d
+>>> from stsci.tools import teal
+>>> teal.teal("basic2d")
+
+In Pyraf:
+
+>>> import stistools
+>>> teal basic2d
+
+From command line::
+
+% ./basic2d.py -v -s o66p01020_raw.fits o66p01020_flt.fits
+% ./basic2d.py -r
+
+"""
+
 from __future__ import division         # confidence unknown
 import os
 import sys
 import getopt
 import glob
 import subprocess
+
+from stsci.tools import parseinput,teal
+
+__taskname__ = "basic2d"
+__version__ = "3.0"
+__vdate__ = "14-January-2013"
+__author__ = "Phil Hodge, STScI, January 2013."
 
 def main(args):
 
@@ -74,6 +111,107 @@ def basic2d(input, output=None, outblev=None,
            photcorr=True, statflag=True,
            darkscale="",
            trailer=None, print_version=False, print_revision=False):
+    """Perform basic 2-D calibration of STIS raw data.
+
+    Some calibration steps are relevant only for CCD or only for MAMA, and
+    since an output file of calstis or basic2d may be used as the input,
+    some steps may have already been done.  Most calibration steps will not
+    be done if they are not relevant or if they have already been done,
+    regardless of the value of the calibration switch (e.g. flatcorr).
+
+    Parameters
+    ----------
+    input: str
+        Name of the input raw file.
+
+    output: str or None
+        Name of the output file, or None (the default).  If None, the
+        output name will be constructed from the input name.
+
+    outblev: str or None
+        Name of the output text file for blev info, or None (the default).
+
+    verbose: bool
+        If True, calstis will print more info.
+
+    timestamps: bool
+        If True, calstis will print the date and time at various points
+        during processing.
+
+    dqicorr: bool
+        If True, update the DQ array.
+
+    blevcorr: bool
+        If True, subtract a bias level based on the overscan values.
+        (CCD only.)
+
+    doppcorr: bool
+        If True, convolve reference files (bpixtab, darkfile, flatfile)
+        as needed with the Doppler shift offset throughout the exposure,
+        if Doppler correction was done on-board.  (MAMA only, because
+        for the CCD Doppler correction is not done on-board.)
+
+    lorscorr: bool
+        If True, bin high-res data to lo-res.  (MAMA only.)
+
+    glincorr: bool
+        If True, correct for global non-linearity.  (MAMA only.)
+
+    lflgcorr: bool
+        If True, flag local non-linearity.  (MAMA only.)
+
+    biascorr: bool
+        If True, subtract the bias image.  (CCD only.)
+
+    darkcorr: bool
+        If True, subtract the dark image, scaled by the exposure time
+        and possibly also a temperature-dependent factor.
+
+    flatcorr: bool
+        If True, divide by the flat field image.
+
+    photcorr: bool
+        If True, determine the photometric parameters and populate keywords
+        PHOTFLAM, PHOTZPT, PHOTPLAM and PHOTBW.  (Imaging data only.)
+
+    statflag: bool
+        If True, compute statistics for image arrays and update keywords.
+
+    darkscale: str
+        This may be used to override the time and/or temperature dependent
+        scale factor that would normally be applied to the dark image
+        before subtracting from the raw data.  It's a string rather than
+        a float in order to accept a different scale factor for each
+        image set in the input data.  calstis reads the value or values
+        (separated by blanks) from the string, and if the value is greater
+        than zero, it will be used instead of the value determined from
+        the temperature and time.  (CCD or NUV-MAMA only.)
+
+    trailer: str or None
+        If specified (i.e. if not None), the standard output and standard
+        error will be written to this file instead of to the terminal.
+        Note, however, that if print_version or print_revision is
+        specified, the value will be printed to the terminal.
+
+    print_version: bool
+        If True, calstis will print the version number (a string) and
+        then return 0.
+
+    print_revision: bool
+        If True, calstis will print the full version string and then
+        return 0.
+
+    Returns
+    -------
+    status: int
+        0 is OK.
+        1 is returned if cs1.e (the calstis host executable) returned a
+        non-zero status.  If verbose is True, the value returned by cs1.e
+        will be printed.
+        2 is returned if the specified input file or files were not found,
+        or if there is a mismatch between the number of input, output,
+        and/or outblev files specified.
+    """
 
     if print_version:
         status = subprocess.call(["cs1.e", "--version"])
@@ -192,6 +330,37 @@ def basic2d(input, output=None, outblev=None,
         f_trailer.close()
 
     return cumulative_status
+
+#-------------------------#
+# Interfaces used by TEAL #
+#-------------------------#
+
+def getHelpAsString(fulldoc=True):
+    """Return documentation on the basic2d function."""
+    return basic2d.__doc__
+
+def run(configobj=None):
+    """TEAL interface for the basic2d function."""
+    basic2d(configobj["input"],
+            configobj["output"],
+            configobj["outblev"],
+            configobj["verbose"],
+            configobj["timestamps"],
+            configobj["dqicorr"],
+            configobj["blevcorr"],
+            configobj["doppcorr"],
+            configobj["lorscorr"],
+            configobj["glincorr"],
+            configobj["lflgcorr"],
+            configobj["biascorr"],
+            configobj["darkcorr"],
+            configobj["flatcorr"],
+            configobj["photcorr"],
+            configobj["statflag"],
+            configobj["darkscale"],
+            configobj["trailer"],
+            configobj["print_version"],
+            configobj["print_revision"])
 
 if __name__ == "__main__":
 
