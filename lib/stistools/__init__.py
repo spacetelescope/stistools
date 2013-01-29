@@ -1,14 +1,15 @@
-from __future__ import division         # confidence high
-__version__ = '1.0.0'
-
 try:
-    from stistools.svninfo import(__svn_version__, __full_svn_info__,
-                                  __setup_datetime__)
+    from stistools.svninfo import(__version__, __svn_revision__,
+                                  __svn_full_info__, __setup_datetime__)
 except ImportError:
-    pass
+    __version__ = '1.0.0'
+    __svn_revision__ = ''
+    __svn_full_info__ = ''
+    __setup_datetime__ = None
 
 import calstis
 import basic2d
+import x1d
 import mktrace
 import sshift
 import stisnoise

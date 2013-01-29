@@ -104,12 +104,12 @@ def prtOptions():
     print("  as the input file names).")
 
 def basic2d(input, output=None, outblev=None,
-           verbose=False, timestamps=False,
            dqicorr=True, blevcorr=True, doppcorr=True,
            lorscorr=True, glincorr=True, lflgcorr=True,
            biascorr=True, darkcorr=True, flatcorr=True,
            photcorr=True, statflag=True,
            darkscale="",
+           verbose=False, timestamps=False,
            trailer=None, print_version=False, print_revision=False):
     """Perform basic 2-D calibration of STIS raw data.
 
@@ -130,13 +130,6 @@ def basic2d(input, output=None, outblev=None,
 
     outblev: str or None
         Name of the output text file for blev info, or None (the default).
-
-    verbose: bool
-        If True, calstis will print more info.
-
-    timestamps: bool
-        If True, calstis will print the date and time at various points
-        during processing.
 
     dqicorr: bool
         If True, update the DQ array.
@@ -186,6 +179,13 @@ def basic2d(input, output=None, outblev=None,
         (separated by blanks) from the string, and if the value is greater
         than zero, it will be used instead of the value determined from
         the temperature and time.  (CCD or NUV-MAMA only.)
+
+    verbose: bool
+        If True, calstis will print more info.
+
+    timestamps: bool
+        If True, calstis will print the date and time at various points
+        during processing.
 
     trailer: str or None
         If specified (i.e. if not None), the standard output and standard
