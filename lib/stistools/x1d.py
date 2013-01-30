@@ -48,7 +48,7 @@ def main(args):
 
     if len(args) < 1:
         prtOptions()
-        print("At least a raw file name must be specified.")
+        print("At least an input file name must be specified.")
         sys.exit()
 
     try:

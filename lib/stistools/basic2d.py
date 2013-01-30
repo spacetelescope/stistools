@@ -344,8 +344,6 @@ def run(configobj=None):
     basic2d(configobj["input"],
             configobj["output"],
             configobj["outblev"],
-            configobj["verbose"],
-            configobj["timestamps"],
             configobj["dqicorr"],
             configobj["blevcorr"],
             configobj["doppcorr"],
@@ -358,6 +356,8 @@ def run(configobj=None):
             configobj["photcorr"],
             configobj["statflag"],
             configobj["darkscale"],
+            configobj["verbose"],
+            configobj["timestamps"],
             configobj["trailer"],
             configobj["print_version"],
             configobj["print_revision"])
