@@ -58,8 +58,8 @@ def main(args):
         prtOptions()
         sys.exit()
 
-    outroot = None
-    wavecal = None
+    outroot = ""
+    wavecal = ""
     verbose = False
     timestamps = False
     savetmp = False
@@ -111,9 +111,9 @@ def prtOptions():
     print("An output directory (include a trailing '/') or a root name for")
     print("  the output files may be specified.")
 
-def calstis(input, wavecal=None, outroot=None, savetmp=False,
+def calstis(input, wavecal="", outroot="", savetmp=False,
             verbose=False, timestamps=False,
-            trailer=None, print_version=False, print_revision=False):
+            trailer="", print_version=False, print_revision=False):
     """Calibrate STIS data.
 
     Parameters
@@ -121,13 +121,13 @@ def calstis(input, wavecal=None, outroot=None, savetmp=False,
     input: str
         Name of the input raw file.
 
-    wavecal: str or None
-        Name of the input wavecal file, or None (the default).  This is
+    wavecal: str
+        Name of the input wavecal file, or "" (the default).  This is
         only needed if the name is not the "normal" name
         (rootname_wav.fits).
 
-    outroot: str or None
-        Root name for the output files, or None (the default).  This can
+    outroot: str
+        Root name for the output files, or "" (the default).  This can
         be a directory name, in which case the string must end in '/'.
 
     savetmp: bool
@@ -140,12 +140,12 @@ def calstis(input, wavecal=None, outroot=None, savetmp=False,
         If True, calstis will print the date and time at various points
         during processing.
 
-    trailer: str or None
-        If specified (i.e. if not None), the standard output and standard
-        error will be written to this file instead of to the terminal.
-        Note, however, that if print_version or print_revision is
-        specified, the value will be printed to the terminal, and any
-        name given for the trailer will be ignored.
+    trailer: str
+        If specified, the standard output and standard error will be
+        written to this file instead of to the terminal.  Note, however,
+        that if print_version or print_revision is specified, the value
+        will be printed to the terminal, and any name given for the
+        trailer will be ignored.
 
     print_version: bool
         If True, calstis will print the version number (a string) and
@@ -187,10 +187,10 @@ def calstis(input, wavecal=None, outroot=None, savetmp=False,
         print("No file name matched the string '%s'" % input)
         return 2
 
-    if trailer is None:
-        f_trailer = None
-    else:
+    if trailer:
         f_trailer = open(trailer, "w")
+    else:
+        f_trailer = None
 
     for infile in infiles:
 
@@ -202,9 +202,9 @@ def calstis(input, wavecal=None, outroot=None, savetmp=False,
         if savetmp:
             arglist.append("-s")
         arglist.append(infile)
-        if outroot is not None:
+        if outroot:
             arglist.append(outroot)
-        if wavecal is not None:
+        if wavecal:
             arglist.append("-w")
             arglist.append("%s" % wavecal)
 

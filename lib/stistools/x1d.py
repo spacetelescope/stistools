@@ -58,7 +58,7 @@ def main(args):
         prtOptions()
         sys.exit()
 
-    output = None
+    output = ""
     verbose = False
     timestamps = False
 
@@ -102,7 +102,7 @@ def prtOptions():
     print("One or more output file names may be specified (the same number")
     print("  as the input file names).")
 
-def x1d(input, output=None,
+def x1d(input, output="",
         backcorr=True, ctecorr=True, dispcorr=True,
         helcorr=True, fluxcorr=True,
         sporder=None, a2center=None, maxsrch=None,
@@ -110,7 +110,7 @@ def x1d(input, output=None,
         bk1size=None, bk2size=None, bk1offst=None, bk2offst=None, bktilt=None,
         backord=None, bksmode="median", bksorder=3,
         blazeshift=None, algorithm="unweighted", xoffset=None,
-        verbose=False, timestamps=False, trailer=None,
+        verbose=False, timestamps=False, trailer="",
         print_version=False, print_revision=False):
     """Extract a 1-D spectrum from an flt or crj file.
 
@@ -119,9 +119,9 @@ def x1d(input, output=None,
     input: str
         Name of the input raw file.
 
-    output: str or None
-        Name of the output file, or None (the default).  If None, the
-        output name will be constructed from the input name.
+    output: str
+        Name of the output file, or "" (the default).  If no name was
+        specified, the output name will be constructed from the input name.
 
     backcorr: bool
         If True, subtract the background.
@@ -195,11 +195,12 @@ def x1d(input, output=None,
         If True, calstis will print the date and time at various points
         during processing.
 
-    trailer: str or None
-        If specified (i.e. if not None), the standard output and standard
-        error will be written to this file instead of to the terminal.
-        Note, however, that if print_version or print_revision is
-        specified, the value will be printed to the terminal.
+    trailer: str
+        If specified, the standard output and standard error will be
+        written to this file instead of to the terminal.  Note, however,
+        that if print_version or print_revision is specified, the value
+        will be printed to the terminal, and any name given for the
+        trailer will be ignored.
 
     print_version: bool
         If True, calstis will print the version number (a string) and

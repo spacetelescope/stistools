@@ -58,8 +58,8 @@ def main(args):
         prtOptions()
         sys.exit()
 
-    output = None
-    outblev = None
+    output = ""
+    outblev = ""
     verbose = False
     timestamps = False
 
@@ -103,14 +103,14 @@ def prtOptions():
     print("One or more output file names may be specified (the same number")
     print("  as the input file names).")
 
-def basic2d(input, output=None, outblev=None,
+def basic2d(input, output="", outblev="",
            dqicorr=True, blevcorr=True, doppcorr=True,
            lorscorr=True, glincorr=True, lflgcorr=True,
            biascorr=True, darkcorr=True, flatcorr=True,
            photcorr=True, statflag=True,
            darkscale="",
            verbose=False, timestamps=False,
-           trailer=None, print_version=False, print_revision=False):
+           trailer="", print_version=False, print_revision=False):
     """Perform basic 2-D calibration of STIS raw data.
 
     Some calibration steps are relevant only for CCD or only for MAMA, and
@@ -124,12 +124,12 @@ def basic2d(input, output=None, outblev=None,
     input: str
         Name of the input raw file.
 
-    output: str or None
-        Name of the output file, or None (the default).  If None, the
-        output name will be constructed from the input name.
+    output: str
+        Name of the output file, or "" (the default).  If no name was
+        specified, the output name will be constructed from the input name.
 
-    outblev: str or None
-        Name of the output text file for blev info, or None (the default).
+    outblev: str
+        Name of the output text file for blev info, or "" (the default).
 
     dqicorr: bool
         If True, update the DQ array.
@@ -187,11 +187,12 @@ def basic2d(input, output=None, outblev=None,
         If True, calstis will print the date and time at various points
         during processing.
 
-    trailer: str or None
-        If specified (i.e. if not None), the standard output and standard
-        error will be written to this file instead of to the terminal.
-        Note, however, that if print_version or print_revision is
-        specified, the value will be printed to the terminal.
+    trailer: str
+        If specified, the standard output and standard error will be
+        written to this file instead of to the terminal.  Note, however,
+        that if print_version or print_revision is specified, the value
+        will be printed to the terminal, and any name given for the
+        trailer will be ignored.
 
     print_version: bool
         If True, calstis will print the version number (a string) and

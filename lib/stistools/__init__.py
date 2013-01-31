@@ -9,6 +9,7 @@ except ImportError:
 
 import calstis
 import basic2d
+import ocrreject
 import x1d
 import mktrace
 import sshift
