@@ -27,7 +27,6 @@ From command line::
 
 % ./calstis.py -v -s o66p01020_raw.fits out/
 % ./calstis.py -r
-
 """
 
 from __future__ import division         # confidence unknown

@@ -27,7 +27,6 @@ From command line::
 
 % ./basic2d.py -v -s o66p01020_raw.fits o66p01020_flt.fits
 % ./basic2d.py -r
-
 """
 
 from __future__ import division         # confidence unknown

@@ -27,7 +27,6 @@ From command line::
 
 % ./x1d.py -v o66p01020_flt.fits o66p01020_x1d.fits
 % ./x1d.py -r
-
 """
 
 from __future__ import division         # confidence unknown
