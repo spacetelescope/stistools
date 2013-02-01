@@ -235,25 +235,25 @@ def basic2d(input, output="", outblev="",
         print("No file name matched the string '%s'" % input)
         return 2
 
-    if output is None:
-        outfiles = None
-    else:
+    if output:
         outfiles = []
         output1 = output.split()
         for out1 in output1:
             output2 = out1.split(",")
             for out2 in output2:
                 outfiles.append(out2)
-
-    if outblev is None:
-        outblev_txt = None
     else:
+        outfiles = None
+
+    if outblev:
         outblev_txt = []
         outblev1 = outblev.split()
         for out1 in outblev1:
             outblev2 = out1.split(",")
             for out2 in outblev2:
                 outblev_txt.append(out2)
+    else:
+        outblev_txt = None
 
     same_length = True          # optimistic initial value
     n_infiles = len(infiles)

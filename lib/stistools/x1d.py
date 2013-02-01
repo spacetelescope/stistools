@@ -243,15 +243,15 @@ def x1d(input, output="",
         print("No file name matched the string '%s'" % input)
         return 2
 
-    if output is None:
-        outfiles = None
-    else:
+    if output:
         outfiles = []
         output1 = output.split()
         for out1 in output1:
             output2 = out1.split(",")
             for out2 in output2:
                 outfiles.append(out2)
+    else:
+        outfiles = None
 
     n_infiles = len(infiles)
     if outfiles and len(outfiles) != n_infiles:
