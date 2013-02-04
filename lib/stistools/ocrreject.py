@@ -9,7 +9,7 @@ Examples
 In Python without TEAL:
 
 >>> import stistools
->>> stistools.ocrreject.ocrreject("o3tt02020_raw.fits",
+>>> stistools.ocrreject.ocrreject("o3tt02020_flt.fits",
 ...     "o3tt02020_crj.fits", verbose=True, trailer="o3tt02020.trl")
 
 In Python with TEAL:

@@ -1,4 +1,4 @@
-_task_name_ = string_kw(default="calstis")
+_task_name_ = string_kw(default="ocrreject")
 input = string_kw(default="", comment="Input file or files")
 output = string_kw(default=None, comment="Output file name")
 all = boolean_kw(default=True, comment="Combine all input files to one output file?")
