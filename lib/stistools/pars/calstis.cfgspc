@@ -1,0 +1,11 @@
+_task_name_ = string_kw(default="calstis")
+input = string_kw(default="", comment="Input raw file")
+wavecal = string_kw(default=None, comment="Wavecal file, if not the default name")
+outroot = string_kw(default=None, comment="Output root, e.g. directory")
+savetmp = boolean_kw(default=False, comment="Save temporary files?")
+verbose = boolean_kw(default=False, comment="Print more info?")
+timestamps = boolean_kw(default=False, comment="Print time stamps?")
+trailer = string_kw(default=None, comment="Output trailer file")
+print_version = boolean_kw(default=False, comment="Print version number?")
+print_revision = boolean_kw(default=False, comment="Print full version string?")
+[ _RULES_ ]
