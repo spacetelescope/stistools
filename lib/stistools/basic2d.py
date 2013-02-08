@@ -1,7 +1,16 @@
 #! /usr/bin/env python
 
+from __future__ import division         # confidence unknown
+import os
+import sys
+import getopt
+import glob
+import subprocess
+
+from stsci.tools import parseinput,teal
+
 """
-Calibrate STIS data.
+Perform basic 2-D calibration of STIS data.
 
 Examples
 --------
@@ -28,15 +37,6 @@ From command line::
 % ./basic2d.py -v -s o66p01020_raw.fits o66p01020_flt.fits
 % ./basic2d.py -r
 """
-
-from __future__ import division         # confidence unknown
-import os
-import sys
-import getopt
-import glob
-import subprocess
-
-from stsci.tools import parseinput,teal
 
 __taskname__ = "basic2d"
 __version__ = "3.0"
@@ -69,9 +69,9 @@ def main(args):
         if options[i][0] == "-r":
             status = subprocess.call(["cs1.e", "-r"])
             return 0
-        elif options[i][0] == "-v":
+        if options[i][0] == "-v":
             verbose = True
-        elif options[i][0] == "-t":
+        if options[i][0] == "-t":
             timestamps = True
 
     nargs = len(pargs)
@@ -268,10 +268,12 @@ def basic2d(input, output="", outblev="",
     if not same_length:
         return 2
 
-    if trailer is None:
-        f_trailer = None
-    else:
+    if trailer:
         f_trailer = open(trailer, "w")
+        fd_trailer = f_trailer.fileno()
+    else:
+        f_trailer = None
+        fd_trailer = None
 
     for (i, infile) in enumerate(infiles):
 
@@ -285,9 +287,9 @@ def basic2d(input, output="", outblev="",
             arglist.append("%s" % darkscale)
 
         arglist.append(infile)
-        if outfiles is not None:
+        if outfiles:
             arglist.append(outfiles[i])
-        if outblev_txt is not None:
+        if outblev_txt:
             arglist.append(outblev_txt[i])
 
         if dqicorr:
@@ -314,17 +316,14 @@ def basic2d(input, output="", outblev="",
             arglist.append("-stat")
 
         if verbose:
-            print("'%s'" % str(arglist))
             print("Running basic2d on %s" % infile)
-        if f_trailer is None:           # no trailer file
-            status = subprocess.call(arglist)
-        else:
-            status = subprocess.call(arglist, stdout=f_trailer.fileno(),
-                                     stderr=subprocess.STDOUT)
-            if status:
-                cumulative_status = 1
-                if verbose:
-                    print("Warning:  status = %d" % status)
+            print("  '%s'" % str(arglist))
+        status = subprocess.call(arglist, stdout=fd_trailer,
+                                 stderr=subprocess.STDOUT)
+        if status:
+            cumulative_status = 1
+            if verbose:
+                print("Warning:  status = %d" % status)
 
     if f_trailer is not None:
         f_trailer.close()

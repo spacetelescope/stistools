@@ -1,6 +1,6 @@
 _task_name_ = string_kw(default="x1d")
 input = string_kw(default="", comment="Input flt or crj file")
-output = string_kw(default=None, comment="Output file")
+output = string_kw(default="", comment="Output file")
 backcorr = boolean_kw(default=True, comment="Subtract background?")
 ctecorr = boolean_kw(default=True, comment="Apply CTE correction to flux?")
 dispcorr = boolean_kw(default=True, comment="Compute wavelengths?")
@@ -24,7 +24,7 @@ algorithm = string_kw(default="unweighted", comment="Extraction algorithm (unwei
 xoffset = float_or_none_kw(default=None, comment="Offset in X for slitless extraction")
 verbose = boolean_kw(default=False, comment="Print more info?")
 timestamps = boolean_kw(default=False, comment="Print time stamps?")
-trailer = string_kw(default=None, comment="Output trailer file")
+trailer = string_kw(default="", comment="Output trailer file")
 print_version = boolean_kw(default=False, comment="Print version number?")
 print_revision = boolean_kw(default=False, comment="Print full version string?")
 [_RULES_]

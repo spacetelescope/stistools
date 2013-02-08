@@ -1,5 +1,14 @@
 #! /usr/bin/env python
 
+from __future__ import division         # confidence unknown
+import os
+import sys
+import getopt
+import glob
+import subprocess
+
+from stsci.tools import parseinput,teal
+
 """
 Calibrate STIS data.
 
@@ -28,15 +37,6 @@ From command line::
 % ./ocrreject.py -v -s o3tt02020_flt.fits o3tt02020_crj.fits
 % ./ocrreject.py -r
 """
-
-from __future__ import division         # confidence unknown
-import os
-import sys
-import getopt
-import glob
-import subprocess
-
-from stsci.tools import parseinput,teal
 
 __taskname__ = "ocrreject"
 __version__ = "3.0"
@@ -96,8 +96,6 @@ def prtOptions():
     print("Following the options, list one or more input files")
     print("  (enclosed in quotes if more than one file name is specified")
     print("  and/or if wildcards are used) and one output file name.")
-    print("One or more output file names may be specified (the same number")
-    print("  as the input file names).")
 
 def ocrreject(input, output,
               all=True, crrejtab="", scalense="", initgues="",
@@ -244,8 +242,10 @@ def ocrreject(input, output,
 
     if trailer:
         f_trailer = open(trailer, "w")
+        fd_trailer = f_trailer.fileno()
     else:
         f_trailer = None
+        fd_trailer = None
 
     optional_args = []
     if crrejtab:
@@ -272,14 +272,15 @@ def ocrreject(input, output,
     if badinpdq:
         optional_args.append("-pdq")
         optional_args.append("%d" % badinpdq)
-    if crmask == "yes":
-        optional_args.append("-crmask")
-        optional_args.append("yes")
-    elif crmask == "no":
-        optional_args.append("-crmask")
-        optional_args.append("no")
-    elif crmask != "":
-        raise RuntimeError("crmask = %s, must be yes or no." % crmask)
+    if crmask:
+        if crmask == "yes":
+            optional_args.append("-crmask")
+            optional_args.append("yes")
+        elif crmask == "no":
+            optional_args.append("-crmask")
+            optional_args.append("no")
+        else:
+            raise RuntimeError("crmask = %s, must be yes or no." % crmask)
 
     if all:
         arglist = ["cs2.e"]
@@ -301,13 +302,10 @@ def ocrreject(input, output,
             print("'%s'" % str(arglist))
             print("Running ocrreject on %s" % infilestr)
         del(infilestr)
-        if f_trailer is None:           # no trailer file
-            status = subprocess.call(arglist)
-        else:
-            status = subprocess.call(arglist, stdout=f_trailer.fileno(),
-                                     stderr=subprocess.STDOUT)
-            if status and verbose:
-                print("Warning:  status = %d" % status)
+        status = subprocess.call(arglist, stdout=fd_trailer,
+                                 stderr=subprocess.STDOUT)
+        if status and verbose:
+            print("Warning:  status = %d" % status)
         cumulative_status = status
 
     else:
@@ -324,17 +322,14 @@ def ocrreject(input, output,
             arglist.extend(optional_args)
 
         if verbose:
-            print("'%s'" % str(arglist))
             print("Running ocrreject on %s" % infile)
-        if f_trailer is None:           # no trailer file
-            status = subprocess.call(arglist)
-        else:
-            status = subprocess.call(arglist, stdout=f_trailer.fileno(),
-                                     stderr=subprocess.STDOUT)
-            if status:
-                cumulative_status = 1
-                if verbose:
-                    print("Warning:  status = %d" % status)
+            print("  '%s'" % str(arglist))
+        status = subprocess.call(arglist, stdout=fd_trailer,
+                                 stderr=subprocess.STDOUT)
+        if status:
+            cumulative_status = 1
+            if verbose:
+                print("Warning:  status = %d" % status)
 
     if f_trailer is not None:
         f_trailer.close()

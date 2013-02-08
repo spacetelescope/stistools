@@ -10,7 +10,7 @@ import subprocess
 from stsci.tools import parseinput,teal
 
 """
-Extract 1-D spectrum.
+Rectify 2-D STIS spectral data.
 
 Examples
 --------
@@ -18,27 +18,27 @@ Examples
 In Python without TEAL:
 
 >>> import stistools
->>> stistools.x1d.x1d("o66p01020_flt.fits", output="test_x1d.fits",
+>>> stistools.x2d.x2d("o66p01020_flt.fits", output="test_x2d.fits",
 ...                   verbose=True, trailer="o66p01020.trl")
 
 In Python with TEAL:
 
->>> from stistools import x1d
+>>> from stistools import x2d
 >>> from stsci.tools import teal
->>> teal.teal("x1d")
+>>> teal.teal("x2d")
 
 In Pyraf:
 
 >>> import stistools
->>> teal x1d
+>>> teal x2d
 
 From command line::
 
-% ./x1d.py -v o66p01020_flt.fits o66p01020_x1d.fits
-% ./x1d.py -r
+% ./x2d.py -v o66p01020_flt.fits o66p01020_x2d.fits
+% ./x2d.py -r
 """
 
-__taskname__ = "x1d"
+__taskname__ = "x2d"
 __version__ = "3.0"
 __vdate__ = "14-January-2013"
 __author__ = "Phil Hodge, STScI, January 2013."
@@ -58,15 +58,16 @@ def main(args):
         sys.exit()
 
     output = ""
+    blazeshift = None
     verbose = False
     timestamps = False
 
     for i in range(len(options)):
         if options[i][0] == "--version":
-            status = subprocess.call(["cs6.e", "--version"])
+            status = subprocess.call(["cs7.e", "--version"])
             return 0
         if options[i][0] == "-r":
-            status = subprocess.call(["cs6.e", "-r"])
+            status = subprocess.call(["cs7.e", "-r"])
             return 0
         if options[i][0] == "-v":
             verbose = True
@@ -81,7 +82,7 @@ def main(args):
     if nargs == 2:
         output = pargs[1]
 
-    status = x1d(input, output=output,
+    status = x2d(input, output=output,
                  verbose=verbose, timestamps=timestamps)
 
     sys.exit(status)
@@ -95,23 +96,18 @@ def prtOptions():
     print("  -v (verbose)")
     print("  -t (print timestamps)")
     print("")
-    print("Following the options, list one or more flt or crj file names,")
+    print("Following the options, list one or more input file names,")
     print("  enclosed in quotes if more than one file name is specified")
     print("  and/or if wildcards are used.")
     print("One or more output file names may be specified (the same number")
     print("  as the input file names).")
 
-def x1d(input, output="",
-        backcorr=True, ctecorr=True, dispcorr=True,
-        helcorr=True, fluxcorr=True,
-        sporder=None, a2center=None, maxsrch=None,
-        globalx=False, extrsize=None,
-        bk1size=None, bk2size=None, bk1offst=None, bk2offst=None, bktilt=None,
-        backord=None, bksmode="median", bksorder=3,
-        blazeshift=None, algorithm="unweighted", xoffset=None,
+def x2d(input, output="",
+        helcorr=True, fluxcorr=True, statflag=True,
+        center=False, blazeshift=None, err_alg="wgt_var",
         verbose=False, timestamps=False, trailer="",
         print_version=False, print_revision=False):
-    """Extract a 1-D spectrum from an flt or crj file.
+    """Rectify 2-D STIS spectral data.
 
     Parameters
     ----------
@@ -122,70 +118,32 @@ def x1d(input, output="",
         Name of the output file, or "" (the default).  If no name was
         specified, the output name will be constructed from the input name.
 
-    backcorr: bool
-        If True, subtract the background.
-
-    ctecorr: bool
-        If True, apply CTE correction.
-
-    dispcorr: bool
-        If True, compute wavelengths from the dispersion relation.
-
     helcorr: bool
         If True, correct for heliocentric Doppler shift.
 
     fluxcorr: bool
         If True, convert to absolute flux.
 
-    sporder: int or None
-        The number of the spectral order to extract.
+    statflag: bool
+        If True, compute statistics for image arrays and update keywords.
 
-    a2center: float or None
-
-    maxsrch: float or None
-
-    globalx: bool
-        If True, use the global cross correlation offset (i.e. average for
-        all orders) for all spectral orders.
-
-    extrsize:  float or None
-        Size of extraction box.  None means extrsize is not specified.
-
-    bk1size:  float or None
-        Size of first background region.  None means bk1size is not specified.
-
-    bk2size:  float or None
-        Size of second background region.  None means bk2size is not specified.
-
-    bk1offst:  float or None
-        Offset of first background region.  None means bk1offst is not
-                specified.
-
-    bk2offst:  float or None
-        Offset of first background region.  None means bk2offst is not
-        specified.
-
-    bktilt:  float or None
-        Background tilt.  None means bktilt is not specified.
-
-    backord:  int or None
-        Background order (0 or 1).  None means backord is not specified.
-
-    bksmode: str
-        Background smoothing mode ("off", "median" (the default), or
-        "average").
-
-    bksorder: int
-        Background smoothing polynomial order (default is 3).
+    center: bool
+        If True, center the target spectrum in the cross-dispersion
+        direction.  For G140L and G140M spectra, the target has at
+        different times been offset to a location either above or below
+        the middle of the detector, to avoid the repeller wire.  This
+        argument allows more convenient comparison of data taken at
+        widely different times.
 
     blazeshift: float or None
         Blaze shift (in pixels).  None means blazeshift is not specified.
 
-    algorithm: str
-        Extraction algorithm ("unweighted" (the default) or "sc2d")
-
-    xoffset: float
-        Offset in X for slitless extraction.
+    err_alg: str
+        Algorithm for computing error estimates.  The default is "wgt_var",
+        which means that the weight (for bilinear interpolation) is applied
+        to the variances of the input pixels.  The alternative is
+        "wgt_err", to specify that the weight should be applied to the
+        errors of the input pixels.
 
     verbose: bool
         If True, calstis will print more info.
@@ -213,8 +171,8 @@ def x1d(input, output="",
     -------
     status: int
         0 is OK.
-        1 is returned if cs6.e (the calstis host executable) returned a
-        non-zero status.  If verbose is True, the value returned by cs6.e
+        1 is returned if cs7.e (the calstis host executable) returned a
+        non-zero status.  If verbose is True, the value returned by cs7.e
         will be printed.
         2 is returned if the specified input file or files were not found,
         or the numbers of input and output files (if the latter was
@@ -222,10 +180,10 @@ def x1d(input, output="",
     """
 
     if print_version:
-        status = subprocess.call(["cs6.e", "--version"])
+        status = subprocess.call(["cs7.e", "--version"])
         return 0
     if print_revision:
-        status = subprocess.call(["cs6.e", "-r"])
+        status = subprocess.call(["cs7.e", "-r"])
         return 0
 
     cumulative_status = 0
@@ -269,10 +227,10 @@ def x1d(input, output="",
 
     for (i, infile) in enumerate(infiles):
 
-        arglist = ["cs6.e"]
+        arglist = ["cs7.e"]
 
         arglist.append(infile)
-        if outfiles:
+        if outfiles is not None:
             arglist.append(outfiles[i])
 
         if verbose:
@@ -282,96 +240,26 @@ def x1d(input, output="",
         if globalx:
             arglist.append("-g")
 
-        if backcorr:
-            arglist.append("-back")
-        if ctecorr:
-            arglist.append("-cte")
-        if dispcorr:
-            arglist.append("-disp")
         if helcorr:
             arglist.append("-hel")
         if fluxcorr:
             arglist.append("-flux")
-        if not (backcorr or ctecorr or dispcorr or helcorr or fluxcorr):
-            arglist.append("-x1d")
-
-        if sporder is not None:
-            arglist.append("-s")
-            arglist.append("%d" % sporder)
-
-        if a2center is not None:
-            arglist.append("-c")
-            arglist.append("%.10g" % a2center)
-
-        if maxsrch is not None:
-            arglist.append("-r")
-            arglist.append("%.10g" % maxsrch)
-
-        if extrsize is not None:
-            arglist.append("-x")
-            arglist.append("%.10g" % extrsize)
-
-        if bk1size is not None:
-            arglist.append("-b1")
-            arglist.append("%.10g" % bk1size)
-
-        if bk2size is not None:
-            arglist.append("-b2")
-            arglist.append("%.10g" % bk2size)
-
-        if bk1offst is not None:
-            arglist.append("-o1")
-            arglist.append("%.10g" % bk1offst)
-
-        if bk2offst is not None:
-            arglist.append("-o2")
-            arglist.append("%.10g" % bk2offst)
-
-        if bktilt is not None:
-            arglist.append("-k")
-            arglist.append("%.10g" % bktilt)
-
-        if backord is not None:
-            arglist.append("-n")
-            arglist.append("%d" % backord)
+        if not (helcorr or fluxcorr):
+            arglist.append("-x2d")
 
         if blazeshift is not None:
-            arglist.append("-bs")
+            arglist.append("-b")
             arglist.append("%.10g" % blazeshift)
 
-        if bksmode:
-            if bksmode == "off":
-                arglist.append("-bn")
-            elif bksmode == "median":
-                arglist.append("-bm")
-                arglist.append("-bo")
-                arglist.append("%d" % bksorder)
-            elif bksmode == "average":
-                arglist.append("-bb")
-                arglist.append("-bo")
-                arglist.append("%d" % bksorder)
-            else:
-                raise RuntimeError("bksmode must be one of 'off',"
-                    " 'median', 'average'; you specified '%s'" % bksmode)
-
-        if algorithm:
-            if algorithm == "unweighted":
-                arglist.append("-a")
-                arglist.append("unweighted")
-            elif algorithm == "sc2d":
-                arglist.append("-a")
-                arglist.append("unweighted")
-                arglist.append("-idt")
-            else:
-                raise RuntimeError("algorithm must be either 'unweighted'"
-                    " or 'sc2d'; you specified '%s'" % algorithm)
-
-        if xoffset is not None:
-            arglist.append("-st")
-            arglist.append("%.10g" % xoffset)
+        if err_alg:
+            if err_alg == "wgt_err":
+                arglist.append("-wgt_err")
+            elif err_alg != "wgt_var":
+                raise RuntimeError("err_alg must be either 'wgt_err'"
+                    " or 'wgt_var'; you specified '%s'" % err_alg)
 
         if verbose:
-            print("Running x1d on %s" % infile)
+            print("Running x2d on %s" % infile)
             print("  '%s'" % str(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
@@ -390,34 +278,19 @@ def x1d(input, output="",
 #-------------------------#
 
 def getHelpAsString(fulldoc=True):
-    """Return documentation on the x1d function."""
-    return x1d.__doc__
+    """Return documentation on the x2d function."""
+    return x2d.__doc__
 
 def run(configobj=None):
-    """TEAL interface for the x1d function."""
-    x1d(configobj["input"],
+    """TEAL interface for the x2d function."""
+    x2d(configobj["input"],
         configobj["output"],
-        configobj["backcorr"],
-        configobj["ctecorr"],
-        configobj["dispcorr"],
         configobj["helcorr"],
         configobj["fluxcorr"],
-        configobj["sporder"],
-        configobj["a2center"],
-        configobj["maxsrch"],
-        configobj["globalx"],
-        configobj["extrsize"],
-        configobj["bk1size"],
-        configobj["bk2size"],
-        configobj["bk1offst"],
-        configobj["bk2offst"],
-        configobj["bktilt"],
-        configobj["backord"],
-        configobj["bksmode"],
-        configobj["bksorder"],
+        configobj["statflag"],
+        configobj["center"],
         configobj["blazeshift"],
-        configobj["algorithm"],
-        configobj["xoffset"],
+        configobj["err_alg"],
         configobj["verbose"],
         configobj["timestamps"],
         configobj["trailer"],
