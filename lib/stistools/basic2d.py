@@ -239,9 +239,11 @@ def basic2d(input, output="", outblev="",
         outfiles = []
         output1 = output.split()
         for out1 in output1:
-            output2 = out1.split(",")
-            for out2 in output2:
-                outfiles.append(out2)
+            if out1:
+                output2 = out1.split(",")
+                for out2 in output2:
+                    if out2:
+                        outfiles.append(out2)
     else:
         outfiles = None
 
@@ -249,13 +251,17 @@ def basic2d(input, output="", outblev="",
         outblev_txt = []
         outblev1 = outblev.split()
         for out1 in outblev1:
-            outblev2 = out1.split(",")
-            for out2 in outblev2:
-                outblev_txt.append(out2)
+            if out1:
+                outblev2 = out1.split(",")
+                for out2 in outblev2:
+                    if out2:
+                        outblev_txt.append(out2)
     else:
         outblev_txt = None
 
     same_length = True          # optimistic initial value
+    print("debug:  infiles = %s" % infiles)
+    print("debug:  outfiles = %s" % outfiles)
     n_infiles = len(infiles)
     if outfiles and len(outfiles) != n_infiles:
         same_length = False
@@ -269,7 +275,9 @@ def basic2d(input, output="", outblev="",
         return 2
 
     if trailer:
-        f_trailer = open(trailer, "w")
+        if verbose and os.access(trailer, os.F_OK):
+            print("Appending to trailer file %s" % trailer)
+        f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
         f_trailer = None

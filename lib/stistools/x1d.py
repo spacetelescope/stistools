@@ -247,9 +247,11 @@ def x1d(input, output="",
         outfiles = []
         output1 = output.split()
         for out1 in output1:
-            output2 = out1.split(",")
-            for out2 in output2:
-                outfiles.append(out2)
+            if out1:
+                output2 = out1.split(",")
+                for out2 in output2:
+                    if out2:
+                        outfiles.append(out2)
     else:
         outfiles = None
 
@@ -261,7 +263,9 @@ def x1d(input, output="",
         return 2
 
     if trailer:
-        f_trailer = open(trailer, "w")
+        if verbose and os.access(trailer, os.F_OK):
+            print("Appending to trailer file %s" % trailer)
+        f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
         f_trailer = None

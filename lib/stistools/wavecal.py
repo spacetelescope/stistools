@@ -225,9 +225,11 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
     wavecal_files = []
     wavecal1 = wavecal.split()
     for wav1 in wavecal1:
-        wavecal2 = wav1.split(",")
-        for wav2 in wavecal2:
-            wavecal_files.append(wav2)
+        if wav1:
+            wavecal2 = wav1.split(",")
+            for wav2 in wavecal2:
+                if wav2:
+                    wavecal_files.append(wav2)
 
     dbgfiles = []
     if debugfile:
@@ -251,7 +253,9 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
         return 2
 
     if trailer:
-        f_trailer = open(trailer, "w")
+        if verbose and os.access(trailer, os.F_OK):
+            print("Appending to trailer file %s" % trailer)
+        f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
         f_trailer = None
@@ -425,12 +429,17 @@ def runX2d(cwv_file, angle, tempfnames,
 
     fd = pyfits.open(cwv_file)
     opt_elem = fd[0].header.get("opt_elem", default="missing")
+    x2dcorr = fd[0].header.get("x2dcorr", default="missing")
     fd.close()
 
     # Skip 2-D rectification for echelle or prism data.
     skip_it = opt_elem.startswith("E") or opt_elem == "PRISM"
 
     if skip_it:
+        w2d_file = cwv_file
+        flag = False
+    elif x2dcorr == "COMPLETE":
+        # The wavecal is already fully calibrated.
         w2d_file = cwv_file
         flag = False
     else:

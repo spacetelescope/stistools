@@ -187,7 +187,9 @@ def calstis(input, wavecal="", outroot="", savetmp=False,
         return 2
 
     if trailer:
-        f_trailer = open(trailer, "w")
+        if verbose and os.access(trailer, os.F_OK):
+            print("Appending to trailer file %s" % trailer)
+        f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
         f_trailer = None
