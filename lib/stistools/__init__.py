@@ -3,7 +3,9 @@ from .version import *
 import calstis
 import basic2d
 import ocrreject
+import wavecal
 import x1d
+import x2d
 import mktrace
 import sshift
 import stisnoise

@@ -1,5 +1,14 @@
 #! /usr/bin/env python
 
+from __future__ import division         # confidence unknown
+import os
+import sys
+import getopt
+import glob
+import subprocess
+
+from stsci.tools import parseinput,teal
+
 """
 Calibrate STIS data.
 
@@ -28,15 +37,6 @@ From command line::
 % ./calstis.py -v -s o66p01020_raw.fits out/
 % ./calstis.py -r
 """
-
-from __future__ import division         # confidence unknown
-import os
-import sys
-import getopt
-import glob
-import subprocess
-
-from stsci.tools import parseinput,teal
 
 __taskname__ = "calstis"
 __version__ = "3.0"
@@ -70,13 +70,13 @@ def main(args):
         if options[i][0] == "-r":
             status = subprocess.call(["cs0.e", "-r"])
             return 0
-        elif options[i][0] == "-v":
+        if options[i][0] == "-v":
             verbose = True
-        elif options[i][0] == "-t":
+        if options[i][0] == "-t":
             timestamps = True
-        elif options[i][0] == "-s":
+        if options[i][0] == "-s":
             savetmp = True
-        elif options[i][0] == "-w":
+        if options[i][0] == "-w":
             wavecal = options[i][1]
 
     nargs = len(pargs)
@@ -118,7 +118,7 @@ def calstis(input, wavecal="", outroot="", savetmp=False,
     Parameters
     ----------
     input: str
-        Name of the input raw file.
+        Name of the input file.
 
     wavecal: str
         Name of the input wavecal file, or "" (the default).  This is
@@ -187,9 +187,13 @@ def calstis(input, wavecal="", outroot="", savetmp=False,
         return 2
 
     if trailer:
-        f_trailer = open(trailer, "w")
+        if verbose and os.access(trailer, os.F_OK):
+            print("Appending to trailer file %s" % trailer)
+        f_trailer = open(trailer, "a")
+        fd_trailer = f_trailer.fileno()
     else:
         f_trailer = None
+        fd_trailer = None
 
     for infile in infiles:
 
@@ -209,15 +213,13 @@ def calstis(input, wavecal="", outroot="", savetmp=False,
 
         if verbose:
             print("Running calstis on %s" % infile)
-        if f_trailer is None:           # no trailer file
-            status = subprocess.call(arglist)
-        else:
-            status = subprocess.call(arglist, stdout=f_trailer.fileno(),
-                                     stderr=subprocess.STDOUT)
-            if status:
-                cumulative_status = 1
-                if verbose:
-                    print("Warning:  status = %d" % status)
+            print("  '%s'" % str(arglist))
+        status = subprocess.call(arglist, stdout=fd_trailer,
+                                 stderr=subprocess.STDOUT)
+        if status:
+            cumulative_status = 1
+            if verbose:
+                print("Warning:  status = %d" % status)
 
     if f_trailer is not None:
         f_trailer.close()
