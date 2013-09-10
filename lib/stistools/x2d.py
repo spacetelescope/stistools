@@ -39,9 +39,9 @@ From command line::
 """
 
 __taskname__ = "x2d"
-__version__ = "3.0"
-__vdate__ = "14-January-2013"
-__author__ = "Phil Hodge, STScI, January 2013."
+__version__ = "3.1"
+__vdate__ = "10-September-2013"
+__author__ = "Phil Hodge, STScI, September 2013."
 
 def main(args):
 
@@ -103,7 +103,7 @@ def prtOptions():
     print("  as the input file names).")
 
 def x2d(input, output="",
-        helcorr=True, fluxcorr=True, statflag=True,
+        helcorr="perform", fluxcorr="perform", statflag=True,
         center=False, blazeshift=None, err_alg="wgt_var",
         verbose=False, timestamps=False, trailer="",
         print_version=False, print_revision=False):
@@ -118,11 +118,11 @@ def x2d(input, output="",
         Name of the output file, or "" (the default).  If no name was
         specified, the output name will be constructed from the input name.
 
-    helcorr: bool
-        If True, correct for heliocentric Doppler shift.
+    helcorr: str
+        If "perform", correct for heliocentric Doppler shift.
 
-    fluxcorr: bool
-        If True, convert to absolute flux.
+    fluxcorr: str
+        If "perform", convert to absolute flux.
 
     statflag: bool
         If True, compute statistics for image arrays and update keywords.
@@ -242,16 +242,15 @@ def x2d(input, output="",
         if timestamps:
             arglist.append("-t")
 
-        if helcorr:
+        switch_was_set = False
+        if helcorr == "perform":
             arglist.append("-hel")
-        if fluxcorr:
+            switch_was_set = True
+        if fluxcorr == "perform":
             arglist.append("-flux")
-        if not (helcorr or fluxcorr):
+            switch_was_set = True
+        if not switch_was_set:
             arglist.append("-x2d")
-
-        if blazeshift is not None:
-            arglist.append("-b")
-            arglist.append("%.10g" % blazeshift)
 
         if err_alg:
             if err_alg == "wgt_err":
@@ -259,6 +258,10 @@ def x2d(input, output="",
             elif err_alg != "wgt_var":
                 raise RuntimeError("err_alg must be either 'wgt_err'"
                     " or 'wgt_var'; you specified '%s'" % err_alg)
+
+        if blazeshift is not None:
+            arglist.append("-b")
+            arglist.append("%.10g" % blazeshift)
 
         if verbose:
             print("Running x2d on %s" % infile)
