@@ -39,9 +39,9 @@ From command line::
 """
 
 __taskname__ = "ocrreject"
-__version__ = "3.0"
-__vdate__ = "14-January-2013"
-__author__ = "Phil Hodge, STScI, January 2013."
+__version__ = "3.1"
+__vdate__ = "10-September-2013"
+__author__ = "Phil Hodge, STScI, September 2013."
 
 def main(args):
 

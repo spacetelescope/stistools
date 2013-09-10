@@ -39,9 +39,9 @@ From command line::
 """
 
 __taskname__ = "x1d"
-__version__ = "3.0"
-__vdate__ = "14-January-2013"
-__author__ = "Phil Hodge, STScI, January 2013."
+__version__ = "3.1"
+__vdate__ = "10-September-2013"
+__author__ = "Phil Hodge, STScI, September 2013."
 
 def main(args):
 
@@ -102,8 +102,8 @@ def prtOptions():
     print("  as the input file names).")
 
 def x1d(input, output="",
-        backcorr=True, ctecorr=True, dispcorr=True,
-        helcorr=True, fluxcorr=True,
+        backcorr="perform", ctecorr="perform", dispcorr="perform",
+        helcorr="perform", fluxcorr="perform",
         sporder=None, a2center=None, maxsrch=None,
         globalx=False, extrsize=None,
         bk1size=None, bk2size=None, bk1offst=None, bk2offst=None, bktilt=None,
@@ -122,20 +122,20 @@ def x1d(input, output="",
         Name of the output file, or "" (the default).  If no name was
         specified, the output name will be constructed from the input name.
 
-    backcorr: bool
-        If True, subtract the background.
+    backcorr: str
+        If "perform", subtract the background.
 
-    ctecorr: bool
-        If True, apply CTE correction.
+    ctecorr: str
+        If "perform", apply CTE correction (CCD only).
 
-    dispcorr: bool
-        If True, compute wavelengths from the dispersion relation.
+    dispcorr: str
+        If "perform", compute wavelengths from the dispersion relation.
 
-    helcorr: bool
-        If True, correct for heliocentric Doppler shift.
+    helcorr: str
+        If "perform", correct for heliocentric Doppler shift.
 
-    fluxcorr: bool
-        If True, convert to absolute flux.
+    fluxcorr: str
+        If "perform", convert to absolute flux.
 
     sporder: int or None
         The number of the spectral order to extract.
@@ -286,17 +286,23 @@ def x1d(input, output="",
         if globalx:
             arglist.append("-g")
 
-        if backcorr:
+        switch_was_set = False
+        if backcorr == "perform":
             arglist.append("-back")
-        if ctecorr:
+            switch_was_set = True
+        if ctecorr == "perform":
             arglist.append("-cte")
-        if dispcorr:
+            switch_was_set = True
+        if dispcorr == "perform":
             arglist.append("-disp")
-        if helcorr:
+            switch_was_set = True
+        if helcorr == "perform":
             arglist.append("-hel")
-        if fluxcorr:
+            switch_was_set = True
+        if fluxcorr == "perform":
             arglist.append("-flux")
-        if not (backcorr or ctecorr or dispcorr or helcorr or fluxcorr):
+            switch_was_set = True
+        if not switch_was_set:
             arglist.append("-x1d")
 
         if sporder is not None:

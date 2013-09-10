@@ -39,9 +39,9 @@ From command line::
 """
 
 __taskname__ = "basic2d"
-__version__ = "3.0"
-__vdate__ = "14-January-2013"
-__author__ = "Phil Hodge, STScI, January 2013."
+__version__ = "3.1"
+__vdate__ = "10-September-2013"
+__author__ = "Phil Hodge, STScI, September 2013."
 
 def main(args):
 
@@ -103,10 +103,10 @@ def prtOptions():
     print("  as the input file names).")
 
 def basic2d(input, output="", outblev="",
-           dqicorr=True, blevcorr=True, doppcorr=True,
-           lorscorr=True, glincorr=True, lflgcorr=True,
-           biascorr=True, darkcorr=True, flatcorr=True,
-           photcorr=True, statflag=True,
+           dqicorr="perform", blevcorr="perform", doppcorr="perform",
+           lorscorr="perform", glincorr="perform", lflgcorr="perform",
+           biascorr="perform", darkcorr="perform", flatcorr="perform",
+           photcorr="perform", statflag=True,
            darkscale="",
            verbose=False, timestamps=False,
            trailer="", print_version=False, print_revision=False):
@@ -130,41 +130,41 @@ def basic2d(input, output="", outblev="",
     outblev: str
         Name of the output text file for blev info, or "" (the default).
 
-    dqicorr: bool
-        If True, update the DQ array.
+    dqicorr: str
+        If "perform", update the DQ array.
 
-    blevcorr: bool
-        If True, subtract a bias level based on the overscan values.
+    blevcorr: str
+        If "perform", subtract a bias level based on the overscan values.
         (CCD only.)
 
-    doppcorr: bool
-        If True, convolve reference files (bpixtab, darkfile, flatfile)
-        as needed with the Doppler shift offset throughout the exposure,
-        if Doppler correction was done on-board.  (MAMA only, because
-        for the CCD Doppler correction is not done on-board.)
+    doppcorr: str
+        If "perform", convolve reference files (bpixtab, darkfile,
+        flatfile) as needed with the Doppler shift offset throughout the
+        exposure, if Doppler correction was done on-board.  (MAMA only,
+        because for the CCD Doppler correction is not done on-board.)
 
-    lorscorr: bool
-        If True, bin high-res data to lo-res.  (MAMA only.)
+    lorscorr: str
+        If "perform", bin high-res data to lo-res.  (MAMA only.)
 
-    glincorr: bool
-        If True, correct for global non-linearity.  (MAMA only.)
+    glincorr: str
+        If "perform", correct for global non-linearity.  (MAMA only.)
 
-    lflgcorr: bool
-        If True, flag local non-linearity.  (MAMA only.)
+    lflgcorr: str
+        If "perform", flag local non-linearity.  (MAMA only.)
 
-    biascorr: bool
-        If True, subtract the bias image.  (CCD only.)
+    biascorr: str
+        If "perform", subtract the bias image.  (CCD only.)
 
-    darkcorr: bool
-        If True, subtract the dark image, scaled by the exposure time
+    darkcorr: str
+        If "perform", subtract the dark image, scaled by the exposure time
         and possibly also a temperature-dependent factor.
 
-    flatcorr: bool
-        If True, divide by the flat field image.
+    flatcorr: str
+        If "perform", divide by the flat field image.
 
-    photcorr: bool
-        If True, determine the photometric parameters and populate keywords
-        PHOTFLAM, PHOTZPT, PHOTPLAM and PHOTBW.  (Imaging data only.)
+    photcorr: str
+        If "perform", determine the photometric parameters and populate
+        keywords PHOTFLAM, PHOTZPT, PHOTPLAM and PHOTBW.  (Imaging only.)
 
     statflag: bool
         If True, compute statistics for image arrays and update keywords.
@@ -260,8 +260,6 @@ def basic2d(input, output="", outblev="",
         outblev_txt = None
 
     same_length = True          # optimistic initial value
-    print("debug:  infiles = %s" % infiles)
-    print("debug:  outfiles = %s" % outfiles)
     n_infiles = len(infiles)
     if outfiles and len(outfiles) != n_infiles:
         same_length = False
@@ -300,25 +298,25 @@ def basic2d(input, output="", outblev="",
         if outblev_txt:
             arglist.append(outblev_txt[i])
 
-        if dqicorr:
+        if dqicorr == "perform":
             arglist.append("-dqi")
-        if blevcorr:
+        if blevcorr == "perform":
             arglist.append("-blev")
-        if doppcorr:
+        if doppcorr == "perform":
             arglist.append("-dopp")
-        if lorscorr:
+        if lorscorr == "perform":
             arglist.append("-lors")
-        if glincorr:
+        if glincorr == "perform":
             arglist.append("-glin")
-        if lflgcorr:
+        if lflgcorr == "perform":
             arglist.append("-lflg")
-        if biascorr:
+        if biascorr == "perform":
             arglist.append("-bias")
-        if darkcorr:
+        if darkcorr == "perform":
             arglist.append("-dark")
-        if flatcorr:
+        if flatcorr == "perform":
             arglist.append("-flat")
-        if photcorr:
+        if photcorr == "perform":
             arglist.append("-phot")
         if statflag:
             arglist.append("-stat")
