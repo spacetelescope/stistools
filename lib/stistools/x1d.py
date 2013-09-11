@@ -382,7 +382,7 @@ def x1d(input, output="",
 
         if verbose:
             print("Running x1d on %s" % infile)
-            print("  '%s'" % str(arglist))
+            print("  %s" % str(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:

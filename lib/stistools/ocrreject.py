@@ -327,7 +327,7 @@ def ocrreject(input, output,
 
         if verbose:
             print("Running ocrreject on %s" % infile)
-            print("  '%s'" % str(arglist))
+            print("  %s" % str(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:

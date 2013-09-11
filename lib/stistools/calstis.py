@@ -213,7 +213,7 @@ def calstis(input, wavecal="", outroot="", savetmp=False,
 
         if verbose:
             print("Running calstis on %s" % infile)
-            print("  '%s'" % str(arglist))
+            print("  %s" % str(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
