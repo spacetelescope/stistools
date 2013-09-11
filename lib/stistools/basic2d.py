@@ -295,6 +295,8 @@ def basic2d(input, output="", outblev="",
         arglist.append(infile)
         if outfiles:
             arglist.append(outfiles[i])
+        else:
+            arglist.append('')
         if outblev_txt:
             arglist.append(outblev_txt[i])
 
