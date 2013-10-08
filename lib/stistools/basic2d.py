@@ -40,7 +40,7 @@ From command line::
 
 __taskname__ = "basic2d"
 __version__ = "3.1"
-__vdate__ = "10-September-2013"
+__vdate__ = "08-October-2013"
 __author__ = "Phil Hodge, STScI, September 2013."
 
 def main(args):
@@ -103,10 +103,11 @@ def prtOptions():
     print("  as the input file names).")
 
 def basic2d(input, output="", outblev="",
-           dqicorr="perform", blevcorr="perform", doppcorr="perform",
+           dqicorr="perform", atodcorr="omit", blevcorr="perform",
+           doppcorr="perform",
            lorscorr="perform", glincorr="perform", lflgcorr="perform",
            biascorr="perform", darkcorr="perform", flatcorr="perform",
-           photcorr="perform", statflag=True,
+           shadcorr="omit", photcorr="perform", statflag=True,
            darkscale="",
            verbose=False, timestamps=False,
            trailer="", print_version=False, print_revision=False):
@@ -132,6 +133,10 @@ def basic2d(input, output="", outblev="",
 
     dqicorr: str
         If "perform", update the DQ array.
+
+    atodcorr: str
+        The analog-to-digital correction is ignored because it was never
+        implemented.
 
     blevcorr: str
         If "perform", subtract a bias level based on the overscan values.
@@ -161,6 +166,10 @@ def basic2d(input, output="", outblev="",
 
     flatcorr: str
         If "perform", divide by the flat field image.
+
+    shadcorr: str
+        The shutter shading correction is ignored because it was never
+        implemented.
 
     photcorr: str
         If "perform", determine the photometric parameters and populate
@@ -352,6 +361,7 @@ def run(configobj=None):
             configobj["output"],
             configobj["outblev"],
             configobj["dqicorr"],
+            configobj["atodcorr"],
             configobj["blevcorr"],
             configobj["doppcorr"],
             configobj["lorscorr"],
@@ -360,6 +370,7 @@ def run(configobj=None):
             configobj["biascorr"],
             configobj["darkcorr"],
             configobj["flatcorr"],
+            configobj["shadcorr"],
             configobj["photcorr"],
             configobj["statflag"],
             configobj["darkscale"],
