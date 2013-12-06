@@ -12,6 +12,12 @@ from stsci.tools import parseinput,teal
 """
 Calibrate STIS data.
 
+The input raw files should be in the default directory.  This is not
+always necessary, but it will always work.  For spectroscopic data, if
+a path is specified for the input file, the wavecal file may not be
+found unless the wavecal file name (including path) was explicitly
+specified.
+
 Examples
 --------
 
