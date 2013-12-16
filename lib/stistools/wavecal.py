@@ -44,8 +44,8 @@ From command line::
 """
 
 __taskname__ = "wavecal"
-__version__ = "3.1"
-__vdate__ = "10-September-2013"
+__version__ = "3.3"
+__vdate__ = "03-October-2013"
 __author__ = "Phil Hodge, STScI, September 2013."
 
 # MJD after which the external shutter was closed for CCD HITM wavecals.
