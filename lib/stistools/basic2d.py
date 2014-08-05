@@ -39,9 +39,9 @@ From command line::
 """
 
 __taskname__ = "basic2d"
-__version__ = "3.3"
-__vdate__ = "03-October-2013"
-__author__ = "Phil Hodge, STScI, September 2013."
+__version__ = "3.4"
+__vdate__ = "13-November-2013"
+__author__ = "Phil Hodge, STScI, November 2013."
 
 def main(args):
 
@@ -357,28 +357,28 @@ def getHelpAsString(fulldoc=True):
 
 def run(configobj=None):
     """TEAL interface for the basic2d function."""
-    basic2d(configobj["input"],
-            configobj["output"],
-            configobj["outblev"],
-            configobj["dqicorr"],
-            configobj["atodcorr"],
-            configobj["blevcorr"],
-            configobj["doppcorr"],
-            configobj["lorscorr"],
-            configobj["glincorr"],
-            configobj["lflgcorr"],
-            configobj["biascorr"],
-            configobj["darkcorr"],
-            configobj["flatcorr"],
-            configobj["shadcorr"],
-            configobj["photcorr"],
-            configobj["statflag"],
-            configobj["darkscale"],
-            configobj["verbose"],
-            configobj["timestamps"],
-            configobj["trailer"],
-            configobj["print_version"],
-            configobj["print_revision"])
+    basic2d(input=configobj["input"],
+            output=configobj["output"],
+            outblev=configobj["outblev"],
+            dqicorr=configobj["dqicorr"],
+            atodcorr=configobj["atodcorr"],
+            blevcorr=configobj["blevcorr"],
+            doppcorr=configobj["doppcorr"],
+            lorscorr=configobj["lorscorr"],
+            glincorr=configobj["glincorr"],
+            lflgcorr=configobj["lflgcorr"],
+            biascorr=configobj["biascorr"],
+            darkcorr=configobj["darkcorr"],
+            flatcorr=configobj["flatcorr"],
+            shadcorr=configobj["shadcorr"],
+            photcorr=configobj["photcorr"],
+            statflag=configobj["statflag"],
+            darkscale=configobj["darkscale"],
+            verbose=configobj["verbose"],
+            timestamps=configobj["timestamps"],
+            trailer=configobj["trailer"],
+            print_version=configobj["print_version"],
+            print_revision=configobj["print_revision"])
 
 if __name__ == "__main__":
 

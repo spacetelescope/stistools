@@ -39,9 +39,9 @@ From command line::
 """
 
 __taskname__ = "x1d"
-__version__ = "3.3"
-__vdate__ = "03-October-2013"
-__author__ = "Phil Hodge, STScI, September 2013."
+__version__ = "3.4"
+__vdate__ = "13-November-2013"
+__author__ = "Phil Hodge, STScI, November 2013."
 
 def main(args):
 
@@ -405,35 +405,36 @@ def getHelpAsString(fulldoc=True):
 
 def run(configobj=None):
     """TEAL interface for the x1d function."""
-    x1d(configobj["input"],
-        configobj["output"],
-        configobj["backcorr"],
-        configobj["ctecorr"],
-        configobj["dispcorr"],
-        configobj["helcorr"],
-        configobj["fluxcorr"],
-        configobj["sporder"],
-        configobj["a2center"],
-        configobj["maxsrch"],
-        configobj["globalx"],
-        configobj["extrsize"],
-        configobj["bk1size"],
-        configobj["bk2size"],
-        configobj["bk1offst"],
-        configobj["bk2offst"],
-        configobj["bktilt"],
-        configobj["backord"],
-        configobj["bksmode"],
-        configobj["bksorder"],
-        configobj["blazeshift"],
-        configobj["algorithm"],
-        configobj["xoffset"],
-        configobj["verbose"],
-        configobj["timestamps"],
-        configobj["trailer"],
-        configobj["print_version"],
-        configobj["print_revision"])
+    x1d(input=configobj["input"],
+        output=configobj["output"],
+        backcorr=configobj["backcorr"],
+        ctecorr=configobj["ctecorr"],
+        dispcorr=configobj["dispcorr"],
+        helcorr=configobj["helcorr"],
+        fluxcorr=configobj["fluxcorr"],
+        sporder=configobj["sporder"],
+        a2center=configobj["a2center"],
+        maxsrch=configobj["maxsrch"],
+        globalx=configobj["globalx"],
+        extrsize=configobj["extrsize"],
+        bk1size=configobj["bk1size"],
+        bk2size=configobj["bk2size"],
+        bk1offst=configobj["bk1offst"],
+        bk2offst=configobj["bk2offst"],
+        bktilt=configobj["bktilt"],
+        backord=configobj["backord"],
+        bksmode=configobj["bksmode"],
+        bksorder=configobj["bksorder"],
+        blazeshift=configobj["blazeshift"],
+        algorithm=configobj["algorithm"],
+        xoffset=configobj["xoffset"],
+        verbose=configobj["verbose"],
+        timestamps=configobj["timestamps"],
+        trailer=configobj["trailer"],
+        print_version=configobj["print_version"],
+        print_revision=configobj["print_revision"])
 
 if __name__ == "__main__":
 
     main(sys.argv[1:])
+def x1d(input, output="",

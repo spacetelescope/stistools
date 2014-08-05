@@ -45,9 +45,9 @@ From command line::
 """
 
 __taskname__ = "calstis"
-__version__ = "3.3"
-__vdate__ = "03-October-2013"
-__author__ = "Phil Hodge, STScI, September 2013."
+__version__ = "3.4"
+__vdate__ = "13-November-2013"
+__author__ = "Phil Hodge, STScI, November 2013."
 
 def main(args):
 
@@ -242,15 +242,15 @@ def getHelpAsString(fulldoc=True):
 
 def run(configobj=None):
     """TEAL interface for the calstis function."""
-    calstis(configobj["input"],
-            configobj["wavecal"],
-            configobj["outroot"],
-            configobj["savetmp"],
-            configobj["verbose"],
-            configobj["timestamps"],
-            configobj["trailer"],
-            configobj["print_version"],
-            configobj["print_revision"])
+    calstis(input=configobj["input"],
+            wavecal=configobj["wavecal"],
+            outroot=configobj["outroot"],
+            savetmp=configobj["savetmp"],
+            verbose=configobj["verbose"],
+            timestamps=configobj["timestamps"],
+            trailer=configobj["trailer"],
+            print_version=configobj["print_version"],
+            print_revision=configobj["print_revision"])
 
 if __name__ == "__main__":
 
