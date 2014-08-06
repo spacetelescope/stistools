@@ -437,4 +437,3 @@ def run(configobj=None):
 if __name__ == "__main__":
 
     main(sys.argv[1:])
-def x1d(input, output="",
