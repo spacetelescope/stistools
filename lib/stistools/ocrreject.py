@@ -39,9 +39,9 @@ From command line::
 """
 
 __taskname__ = "ocrreject"
-__version__ = "3.3"
-__vdate__ = "03-October-2013"
-__author__ = "Phil Hodge, STScI, September 2013."
+__version__ = "3.4"
+__vdate__ = "13-November-2013"
+__author__ = "Phil Hodge, STScI, November 2013."
 
 def main(args):
 
@@ -350,23 +350,23 @@ def getHelpAsString(fulldoc=True):
 
 def run(configobj=None):
     """TEAL interface for the ocrreject function."""
-    ocrreject(configobj["input"],
-              configobj["output"],
-              configobj["all"],
-              configobj["crrejtab"],
-              configobj["scalense"],
-              configobj["initgues"],
-              configobj["skysub"],
-              configobj["crsigmas"],
-              configobj["crradius"],
-              configobj["crthresh"],
-              configobj["badinpdq"],
-              configobj["crmask"],
-              configobj["verbose"],
-              configobj["timestamps"],
-              configobj["trailer"],
-              configobj["print_version"],
-              configobj["print_revision"])
+    ocrreject(input=configobj["input"],
+              output=configobj["output"],
+              all=configobj["all"],
+              crrejtab=configobj["crrejtab"],
+              scalense=configobj["scalense"],
+              initgues=configobj["initgues"],
+              skysub=configobj["skysub"],
+              crsigmas=configobj["crsigmas"],
+              crradius=configobj["crradius"],
+              crthresh=configobj["crthresh"],
+              badinpdq=configobj["badinpdq"],
+              crmask=configobj["crmask"],
+              verbose=configobj["verbose"],
+              timestamps=configobj["timestamps"],
+              trailer=configobj["trailer"],
+              print_version=configobj["print_version"],
+              print_revision=configobj["print_revision"])
 
 if __name__ == "__main__":
 

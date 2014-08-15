@@ -44,9 +44,9 @@ From command line::
 """
 
 __taskname__ = "wavecal"
-__version__ = "3.3"
-__vdate__ = "03-October-2013"
-__author__ = "Phil Hodge, STScI, September 2013."
+__version__ = "3.4"
+__vdate__ = "13-November-2013"
+__author__ = "Phil Hodge, STScI, November 2013."
 
 # MJD after which the external shutter was closed for CCD HITM wavecals.
 SH_CLOSED = 51126.0
@@ -530,17 +530,17 @@ def getHelpAsString(fulldoc=True):
 
 def run(configobj=None):
     """TEAL interface for the wavecal function."""
-    wavecal(configobj["input"],
-            configobj["wavecal"],
-            configobj["debugfile"],
-            configobj["savetmp"],
-            configobj["option"],
-            configobj["angle"],
-            configobj["verbose"],
-            configobj["timestamps"],
-            configobj["trailer"],
-            configobj["print_version"],
-            configobj["print_revision"])
+    wavecal(input=configobj["input"],
+            wavecal=configobj["wavecal"],
+            debugfile=configobj["debugfile"],
+            savetmp=configobj["savetmp"],
+            option=configobj["option"],
+            angle=configobj["angle"],
+            verbose=configobj["verbose"],
+            timestamps=configobj["timestamps"],
+            trailer=configobj["trailer"],
+            print_version=configobj["print_version"],
+            print_revision=configobj["print_revision"])
 
 if __name__ == "__main__":
 

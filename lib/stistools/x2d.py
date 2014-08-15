@@ -39,9 +39,9 @@ From command line::
 """
 
 __taskname__ = "x2d"
-__version__ = "3.3"
-__vdate__ = "03-October-2013"
-__author__ = "Phil Hodge, STScI, September 2013."
+__version__ = "3.4"
+__vdate__ = "13-November-2013"
+__author__ = "Phil Hodge, STScI, November 2013."
 
 def main(args):
 
@@ -288,19 +288,19 @@ def getHelpAsString(fulldoc=True):
 
 def run(configobj=None):
     """TEAL interface for the x2d function."""
-    x2d(configobj["input"],
-        configobj["output"],
-        configobj["helcorr"],
-        configobj["fluxcorr"],
-        configobj["statflag"],
-        configobj["center"],
-        configobj["blazeshift"],
-        configobj["err_alg"],
-        configobj["verbose"],
-        configobj["timestamps"],
-        configobj["trailer"],
-        configobj["print_version"],
-        configobj["print_revision"])
+    x2d(input=configobj["input"],
+        output=configobj["output"],
+        helcorr=configobj["helcorr"],
+        fluxcorr=configobj["fluxcorr"],
+        statflag=configobj["statflag"],
+        center=configobj["center"],
+        blazeshift=configobj["blazeshift"],
+        err_alg=configobj["err_alg"],
+        verbose=configobj["verbose"],
+        timestamps=configobj["timestamps"],
+        trailer=configobj["trailer"],
+        print_version=configobj["print_version"],
+        print_revision=configobj["print_revision"])
 
 if __name__ == "__main__":
 
