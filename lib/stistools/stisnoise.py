@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import division         # confidence medium
+from __future__ import division, print_function # confidence medium
 import math
 
 import pyfits
@@ -20,11 +20,11 @@ def medianfilter(time_series, width):
     res[:] = 0
     res[0] = time_series[0]
     beg, end = width//2, (width+1)//2
-    for j in xrange(beg):
+    for j in range(beg):
         res[j] = _median(time_series[:j+end])
-    for j in xrange(beg, tlen-end):
+    for j in range(beg, tlen-end):
         res[j] = _median(time_series[j-beg:j+end])
-    for j in xrange(tlen-end, tlen):
+    for j in range(tlen-end, tlen):
         res[j] = _median(time_series[j-beg:])
     return res
 
@@ -184,7 +184,7 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
 
     # Check filter options
     if ((boxcar > 0) + (wipe != None) + (window != None)) > 1:
-        raise ValueError, 'conflicting filter options'
+        raise ValueError('conflicting filter options')
 
     # Define physical characteristics of STIS CCD
     pst = 640.0         # parallel shift time (us)
@@ -203,13 +203,13 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
 
     amp  = fin[0].header['CCDAMP']
     if verbose == 1:
-        print 'Target: %s, Amp: %s, Gain: %d' % \
-              (fin[0].header['TARGNAME'], amp, fin[0].header['CCDGAIN'])
+        print('Target: %s, Amp: %s, Gain: %d' % \
+              (fin[0].header['TARGNAME'], amp, fin[0].header['CCDGAIN']))
 
     # Check to ensure the SCI extension is being used
     if extname != 'SCI':
-        raise RuntimeError, \
-              'You should only run this on a SCI extension, not %s.'%extname
+        raise RuntimeError(
+              'You should only run this on a SCI extension, not %s.'%extname)
 
     nr, nc = inimage.shape
     if   (nr, nc) == (nr0, nc0):
@@ -217,8 +217,8 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     elif (nr, nc) == (fltxy, fltxy):
         image_type = 'flt'
     else:
-        raise RuntimeError, 'This program should be run on 1062x1044 ' \
-              'or 1024x1024 data only.'
+        raise RuntimeError('This program should be run on 1062x1044 ' 
+              'or 1024x1024 data only.')
 
     # Pad data with fake "OVERSCAN" if data have been overscan trimmed
     if image_type == 'flt':
@@ -240,7 +240,7 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     elif amp == 'D':
         image = temp[::-1,::-1]  # amp D data -> rotate by 180 degrees
     else:
-        raise RuntimeError, 'No amplifier given in header.'
+        raise RuntimeError('No amplifier given in header.')
 
     # Convert 2-D array to 1-D time series
     nx = nc + pps

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from __future__ import division         # confidence unknown
+from __future__ import division, print_function # confidence unknown
 import os
 import sys
 import getopt
@@ -59,7 +59,7 @@ def main(args):
     try:
         (options, pargs) = getopt.getopt(args, "srtvw:",
                                          ["version"])
-    except Exception, error:
+    except Exception as error:
         prtOptions()
         sys.exit()
 

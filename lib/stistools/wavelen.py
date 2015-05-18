@@ -1,12 +1,12 @@
-from __future__ import division         # confidence high
+from __future__ import absolute_import, division, print_function  # confidence high
 import os
 
 import numpy as N
 
-import evaldisp
-import gettable
-import radialvel
-import r_util
+from . import evaldisp
+from . import gettable
+from . import radialvel
+from . import r_util
 
 DEG_RAD = N.pi / 180.                   # degrees to radians
 SPEED_OF_LIGHT = 299792.458             # km / s
@@ -106,7 +106,7 @@ def compute_wavelengths (shape, phdr, hdr, helcorr):
     if "angle" in names:
         angle = apdes_info.field ("angle")[0]
     else:
-        print "Warning:  Column ANGLE not found in", apdestab
+        print("Warning:  Column ANGLE not found in", apdestab)
         angle = REF_ANGLE
     del names
 

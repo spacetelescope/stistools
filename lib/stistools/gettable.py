@@ -1,4 +1,4 @@
-from __future__ import division         # confidence high
+from __future__ import division, print_function # confidence high
 import os
 import math
 
@@ -99,13 +99,13 @@ def getTable (table, filter, sortcol=None,
         message = "Table has no matching row;\n" + \
                   "table name is " + table + "\n" + \
                   "row selection is " + repr (filter)
-        raise RuntimeError, message
+        raise RuntimeError(message)
 
     if exactly_one and nselect > 1:
-        print "Table has more than one matching row;"
-        print "table name is", table
-        print "row selection is", repr (filter)
-        print "only the first will be used."
+        print("Table has more than one matching row;")
+        print("table name is", table)
+        print("row selection is", repr (filter))
+        print("only the first will be used.")
 
     if len (newdata) > 1 and sortcol is not None:
         newdata = sortrows (newdata, sortcol)
