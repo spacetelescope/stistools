@@ -26,7 +26,7 @@ Simple example of running mktrace on a STIS file named 'file.fits':
 - Python version: Nadia Dencheva
 
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 import numpy as N
 import pyfits
@@ -52,7 +52,7 @@ def mktrace(fname, tracecen=0.0, weights=None):
     try:
         hdulist = pyfits.open(fname)
     except IOError:
-        print "\nUNABLE TO OPEN FITS FILE: %s \n" % fname
+        print("\nUNABLE TO OPEN FITS FILE: %s \n" % fname)
         return
 
     data = hdulist[1].data
@@ -62,8 +62,8 @@ def mktrace(fname, tracecen=0.0, weights=None):
 
     kwinfo = getKWInfo(hdr0, hdr1)
     if kwinfo['instrument'] != 'STIS':
-        print "This trace tool works only on STIS spectroscopic observations.\n"
-        print "Not processing file %s.\n" %fname
+        print("This trace tool works only on STIS spectroscopic observations.\n")
+        print("Not processing file %s.\n" %fname)
         return
 
     sizex, sizey = data.shape
@@ -71,8 +71,8 @@ def mktrace(fname, tracecen=0.0, weights=None):
         wei = N.ones(sizey)
     else:
         if not iterable(weights) or not iterable(weights[0]):
-            print "Weights must be a list of tuples, for example:\n"
-            print "weights=[(23,45),(300,670)] \n"
+            print("Weights must be a list of tuples, for example:\n")
+            print("weights=[(23,45),(300,670)] \n")
             return
         wei = N.zeros(sizey)
 
@@ -122,8 +122,8 @@ def mktrace(fname, tracecen=0.0, weights=None):
 
     #print 'time', time.time()-start
     #the minus sign is for consistency withthe way x2d reports the rotation
-    print "Traces were rotated by %f degrees \n" % (-(sparams[1]-rparams[1])*180 / N.pi)
-    print 'trace is centered on row %f' % tr._a2center
+    print("Traces were rotated by %f degrees \n" % (-(sparams[1]-rparams[1])*180 / N.pi))
+    print('trace is centered on row %f' % tr._a2center)
     return tr
 
 
@@ -230,14 +230,14 @@ class Trace:
             try:
                 f = pyfits.open(filename)
             except IOError:
-                print "Could not open file %s.\n" %filename
+                print("Could not open file %s.\n" %filename)
                 return
 
             tab = f[1].data
             f.close()
             return tab
         else:
-            print "A valid 1-D SPECTRUM TRACE TABLE is required.\n"
+            print("A valid 1-D SPECTRUM TRACE TABLE is required.\n")
             return None
 
     def getTraceInd(self, a2center):

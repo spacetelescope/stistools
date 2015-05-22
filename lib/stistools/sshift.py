@@ -6,7 +6,7 @@ along-the-slit dithering to reject hot pixels and cosmic rays.  The
 POSTARG2 keyword is used to determine the number of rows to be
 shifted.
 """
-from __future__ import division         # confidence high
+from __future__ import division, print_function  # confidence high
 
 import pyfits
 
@@ -98,33 +98,33 @@ Author:
     #  Setup input and output filename lists, so iteration can be done
     #  over a list of zipped filenames.
 
-    if not isinstance(input, types.ListType):
+    if not isinstance(input, list):
         input = [input]
     elif not input:
-        raise ValueError, \
-              'No input files found.  Possibly using wrong directory.'
+        raise ValueError(
+              'No input files found.  Possibly using wrong directory.')
 
     if output is None:
         output = len(input)*[None]
-    elif not isinstance(output, types.ListType):
+    elif not isinstance(output, list):
         output = [output]
 
     if shifts is None:
         pass
-    elif not isinstance(shifts, types.ListType):
+    elif not isinstance(shifts, list):
         shifts = [shifts]
 
     if tolerance is None:
         tolerance = 0.1
 
     if len(input) != len(output):
-        raise ValueError, \
-              'number of output files is not equal to number input files'
+        raise ValueError(
+              'number of output files is not equal to number input files')
 
     if shifts is not None:
         for shift in shifts:
-            if not isinstance(shift, types.IntType):
-                raise ValueError, 'shift value must be an integer'
+            if not isinstance(shift, int):
+                raise ValueError('shift value must be an integer')
 
     xposs, yposs, xpos0, ypos0 = [], [], None, None
     proposid, obset_id, targname = None, None, None
@@ -148,23 +148,23 @@ Author:
             platescale = float(platescale)
 
         if phdr['FLATCORR'].upper() != 'COMPLETE':
-            raise ValueError, \
-                  'Input file has not been flat-fielded corrected.'
+            raise ValueError(
+                  'Input file has not been flat-fielded corrected.')
 
         #  Check that TARGNAME is the same.
         if targname is None:
             targname = phdr['TARGNAME']
         elif targname != phdr['TARGNAME']:
-            raise ValueError, 'Not all exposures are for the same target.'
+            raise ValueError('Not all exposures are for the same target.')
 
         #  Check that all PROPOSID and OBSET_ID values are the same.
         if proposid is None:
             proposid = phdr['PROPOSID']
             obset_id = phdr['OBSET_ID']
         elif proposid != phdr['PROPOSID'] or obset_id != phdr['OBSET_ID']:
-            raise ValueError, '%s %s' % \
+            raise ValueError('%s %s' % 
                   ('Not all exposures are from the same visit;',
-                   'placement of the spectrum on the detector will differ.')
+                   'placement of the spectrum on the detector will differ.'))
 
         #  Check that PROPAPER, OPT_ELEM, CENWAVE are the same.
         if propaper is None:
@@ -173,21 +173,21 @@ Author:
             cenwave  = phdr['CENWAVE']
         elif propaper != phdr['PROPAPER'] or opt_elem != phdr['OPT_ELEM'] or \
                  cenwave != phdr['CENWAVE']:
-            raise ValueError, 'Different observing configurations have been used.'
+            raise ValueError('Different observing configurations have been used.')
 
         #  Check that BINAXIS1 and BINAXIS2 are the same.
         if binaxis1 is None:
             binaxis1 = phdr['BINAXIS1']
             binaxis2 = phdr['BINAXIS2']
         elif binaxis1 != phdr['BINAXIS1'] or binaxis2 != phdr['BINAXIS2']:
-            raise ValueError, 'Different binnings have been used.'
+            raise ValueError('Different binnings have been used.')
 
         #  Check that all POSTARG1 values are the same (within reason).
         xpos  = phdr['POSTARG1']
         if xpos0 is None:
             xpos0 = xpos
         elif abs(xpos - xpos0) > 0.05:
-            raise ValueError, 'POSTARG1 values of input files are not equal.'
+            raise ValueError('POSTARG1 values of input files are not equal.')
 
         #  Get the POSTARG2 values and the one that is nearest to row 512.
         ypos  = phdr['POSTARG2']/platescale
@@ -204,9 +204,9 @@ Author:
         for ypos in yposs:
             dypos = ypos - ypos0
             if abs(abs(dypos) - int(abs(dypos)+0.5)) > tolerance:
-                raise ValueError, '%s (%s pix) %s' % \
+                raise ValueError('%s (%s pix) %s' % \
                       ('POSTARG2 shift not within the specified tolerance',
-                       tolerance, 'of integer-pixel shift')
+                       tolerance, 'of integer-pixel shift'))
             #'POSTARG2 shift greater than specified tolerance: %d' % tolerance
             # 'non-integral POSTARG2 value or incorrect plate scale.'
             if dypos < 0.:
@@ -214,11 +214,11 @@ Author:
             else:
                 ishift = -int(dypos+0.5)
             if ishift % binaxis2:
-                raise ValueError, 'Non-integral pixel shift for binned data'
+                raise ValueError('Non-integral pixel shift for binned data')
             shifts.append(ishift//binaxis2)
 
     #  Process each file using corresponding pixel shift.
-    print 'input-file        pixel-shift'
+    print('input-file        pixel-shift')
     for infile, outfile, npixel in zip(input, output, shifts):
         fin  = pyfits.open(infile)
 
@@ -228,9 +228,9 @@ Author:
             outfile = re.sub('flt\.', 'sfl.', infile, count=1)
 
         if binaxis2 == 1:
-            print '%18s: %3d' % (infile, npixel)
+            print('%18s: %3d' % (infile, npixel))
         else:
-            print '%18s: %3d  binned' % (infile, npixel)
+            print('%18s: %3d  binned' % (infile, npixel))
         shiftimage(infile, outfile, shift=npixel)
         fin.close()
 
@@ -255,12 +255,12 @@ if __name__ == '__main__':
         elif opt[0] == '-t' or opt[0] == '--tolerance':
             toler = eval(opt[1])
         elif opt[0] == '-h' or opt[0] == '--help':
-            print sshift.__doc__
+            print(sshift.__doc__)
             sys.exit()
 
     if len(args) > 0:
         sshift(args, output=output, shifts=shifts, platescale=scale,
                tolerance=toler)
     else:
-        print """Usage: sshift [-o|--output 'files'] [-s|--shifts 'shifts']
-       [-p|--platescale scale] [-t|--tolerance tol] [-h|--help] input-files"""
+        print("""Usage: sshift [-o|--output 'files'] [-s|--shifts 'shifts']
+       [-p|--platescale scale] [-t|--tolerance tol] [-h|--help] input-files""")

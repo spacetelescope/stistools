@@ -1,15 +1,16 @@
+from __future__ import absolute_import
 from .version import *
 
-import calstis
-import basic2d
-import ocrreject
-import wavecal
-import x1d
-import x2d
-import mktrace
-import sshift
-import stisnoise
-import wx2d
+from . import calstis
+from . import basic2d
+from . import ocrreject
+from . import wavecal
+from . import x1d
+from . import x2d
+from . import mktrace
+from . import sshift
+from . import stisnoise
+from . import wx2d
 
 # These lines allow TEAL to print out the names of TEAL-enabled tasks
 # upon importing this package.

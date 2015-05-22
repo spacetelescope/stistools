@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from __future__ import division         # confidence high
+from __future__ import absolute_import, division, print_function # confidence high
 import sys
 import os
 import os.path
@@ -10,9 +10,9 @@ import numpy as N
 import stsci.convolve as convolve
 
 import pyfits
-import gettable
-import wavelen
-import r_util
+from . import gettable
+from . import wavelen
+from . import r_util
 
 __version__ = "1.2 (2010 April 27)"
 
@@ -55,14 +55,14 @@ def wx2d (input, output, wavelengths=None, helcorr="",
     """
 
     if algorithm != "wavelet" and algorithm != "kd":
-        raise ValueError, "algorithm can only be 'wavelet' or 'kd'"
+        raise ValueError("algorithm can only be 'wavelet' or 'kd'")
     if psf_width <= 0. and convolved is not None:
-        print "Warning:  'convolved' will be ignored because psf_width=0"
+        print("Warning:  'convolved' will be ignored because psf_width=0")
         convolved = None
     if algorithm != "wavelet" \
        and (subsampled is not None or convolved is not None):
-        raise ValueError, \
-        "cannot specify 'subsampled' or 'convolved' if algorithm='kd'"
+        raise ValueError(
+        "cannot specify 'subsampled' or 'convolved' if algorithm='kd'")
 
     helcorr = helcorr.upper()
 
@@ -71,7 +71,7 @@ def wx2d (input, output, wavelengths=None, helcorr="",
     n_imsets = nextend // 3     # number of image sets
 
     if ft[1].header.get ("ltm2_2", default=1.0) != 1.0:
-        raise RuntimeError, "can't handle data binned in the Y direction"
+        raise RuntimeError("can't handle data binned in the Y direction")
 
     phdu = ft[0]                # primary header/data unit
 
@@ -803,7 +803,7 @@ def trace_name (trace, phdr):
         try:
             tracefile = phdr["sptrctab"]
         except KeyError:
-            raise "Keyword SPTRCTAB not found; specify trace explicitly."
+            raise ValueError("Keyword SPTRCTAB not found; specify trace explicitly.")
         tracefile = r_util.expandFileName (tracefile)
     elif isinstance (trace, str):
         tracefile = r_util.expandFileName (trace)
@@ -861,7 +861,7 @@ def get_trace (tracefile, phdr, hdr):
     ltv = hdr.get ("ltv1", default=0.)                  # one indexing
     binaxis1 = int (round (1. / ltm))
     if binaxis1 not in [1, 2, 4, 8]:
-        raise ValueError, "LTM1_1 should be either 1., 0.5, 0.25, or 0.125"
+        raise ValueError("LTM1_1 should be either 1., 0.5, 0.25, or 0.125")
 
     filter = {"opt_elem": opt_elem, "cenwave": cenwave}
     trace_info = gettable.getTable (tracefile, filter,
@@ -980,8 +980,8 @@ if __name__ == "__main__":
     # Note that the command-line options do not include all of the
     # wx2d function arguments.
     if len (sys.argv) < 3 or len (sys.argv) > 7:
-        print "Syntax:  wx2d.py input output " \
-              "[wavelengths trace minrow maxrow]"
+        print("Syntax:  wx2d.py input output " 
+              "[wavelengths trace minrow maxrow]")
         sys.exit()
 
     input = sys.argv[1]
