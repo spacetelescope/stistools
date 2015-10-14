@@ -3,7 +3,7 @@
 from __future__ import division, print_function # confidence medium
 import math
 
-import pyfits
+from astropy.io import fits as pyfits
 import numpy
 import numpy.fft as fft
 import stsci.convolve as convolve

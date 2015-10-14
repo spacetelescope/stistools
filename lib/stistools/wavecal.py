@@ -8,7 +8,7 @@ import glob
 import subprocess
 
 import numpy.random as rn               # used by mkRandomName
-import pyfits
+from astropy.io import fits as pyfits
 
 from stsci.tools import parseinput,teal
 

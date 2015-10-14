@@ -29,7 +29,7 @@ Simple example of running mktrace on a STIS file named 'file.fits':
 from __future__ import division, print_function # confidence high
 
 import numpy as N
-import pyfits
+from astropy.io import fits as pyfits
 import os.path
 import stsci.convolve as conv
 import stsci.ndimage as ni

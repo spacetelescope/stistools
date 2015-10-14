@@ -8,7 +8,7 @@ shifted.
 """
 from __future__ import division, print_function  # confidence high
 
-import pyfits
+from astropy.io import fits as pyfits
 
 
 __version__ = '1.7 (2010-Apr-27)'
