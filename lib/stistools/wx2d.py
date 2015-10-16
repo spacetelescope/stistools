@@ -9,7 +9,7 @@ import math
 import numpy as N
 import stsci.convolve as convolve
 
-import pyfits
+from astropy.io import fits as pyfits
 from . import gettable
 from . import wavelen
 from . import r_util

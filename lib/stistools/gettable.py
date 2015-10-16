@@ -4,7 +4,7 @@ import math
 
 import numpy as N
 
-import pyfits
+from astropy.io import fits as pyfits
 
 STRING_WILDCARD = "ANY"
 INT_WILDCARD = -1
