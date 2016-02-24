@@ -7,14 +7,14 @@ import os.path
 import math
 
 import numpy as N
-import stsci.convolve as convolve
+from scipy import signal as convolve
 
 from astropy.io import fits as pyfits
 from . import gettable
 from . import wavelen
 from . import r_util
 
-__version__ = "1.2 (2010 April 27)"
+__version__ = "1.3 (2016 Feb 24)"
 
 def wx2d (input, output, wavelengths=None, helcorr="",
           algorithm="wavelet",
@@ -353,7 +353,7 @@ def wavelet_resampling (hdu, img, errimg,
                        for j in range(-32, 32)])
         krn = krn/N.sum(krn)
         for j in range(sub5.shape[1]):
-            cnv[:,j] = convolve.convolve (sub5[:,j], krn, mode=1)  # same size
+            cnv[:,j] = convolve.convolve (sub5[:,j], krn, mode='same')  # same size
         if convolved is not None:
             hdu.data = cnv.copy()
             ofd = pyfits.open (convolved, mode="update")
@@ -980,7 +980,7 @@ if __name__ == "__main__":
     # Note that the command-line options do not include all of the
     # wx2d function arguments.
     if len (sys.argv) < 3 or len (sys.argv) > 7:
-        print("Syntax:  wx2d.py input output " 
+        print("Syntax:  wx2d.py input output "
               "[wavelengths trace minrow maxrow]")
         sys.exit()
 

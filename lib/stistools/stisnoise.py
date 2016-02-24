@@ -6,10 +6,10 @@ import math
 from astropy.io import fits as pyfits
 import numpy
 import numpy.fft as fft
-import stsci.convolve as convolve
+from scipy import signal as convolve
 
 
-__version__ = '5.5 (2010-Apr-27)'
+__version__ = '5.6 (2016-Feb-24)'
 
 def _median(arg):
     return numpy.sort(arg)[arg.shape[0]//2]
@@ -93,7 +93,7 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
     kernx = numpy.arange(kernw)
     kerny = gauss(kernx, kernw//2, sigma, 1.0)  # gaussian kernel
     kerny = kerny/numpy.sum(kerny)
-    filterc = convolve.correlate(filter, kerny, convolve.SAME)
+    filterc = convolve.correlate(filter, kerny, mode='same')
     tran  = tran*filterc
     # inverse transform
     time_series = fft.ifft(tran).real[:ntime+2]
@@ -217,7 +217,7 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     elif (nr, nc) == (fltxy, fltxy):
         image_type = 'flt'
     else:
-        raise RuntimeError('This program should be run on 1062x1044 ' 
+        raise RuntimeError('This program should be run on 1062x1044 '
               'or 1024x1024 data only.')
 
     # Pad data with fake "OVERSCAN" if data have been overscan trimmed
