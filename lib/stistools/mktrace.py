@@ -31,14 +31,14 @@ from __future__ import division, print_function # confidence high
 import numpy as N
 from astropy.io import fits as pyfits
 import os.path
-import stsci.convolve as conv
-import stsci.ndimage as ni
+from scipy.signal import boxcar
+from scipy import ndimage as ni
 
 from stsci.tools import gfit, linefit
 from stsci.tools import fileutil as fu
 
-__version__ = '1.1'
-__vdate__ = '2007-03-02'
+__version__ = '1.2'
+__vdate__ = '2016-02-24'
 
 
 def mktrace(fname, tracecen=0.0, weights=None):
@@ -404,7 +404,7 @@ class Trace:
         for c in N.arange(sizey):
             col = specimage[:,c]
             col = col - N.median(col)
-            smcol = conv.boxcar(col, (3,)).astype(N.float)
+            smcol = boxcar(col, (3,)).astype(N.float)
             fit = gfit.gfit1d(smcol, quiet=1, maxiter=15)
             smoytrace[c] = fit.params[1]
 
