@@ -6,13 +6,15 @@ import math
 from astropy.io import fits as pyfits
 import numpy
 import numpy.fft as fft
-from scipy import signal as convolve
+from scipy import ndimage
+from scipy import signal
 
+__version__ = '5.6 (2016-Mar-02)'
 
-__version__ = '5.6 (2016-Feb-24)'
 
 def _median(arg):
     return numpy.sort(arg)[arg.shape[0]//2]
+
 
 def medianfilter(time_series, width):
     tlen = time_series.shape[0]
@@ -27,6 +29,7 @@ def medianfilter(time_series, width):
     for j in range(tlen-end, tlen):
         res[j] = _median(time_series[j-beg:])
     return res
+
 
 def wipefilter(time_series, image_type, sst, freqmin, freqmax, scale):
     ntime = time_series.shape[0]
@@ -62,6 +65,7 @@ def gauss(x, x0, dx, ymax):
         y = (0.*x)*(x != x0)+(x == x0)
     return y*ymax
 
+
 def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
     ntime = time_series.shape[0]
     # if ntime is a prime number the fft will take forever, so make
@@ -93,7 +97,7 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
     kernx = numpy.arange(kernw)
     kerny = gauss(kernx, kernw//2, sigma, 1.0)  # gaussian kernel
     kerny = kerny/numpy.sum(kerny)
-    filterc = convolve.correlate(filter, kerny, mode='same')
+    filterc = signal.correlate(filter, kerny, mode='same')
     tran  = tran*filterc
     # inverse transform
     time_series = fft.ifft(tran).real[:ntime+2]
@@ -261,7 +265,8 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     #if median != None:
     #    time_series = medianfilter(time_series, median)
     if boxcar > 0:
-        time_series = convolve.boxcar(time_series, (boxcar,))
+        boxcar_filter = signal.boxcar(boxcar) / boxcar
+        time_series = ndimage.convolve(time_series, boxcar_filter)
 
     elif wipe != None:
         time_series = wipefilter(time_series, image_type, sst,
