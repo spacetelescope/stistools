@@ -11,16 +11,17 @@ from . import r_util
 DEG_RAD = N.pi / 180.                   # degrees to radians
 SPEED_OF_LIGHT = 299792.458             # km / s
 
-def compute_wavelengths (shape, phdr, hdr, helcorr):
+
+def compute_wavelengths(shape, phdr, hdr, helcorr):
     """Compute a 2-D array of wavelengths, one value for each image pixel.
 
     Parameters
     ----------
     shape : tuple of two ints
         the number of rows and columns in the output image
-    phdr :  pyfits Header object
+    phdr :  fits Header object
         primary header
-    hdr : pyfits Header object
+    hdr : fits Header object
         extension header
     helcorr : string
         "PERFORM" if heliocentric correction should be done
@@ -38,34 +39,34 @@ def compute_wavelengths (shape, phdr, hdr, helcorr):
 
     (nrows, ncols) = shape
 
-    opt_elem = phdr.get ("opt_elem", default="keyword_missing")
-    cenwave  = phdr.get ("cenwave", default=0)
-    aperture = phdr.get ("aperture", default="keyword_missing")
-    propaper = phdr.get ("propaper", default="keyword_missing")
-    sclamp   = phdr.get ("sclamp", default="NONE")
-    disptab  = phdr.get ("disptab", default="keyword_missing")
-    apdestab = phdr.get ("apdestab", default="keyword_missing")
-    inangtab = phdr.get ("inangtab", default="keyword_missing")
-    ra_targ  = phdr.get ("ra_targ", default="keyword_missing")
-    dec_targ = phdr.get ("dec_targ", default="keyword_missing")
+    opt_elem = phdr.get("opt_elem", default="keyword_missing")
+    cenwave = phdr.get("cenwave", default=0)
+    aperture = phdr.get("aperture", default="keyword_missing")
+    propaper = phdr.get("propaper", default="keyword_missing")
+    sclamp = phdr.get("sclamp", default="NONE")
+    disptab = phdr.get("disptab", default="keyword_missing")
+    apdestab = phdr.get("apdestab", default="keyword_missing")
+    inangtab = phdr.get("inangtab", default="keyword_missing")
+    ra_targ = phdr.get("ra_targ", default="keyword_missing")
+    dec_targ = phdr.get("dec_targ", default="keyword_missing")
 
-    expstart = hdr.get ("expstart", default=0.)
-    expend   = hdr.get ("expend", default=0.)
-    crpix2   = hdr.get ("crpix2", default=0.)
-    ltm      = hdr.get ("ltm1_1", default=1.)
-    ltv1     = hdr.get ("ltv1", default=0.)
-    ltv2     = hdr.get ("ltv2", default=0.)
-    shifta1  = hdr.get ("shifta1", default=0.)
-    shifta2  = hdr.get ("shifta2", default=0.)
+    expstart = hdr.get("expstart", default=0.)
+    expend = hdr.get("expend", default=0.)
+    crpix2 = hdr.get("crpix2", default=0.)
+    ltm = hdr.get("ltm1_1", default=1.)
+    ltv1 = hdr.get("ltv1", default=0.)
+    ltv2 = hdr.get("ltv2", default=0.)
+    shifta1 = hdr.get("shifta1", default=0.)
+    shifta2 = hdr.get("shifta2", default=0.)
 
-    disptab = r_util.expandFileName (disptab)
-    apdestab = r_util.expandFileName (apdestab)
-    inangtab = r_util.expandFileName (inangtab)
+    disptab = r_util.expandFileName(disptab)
+    apdestab = r_util.expandFileName(apdestab)
+    inangtab = r_util.expandFileName(inangtab)
 
     # Modify ltv and crpix2 for zero-indexed pixels.
     ltv1 += (ltm - 1.)
     crpix2 -= 1.
-    binaxis1 = round (1. / ltm)         # should be 1, 2, 4 or 8
+    binaxis1 = round(1. / ltm)         # should be 1, 2, 4 or 8
 
     # These offsets have not been converted from one-indexing to
     # zero-indexing, but that's OK because the input image must not
@@ -73,14 +74,14 @@ def compute_wavelengths (shape, phdr, hdr, helcorr):
     offset = shifta2 - ltv2
 
     if sclamp != "NONE":
-        nchar = len (propaper)
+        nchar = len(propaper)
         ending = propaper[nchar-2:nchar]
         if ending in PSEUDOAPERTURES:
             aperture = aperture + ending
 
     if helcorr == "PERFORM":
-        v_helio = radialvel.radialVel (ra_targ, dec_targ,
-                    (expstart + expend) / 2.)
+        v_helio = radialvel.radialVel(ra_targ, dec_targ,
+                                      (expstart + expend) / 2.)
         hfactor = (1. - v_helio / SPEED_OF_LIGHT)
     else:
         hfactor = 1.
@@ -89,53 +90,54 @@ def compute_wavelengths (shape, phdr, hdr, helcorr):
     # a set of coefficients at several positions along the slit, i.e.
     # disp_coeff[i] is the set of coefficients at position a2center[i].
     filter = {"opt_elem": opt_elem, "cenwave": cenwave}
-    disp_info = gettable.getTable (disptab, filter,
-                  sortcol="a2center", at_least_one=True)
-    ref_aper = disp_info.field ("ref_aper")[0]  # name of reference aperture
-    a2center = disp_info.field ("a2center") - 1.        # zero indexing
-    ncoeff = disp_info.field ("ncoeff")[0]      # same for all rows
-    disp_coeff = disp_info.field ("coeff")
-    delta_offset1 = get_delta_offset1 (apdestab, aperture, ref_aper)
+    disp_info = gettable.getTable(disptab, filter,
+                                  sortcol="a2center", at_least_one=True)
+    ref_aper = disp_info.field("ref_aper")[0]  # name of reference aperture
+    a2center = disp_info.field("a2center") - 1.        # zero indexing
+    ncoeff = disp_info.field("ncoeff")[0]      # same for all rows
+    disp_coeff = disp_info.field("coeff")
+    delta_offset1 = get_delta_offset1(apdestab, aperture, ref_aper)
 
-    apdes_info = gettable.getTable (apdestab, {"aperture": aperture},
-                   exactly_one=True)
+    apdes_info = gettable.getTable(apdestab, {"aperture": aperture},
+                                   exactly_one=True)
     # Check whether ANGLE is a column in this table.
     names = []
     for name in apdes_info.names:
-        names.append (name.lower())
+        names.append(name.lower())
     if "angle" in names:
-        angle = apdes_info.field ("angle")[0]
+        angle = apdes_info.field("angle")[0]
     else:
         print("Warning:  Column ANGLE not found in", apdestab)
         angle = REF_ANGLE
     del names
 
-    delta_tan = N.tan (angle * DEG_RAD) - N.tan (REF_ANGLE * DEG_RAD);
+    delta_tan = N.tan(angle * DEG_RAD) - N.tan(REF_ANGLE * DEG_RAD)
 
     # Note:  this assumes a first-order spectrum, but at the time of
     # writing there's actually no distinction in any of the iac tables.
     filter = {"opt_elem": opt_elem, "cenwave": cenwave, "sporder": 1}
-    inang_info = gettable.getTable (inangtab, filter, exactly_one=True)
+    inang_info = gettable.getTable(inangtab, filter, exactly_one=True)
 
-    wavelengths = N.zeros ((nrows, ncols), dtype=N.float64)
-    image_pixels = N.arange (ncols, dtype=N.float64)
+    wavelengths = N.zeros((nrows, ncols), dtype=N.float64)
+    image_pixels = N.arange(ncols, dtype=N.float64)
     # Convert from image pixels to reference pixels (but zero indexed).
     pixels = (image_pixels - ltv1) * binaxis1
-    for j in range (nrows):
-        row = float (j) + offset        # account for possible subarray
+    for j in range(nrows):
+        row = float(j) + offset        # account for possible subarray
         # Interpolate to get dispersion relation for current (0-indexed) row.
-        coeff = r_util.interpolate (a2center, disp_coeff, row)
+        coeff = r_util.interpolate(a2center, disp_coeff, row)
         # Apply corrections.
-        adjust_disp (ncoeff, coeff, delta_offset1, shifta1, inang_info,
-                     delta_tan, row-crpix2, binaxis1)
+        adjust_disp(ncoeff, coeff, delta_offset1, shifta1, inang_info,
+                    delta_tan, row-crpix2, binaxis1)
         # Compute wavelength from pixel numbers.
-        wl = evaldisp.newton (pixels, coeff, cenwave)
+        wl = evaldisp.newton(pixels, coeff, cenwave)
         wl *= hfactor
         wavelengths[j] = wl.copy()
 
     return wavelengths
 
-def get_delta_offset1 (apdestab, aperture, ref_aper):
+
+def get_delta_offset1(apdestab, aperture, ref_aper):
     """Get the incidence angle offset.
 
     Parameters
@@ -156,20 +158,21 @@ def get_delta_offset1 (apdestab, aperture, ref_aper):
     """
 
     # Get the offset for the aperture that was used for the observation.
-    apdes_info = gettable.getTable (apdestab, {"aperture": aperture},
-                   exactly_one=True)
-    aperture_offset1 = apdes_info.field ("offset1")[0]
+    apdes_info = gettable.getTable(apdestab, {"aperture": aperture},
+                                   exactly_one=True)
+    aperture_offset1 = apdes_info.field("offset1")[0]
 
     # Get the offset for the aperture that was used for creating the
     # dispersion relation.
-    apdes_info = gettable.getTable (apdestab, {"aperture": ref_aper},
-                  exactly_one=True)
-    ref_aper_offset1 = apdes_info.field ("offset1")[0]
+    apdes_info = gettable.getTable(apdestab, {"aperture": ref_aper},
+                                   exactly_one=True)
+    ref_aper_offset1 = apdes_info.field("offset1")[0]
 
     return aperture_offset1 - ref_aper_offset1
 
-def adjust_disp (ncoeff, coeff, delta_offset1, shifta1, inang_info,
-                 delta_tan, delta_row, binaxis1):
+
+def adjust_disp(ncoeff, coeff, delta_offset1, shifta1, inang_info,
+                delta_tan, delta_row, binaxis1):
     """Adjust the dispersion coefficients.
 
     The changes to the coefficients are for the incidence angle
@@ -197,12 +200,12 @@ def adjust_disp (ncoeff, coeff, delta_offset1, shifta1, inang_info,
 
     """
 
-    iac_ncoeff1 = inang_info.field ("ncoeff1")[0]
-    iac_coeff1 = inang_info.field ("coeff1")[0]
-    iac_ncoeff2 = inang_info.field ("ncoeff2")[0]
-    iac_coeff2 = inang_info.field ("coeff2")[0]
+    iac_ncoeff1 = inang_info.field("ncoeff1")[0]
+    iac_coeff1 = inang_info.field("coeff1")[0]
+    iac_ncoeff2 = inang_info.field("ncoeff2")[0]
+    iac_coeff2 = inang_info.field("coeff2")[0]
 
-    for i in range (iac_ncoeff1):
+    for i in range(iac_ncoeff1):
         coeff[i] += iac_coeff1[i] * delta_offset1
 
     if iac_ncoeff2 > 0:

@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 
-from __future__ import division, print_function # confidence unknown
+from __future__ import division, print_function
 import os
 import sys
 import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput,teal
+from stsci.tools import parseinput, teal
 
 """
 Perform basic 2-D calibration of STIS data.
@@ -103,14 +103,14 @@ def prtOptions():
     print("  as the input file names).")
 
 def basic2d(input, output="", outblev="",
-           dqicorr="perform", atodcorr="omit", blevcorr="perform",
-           doppcorr="perform",
-           lorscorr="perform", glincorr="perform", lflgcorr="perform",
-           biascorr="perform", darkcorr="perform", flatcorr="perform",
-           shadcorr="omit", photcorr="perform", statflag=True,
-           darkscale="",
-           verbose=False, timestamps=False,
-           trailer="", print_version=False, print_revision=False):
+            dqicorr="perform", atodcorr="omit", blevcorr="perform",
+            doppcorr="perform",
+            lorscorr="perform", glincorr="perform", lflgcorr="perform",
+            biascorr="perform", darkcorr="perform", flatcorr="perform",
+            shadcorr="omit", photcorr="perform", statflag=True,
+            darkscale="",
+            verbose=False, timestamps=False,
+            trailer="", print_version=False, print_revision=False):
     """Perform basic 2-D calibration of STIS raw data.
 
     Some calibration steps are relevant only for CCD or only for MAMA, and

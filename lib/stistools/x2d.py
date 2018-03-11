@@ -7,7 +7,7 @@ import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput,teal
+from stsci.tools import parseinput, teal
 
 """
 Rectify 2-D STIS spectral data.
@@ -257,7 +257,7 @@ def x2d(input, output="",
                 arglist.append("-wgt_err")
             elif err_alg != "wgt_var":
                 raise RuntimeError("err_alg must be either 'wgt_err'"
-                    " or 'wgt_var'; you specified '%s'" % err_alg)
+                                   " or 'wgt_var'; you specified '%s'" % err_alg)
 
         if blazeshift is not None:
             arglist.append("-b")
