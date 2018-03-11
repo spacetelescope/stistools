@@ -1,16 +1,16 @@
-from __future__ import division, print_function # confidence high
+from __future__ import division, print_function   # confidence high
 import os
 import math
 
-import numpy as N
+import numpy as np
 
-from astropy.io import fits as pyfits
+from astropy.io import fits
 
 STRING_WILDCARD = "ANY"
 INT_WILDCARD = -1
 
-def getTable (table, filter, sortcol=None,
-              exactly_one=False, at_least_one=False):
+def getTable(table, filter, sortcol=None,
+             exactly_one=False, at_least_one=False):
     """Return row(s) of a table that match the filter.
 
     Rows that match every item in the filter (a dictionary of
@@ -54,7 +54,7 @@ def getTable (table, filter, sortcol=None,
 
     """
 
-    fd = pyfits.open (table, mode="readonly")
+    fd = fits.open(table, mode="readonly")
     data = fd[1].data
 
     # There will be one element of select_arrays for each non-trivial
@@ -65,69 +65,69 @@ def getTable (table, filter, sortcol=None,
 
         if filter[key] == STRING_WILDCARD:
             continue
-        column = data.field (key)
-        if len (column) == 0:
+        column = data.field(key)
+        if len(column) == 0:
             return None
         selected = (column == filter[key])
 
         # Test for for wildcards in the table.
         wild = None
-        if isinstance (column, N.chararray):
+        if isinstance(column, np.chararray):
             wild = (column == STRING_WILDCARD)
-        elif isinstance (column[0], N.integer):
+        elif isinstance(column[0], np.integer):
             wild = (column == INT_WILDCARD)
         if wild is not None:
-            selected = N.logical_or (selected, wild)
+            selected = np.logical_or(selected, wild)
 
-        select_arrays.append (selected)
+        select_arrays.append(selected)
 
-    if len (select_arrays) > 0:
+    if len(select_arrays) > 0:
         selected = select_arrays[0]
         for sel_i in select_arrays[1:]:
-             selected = N.logical_and (selected, sel_i)
+            selected = np.logical_and(selected, sel_i)
         newdata = data[selected]
     else:
         newdata = fd[1].data.copy()
 
     fd.close()
 
-    nselect = len (newdata)
+    nselect = len(newdata)
     if nselect < 1:
         newdata = None
 
     if (exactly_one or at_least_one) and nselect < 1:
         message = "Table has no matching row;\n" + \
                   "table name is " + table + "\n" + \
-                  "row selection is " + repr (filter)
+                  "row selection is " + repr(filter)
         raise RuntimeError(message)
 
     if exactly_one and nselect > 1:
         print("Table has more than one matching row;")
         print("table name is", table)
-        print("row selection is", repr (filter))
+        print("row selection is", repr(filter))
         print("only the first will be used.")
 
-    if len (newdata) > 1 and sortcol is not None:
-        newdata = sortrows (newdata, sortcol)
+    if len(newdata) > 1 and sortcol is not None:
+        newdata = sortrows(newdata, sortcol)
 
     return newdata
 
-def sortrows (rowdata, sortcol, ascend=True):
+def sortrows(rowdata, sortcol, ascend=True):
     """Return a copy of rowdata, sorted on sortcol."""
 
-    if len (rowdata) <= 1:
+    if len(rowdata) <= 1:
         return rowdata
 
-    column = rowdata.field (sortcol)
+    column = rowdata.field(sortcol)
     index = column.argsort()
     if not ascend:
-        ind = list (index)
+        ind = list(index)
         ind.reverse()
-        index = N.array (ind)
+        index = np.array(ind)
 
     return rowdata[index]
 
-def rotateTrace (trace_info, expstart):
+def rotateTrace(trace_info, expstart):
     """Rotate a2displ, if MJD and DEGPERYR are in the trace table.
 
     Parameters
@@ -146,18 +146,18 @@ def rotateTrace (trace_info, expstart):
     # If these columns are not in the table, just return.
     names = []
     for name in trace_info.names:
-        names.append (name.lower())
+        names.append(name.lower())
     if "degperyr" in names and "mjd" in names:
-        degperyr = trace_info.field ("degperyr")
-        mjd = trace_info.field ("mjd")
+        degperyr = trace_info.field("degperyr")
+        mjd = trace_info.field("mjd")
     else:
         return
 
-    a2displ = trace_info.field ("a2displ")
-    nelem = trace_info.field ("nelem")
-    for i in range (len (trace_info)):
+    a2displ = trace_info.field("a2displ")
+    nelem = trace_info.field("nelem")
+    for i in range(len(trace_info)):
         angle = (degperyr[i] * (expstart - mjd[i]) / 365.25)
-        tan_angle = math.tan (angle * math.pi / 180.)
-        x = N.arange (nelem[i], dtype=N.float64)
+        tan_angle = math.tan(angle * math.pi / 180.)
+        x = np.arange(nelem[i], dtype=np.float64)
         x -= (nelem[i] // 2)
         a2displ[i][:] -= (x * tan_angle)

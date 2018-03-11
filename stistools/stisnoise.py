@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from __future__ import division, print_function # confidence medium
+from __future__ import division, print_function  # confidence medium
 import math
 
-from astropy.io import fits as pyfits
+from astropy.io import fits
 import numpy
 import numpy.fft as fft
 from scipy import ndimage
@@ -43,13 +43,13 @@ def wipefilter(time_series, image_type, sst, freqmin, freqmax, scale):
         ntimep = ntime+14
     else:
         ntimep = ntime+7
-    t2    = numpy.zeros(ntimep, numpy.float64)
+    t2 = numpy.zeros(ntimep, numpy.float64)
     t2[:ntime] = time_series
-    freq  = numpy.arange(ntimep)/(ntimep*sst*1.0e-6)
+    freq = numpy.arange(ntimep)/(ntimep*sst*1.0e-6)
     freq[ntimep//2+1:ntimep] = freq[1:ntimep//2][::-1]
-    tran  = fft.fft(t2) / float(len(t2))
+    tran = fft.fft(t2) / float(len(t2))
     # apply filter
-    ind   = numpy.nonzero((freq > freqmin)*(freq < freqmax))
+    ind = numpy.nonzero((freq > freqmin)*(freq < freqmax))
     tran[ind] = tran[ind]*scale
     # inverse transform
     time_series = fft.ifft(tran).real[:ntime+2]
@@ -78,27 +78,27 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
         ntimep = ntime+14
     else:
         ntimep = ntime+7
-    t2    = numpy.zeros(ntimep, numpy.float64)
+    t2 = numpy.zeros(ntimep, numpy.float64)
     t2[:ntime] = time_series
-    freq  = numpy.arange(ntimep, dtype=numpy.float64) / (ntimep*sst*1.0e-6)
+    freq = numpy.arange(ntimep, dtype=numpy.float64) / (ntimep*sst*1.0e-6)
     freq[ntimep//2+1:ntimep] = freq[1:ntimep//2][::-1]
-    tran  = fft.fft(t2) / float(len(t2))
+    tran = fft.fft(t2) / float(len(t2))
     # apply filter
     filter = numpy.ones(ntimep, numpy.float64)
-    ind   = numpy.nonzero((freq > (freqpeak-width/2.0)) * \
-                             (freq < (freqpeak+width/2.0)))
+    ind = numpy.nonzero((freq > (freqpeak - width / 2.0)) *
+                        (freq < (freqpeak + width / 2.0)))
     filter[ind] = 0.0
-    freqstep = 1.0/(ntimep*sst*1.0e-6)
-    width = taper/freqstep       # specify window width in freq steps
+    freqstep = 1.0 / (ntimep * sst * 1.0e-6)
+    width = taper / freqstep       # specify window width in freq steps
     sigma = width/2.354820044    # convert fwhm to sigma
     kernw = int(5*sigma)         # make kernel have width of 5 sigma
-    if kernw%2 == 0:
-        kernw = kernw+1          # make kernel odd
+    if kernw % 2 == 0:
+        kernw = kernw + 1          # make kernel odd
     kernx = numpy.arange(kernw)
     kerny = gauss(kernx, kernw//2, sigma, 1.0)  # gaussian kernel
     kerny = kerny/numpy.sum(kerny)
     filterc = signal.correlate(filter, kerny, mode='same')
-    tran  = tran*filterc
+    tran = tran * filterc
     # inverse transform
     time_series = fft.ifft(tran).real[:ntime+2]
     time_series *= time_series.shape[0]
@@ -187,7 +187,7 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     #                  from __future__ import division
 
     # Check filter options
-    if ((boxcar > 0) + (wipe != None) + (window != None)) > 1:
+    if ((boxcar > 0) + (wipe is not None) + (window is not None)) > 1:
         raise ValueError('conflicting filter options')
 
     # Define physical characteristics of STIS CCD
@@ -200,49 +200,49 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     pps = pst/sst       # number of serial shift intervals in parallel interval
 
     # Retrieve exposure information from header
-    fin = pyfits.open(infile)
+    fin = fits.open(infile)
     extname = fin[exten].header['EXTNAME']
     inimage = fin[exten].data
-    himage  = fin[0].data
+    himage = fin[0].data
 
-    amp  = fin[0].header['CCDAMP']
+    amp = fin[0].header['CCDAMP']
     if verbose == 1:
-        print('Target: %s, Amp: %s, Gain: %d' % \
+        print('Target: %s, Amp: %s, Gain: %d' %
               (fin[0].header['TARGNAME'], amp, fin[0].header['CCDGAIN']))
 
     # Check to ensure the SCI extension is being used
     if extname != 'SCI':
         raise RuntimeError(
-              'You should only run this on a SCI extension, not %s.'%extname)
+            'You should only run this on a SCI extension, not %s.' % extname)
 
     nr, nc = inimage.shape
-    if   (nr, nc) == (nr0, nc0):
+    if (nr, nc) == (nr0, nc0):
         image_type = 'raw'
     elif (nr, nc) == (fltxy, fltxy):
         image_type = 'flt'
     else:
         raise RuntimeError('This program should be run on 1062x1044 '
-              'or 1024x1024 data only.')
+                           'or 1024x1024 data only.')
 
     # Pad data with fake "OVERSCAN" if data have been overscan trimmed
     if image_type == 'flt':
         temp = numpy.zeros((fltxy, nc0), numpy.float32)
         for row in range(fltxy):
-            temp[row,:] = _median(inimage[row,:])
-        temp[:,nos:nc0-nos] = inimage
+            temp[row, :] = _median(inimage[row, :])
+        temp[:, nos:nc0-nos] = inimage
         nc = nc0
     else:
         temp = inimage
 
     # Translate frame so that it is in readout order
-    if   amp == 'A':
+    if amp == 'A':
         image = temp             # amp A data -> leave as is
     elif amp == 'B':
-        image = temp[::-1,:]     # amp B data -> flip left<->right
+        image = temp[::-1, :]     # amp B data -> flip left<->right
     elif amp == 'C':
-        image = temp[:,::-1]     # amp C data -> flip top<->bottom
+        image = temp[:, ::-1]     # amp C data -> flip top<->bottom
     elif amp == 'D':
-        image = temp[::-1,::-1]  # amp D data -> rotate by 180 degrees
+        image = temp[::-1, ::-1]  # amp D data -> rotate by 180 degrees
     else:
         raise RuntimeError('No amplifier given in header.')
 
@@ -253,26 +253,26 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     for i in range(nr):
         k = int(i*nx)
         # (note that non-integer nx prevents phase wandering)
-        time_series[k:k+nc] = image[i,:]
+        time_series[k:k+nc] = image[i, :]
         # pad dead-time
-        medval = _median(image[i,:])
+        medval = _median(image[i, :])
         time_series[k+nc:int(k+nc+pps)] = ds + medval
         if int((i+1)*nx) != int(k+nc+pps):
             time_series[int((i+1)*nx)-1] = medval
 
     # Begin filtering options ***************
 
-    #if median != None:
+    # if median is not None:
     #    time_series = medianfilter(time_series, median)
     if boxcar > 0:
         boxcar_filter = signal.boxcar(boxcar) / boxcar
         time_series = ndimage.convolve(time_series, boxcar_filter)
 
-    elif wipe != None:
+    elif wipe is not None:
         time_series = wipefilter(time_series, image_type, sst,
                                  wipe[0], wipe[1], wipe[2])
 
-    elif window != None:
+    elif window is not None:
         time_series = windowfilter(time_series, image_type, sst,
                                    window[0], window[1], window[2])
 
@@ -281,19 +281,19 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     # Recreate 2-D image from time series
     outimage = numpy.zeros((nr, nc), numpy.float32)
     for i in range(nr):
-        outimage[i,:] = time_series[int(i*nx):int(i*nx+nc)]
+        outimage[i, :] = time_series[int(i*nx):int(i*nx+nc)]
     if image_type == 'flt':
-        outimage      = outimage[:,nos:(nc0-nos)]
+        outimage = outimage[:, nos:(nc0-nos)]
 
     # Restore original image orientation
-    if   amp == 'A':
+    if amp == 'A':
         pass                            # amp A data -> leave as is
     elif amp == 'B':
-        outimage = outimage[::-1,:]     # amp B data -> flip left<->right
+        outimage = outimage[::-1, :]     # amp B data -> flip left<->right
     elif amp == 'C':
-        outimage = outimage[:,::-1]     # amp C data -> flip top<->bottom
+        outimage = outimage[:, ::-1]     # amp C data -> flip top<->bottom
     elif amp == 'D':
-        outimage = outimage[::-1,::-1]  # amp D data -> rotate by 180 degrees
+        outimage = outimage[::-1, ::-1]  # amp D data -> rotate by 180 degrees
 
     # Trim vector to power of 2 for FFT
     # (this is the fastest fft calculation but it doesn't preserve all
@@ -312,9 +312,9 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
 
     if outfile:
         # write primary header then append ext
-        fout = pyfits.HDUList()
-        fout.append(pyfits.PrimaryHDU(header=fin[0].header))
-        fout.append(pyfits.ImageHDU(header=fin[1].header, data=outimage))
+        fout = fits.HDUList()
+        fout.append(fits.PrimaryHDU(header=fin[0].header))
+        fout.append(fits.ImageHDU(header=fin[1].header, data=outimage))
         fout.writeto(outfile)
 
     return (freq, magnitude)

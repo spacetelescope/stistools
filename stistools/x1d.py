@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 
-from __future__ import division, print_function # confidence unknown
+from __future__ import division, print_function  # confidence unknown
 import os
 import sys
 import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput,teal
+from stsci.tools import parseinput, teal
 
 """
 Extract 1-D spectrum.
@@ -362,7 +362,7 @@ def x1d(input, output="",
                 arglist.append("%d" % bksorder)
             else:
                 raise RuntimeError("bksmode must be one of 'off',"
-                    " 'median', 'average'; you specified '%s'" % bksmode)
+                                   " 'median', 'average'; you specified '%s'" % bksmode)
 
         if algorithm:
             if algorithm == "unweighted":
@@ -374,7 +374,7 @@ def x1d(input, output="",
                 arglist.append("-idt")
             else:
                 raise RuntimeError("algorithm must be either 'unweighted'"
-                    " or 'sc2d'; you specified '%s'" % algorithm)
+                                   " or 'sc2d'; you specified '%s'" % algorithm)
 
         if xoffset is not None:
             arglist.append("-st")

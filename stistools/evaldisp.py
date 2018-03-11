@@ -1,6 +1,6 @@
 from __future__ import division         # confidence high
 
-def newton (x, coeff, cenwave, niter=4):
+def newton(x, coeff, cenwave, niter=4):
     """Return the wavelength corresponding to pixel x.
 
     The dispersion solution is evaluated iteratively, and the slope
@@ -28,18 +28,18 @@ def newton (x, coeff, cenwave, niter=4):
     """
 
     wl = cenwave
-    x0 = evalDisp (coeff, wl)
+    x0 = evalDisp(coeff, wl)
 
     delta_wl = 1.                       # one Angstrom
-    for i in range (niter):
-        x1 = evalDisp (coeff, wl+delta_wl)
+    for i in range(niter):
+        x1 = evalDisp(coeff, wl+delta_wl)
         dispersion = delta_wl / (x1 - x0)
         wl += dispersion * (x - x0)
-        x0 = evalDisp (coeff, wl)
+        x0 = evalDisp(coeff, wl)
 
     return wl
 
-def evalDisp (coeff, wl):
+def evalDisp(coeff, wl):
     """Return the pixel corresponding to wavelength wl.
 
     Notes

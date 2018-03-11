@@ -8,9 +8,9 @@ import glob
 import subprocess
 
 import numpy.random as rn               # used by mkRandomName
-from astropy.io import fits as pyfits
+from astropy.io import fits
 
-from stsci.tools import parseinput,teal
+from stsci.tools import parseinput, teal
 
 """
 Perform wavelength calibration of STIS data.
@@ -325,7 +325,7 @@ def runBasic2d(wavecal, tempfnames, verbose, timestamps, fd_trailer):
     flag = False                # initial value
 
     # First check whether the wavecal file is already calibrated.
-    fd = pyfits.open(wavecal)
+    fd = fits.open(wavecal)
     dqicorr = fd[0].header.get("dqicorr", default="missing")
     blevcorr = fd[0].header.get("blevcorr", default="missing")
     darkcorr = fd[0].header.get("darkcorr", default="missing")
@@ -383,7 +383,7 @@ def runCs11(fwv_file, infile, tempfnames, verbose, timestamps, fd_trailer):
     """Subtract a fraction of the science image from the wavecal image."""
 
     # Check whether we need to run cs11.e.
-    fd = pyfits.open(fwv_file)
+    fd = fits.open(fwv_file)
     sclamp = fd[0].header.get("sclamp", default="missing")
     detector = fd[0].header.get("detector", default="missing")
     texpstrt = fd[0].header.get("texpstrt", default="missing")
@@ -427,7 +427,7 @@ def runX2d(cwv_file, angle, tempfnames,
 
     flag = False                # initial value
 
-    fd = pyfits.open(cwv_file)
+    fd = fits.open(cwv_file)
     opt_elem = fd[0].header.get("opt_elem", default="missing")
     x2dcorr = fd[0].header.get("x2dcorr", default="missing")
     fd.close()

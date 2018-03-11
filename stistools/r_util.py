@@ -3,7 +3,7 @@ import os
 import os.path
 import copy
 
-def expandFileName (filename):
+def expandFileName(filename):
     """Expand environment variable in a file name.
 
     If the input file name begins with either a Unix-style or IRAF-style
@@ -13,31 +13,32 @@ def expandFileName (filename):
 
     Parameters
     -----------
-    filename : string
-        a file name, possibly including an environment variable
+    filename : str
+        A file name, possibly including an environment variable.
 
     Returns
     --------
-    fullname : string
-        the file name with environment variable expanded
+    fullname : str
+        The file name with environment variable expanded.
     """
 
-    n = filename.find ("$")
+    n = filename.find("$")
     if n == 0:
         if filename != NOT_APPLICABLE:
             # Unix-style file name.
-            filename = os.path.expandvars (filename)
+            filename = os.path.expandvars(filename)
     elif n > 0:
         # IRAF-style file name.
         temp = "$" + filename[0:n] + os.sep + filename[n+1:]
-        filename = os.path.expandvars (temp)
+        filename = os.path.expandvars(temp)
         # If filename contains "//", delete all of them.
         double_sep = os.sep + os.sep
-        filename = filename.replace(double_sep,os.sep)
+        filename = filename.replace(double_sep, os.sep)
 
     return filename
 
-def interpolate (x, values, xp):
+
+def interpolate(x, values, xp):
     """Interpolate.
 
     Linear interpolation is used.  If the specified indpendent variable
@@ -47,36 +48,36 @@ def interpolate (x, values, xp):
     Parameters
     -----------
     x : a sequence object, e.g. an array, int or float
-        array of independent variable values
+        Array of independent variable values.
     values :  a sequence object, e.g. an array (not character)
-        array of dependent variable values
+        Array of dependent variable values.
     xp : int or float
-        independent variable value at which to interpolate
+        Independent variable value at which to interpolate.
 
     Returns
     -------
     interp_vals : the same type as one element of values
-        linearly interpolated value
+        Linearly interpolated value.
 
     """
 
-    nvalues = len (values)
+    nvalues = len(values)
 
     if nvalues == 1 or xp <= x.item(0):
-        value = copy.deepcopy (values[0])
+        value = copy.deepcopy(values[0])
     elif xp >= x.item(nvalues-1):
-        value = copy.deepcopy (values[nvalues-1])
+        value = copy.deepcopy(values[nvalues-1])
     else:
         # search for independent variable values that bracket the specified xp
-        for i in range (nvalues-1):
+        for i in range(nvalues-1):
             x0 = x.item(i)
             x1 = x.item(i+1)
             if xp >= x0 and xp <= x1:
                 if x0 == x1:
-                    value = copy.deepcopy (values[i])
+                    value = copy.deepcopy(values[i])
                 else:
-                    p = float (x1 - xp)
-                    q = float (xp - x0)
+                    p = float(x1 - xp)
+                    q = float(xp - x0)
                     value = (p * values[i] + q * values[i+1]) / (p + q)
                 break
 

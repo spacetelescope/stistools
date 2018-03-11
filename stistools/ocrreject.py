@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 
-from __future__ import division, print_function # confidence unknown
+from __future__ import division, print_function   # confidence unknown
 import os
 import sys
 import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput,teal
+from stsci.tools import parseinput, teal
 
 """
 Add STIS exposures, rejecting cosmic rays.
