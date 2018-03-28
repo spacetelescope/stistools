@@ -1,4 +1,4 @@
-from ..stistools.inttag import inttag
+from ..inttag import inttag
 from astropy.io.fits import printdiff
 
 def iraf_compare_results1():
