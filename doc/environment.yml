@@ -1,0 +1,12 @@
+name: stistools
+channels:
+  - http://ssb.stsci.edu/astroconda
+  - conda-forge
+dependencies:
+  - numpy
+  - numpydoc
+  - sphinx>=1.5
+  - ipython
+  - pip:
+    - sphinx_rtd_theme
+    - stsci_rtd_theme
