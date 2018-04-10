@@ -17,7 +17,7 @@ import sys, os
 import stsci_rtd_theme
 
 # Check Sphinx version
-import sphinx
+#import sphinx
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -36,7 +36,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.imgmath','numpydoc',
 
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+#templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -111,7 +111,6 @@ html_theme = 'stsci_rtd_theme'
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = [stsci_rtd_theme.get_html_theme_path()]
-html_static_path = ['_static']
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -132,7 +131,7 @@ html_static_path = ['_static']
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+#html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -204,3 +203,6 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
+def setup(app):
+    app.add_stylesheet("stsci.css")
