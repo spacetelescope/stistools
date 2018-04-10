@@ -12,6 +12,7 @@
 # serve to show the default.
 
 import sys, os
+sys.path.insert(0, os.path.abspath('../../lib'))
 
 #from stsci.sphinxext.conf import *
 import stsci_rtd_theme
