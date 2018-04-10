@@ -7,6 +7,8 @@ dependencies:
   - numpydoc
   - sphinx>=1.5
   - ipython
+  - d2to1
+  - stsci.distutils
   - pip:
     - sphinx_rtd_theme
     - stsci_rtd_theme
