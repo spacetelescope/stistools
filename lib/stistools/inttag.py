@@ -195,7 +195,7 @@ def exp_range_py(starttime, stoptime, events_data, gti_data, tzero_mjd):
     good_events = imset_events[gti_mask] # All events in the imset within the GTI(s)
     expstart = tzero_mjd + good_events['TIME'][0]/sec_per_day  # exposure start in MJD for imset
     expstop = tzero_mjd + good_events['TIME'][-1] / sec_per_day  # exposure stop in MJD for imset
-    exp_time = good_events['TIME'][-1] - good_events['TIME'][0] - masked_time  # exposure time in seconds
+    exp_time = imset_events['TIME'][-1] - imset_events['TIME'][0] - masked_time  # exposure time in seconds
 
     return exp_time, expstart, expstop, good_events
 
