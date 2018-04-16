@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import numpy as np
 from astropy.io import fits
+import astropy.stats
 import matplotlib.pyplot as plt
 
 
@@ -94,6 +95,8 @@ def inttag(input, output, starttime=None, increment=None,
     stoptime = starttime + increment
 
     imset_hdr_ver = 0  # output header value corresponding to imset
+    hdu_list = []
+    primary_added = False
     for imset in range(rcount):
 
         # Get Exposure Times
@@ -121,11 +124,36 @@ def inttag(input, output, starttime=None, increment=None,
                                                                             stoptime,
                                                                             exp_time))
 
-        accum = events_to_accum(good_events, siz_ax1, siz_ax2)
-        plt.imshow(accum,vmin=0,vmax=10,origin='lower')
-        plt.show()
+        accum = events_to_accum(good_events, siz_ax1, siz_ax2, highres)
+        # Calculate errors from accum image
+        # Note: C takes the square root of the counts, inttag.py uses a more robust confidence interval
+        conf_int = astropy.stats.poisson_conf_interval(accum, interval='sherpagehrels', sigma=1)
+        err = conf_int[1] - accum  # Error is the difference between the data and the upper confidence boundary
+
+        #plt.imshow(accum, vmin=0, vmax=10, origin='lower')
+        #plt.show()
+
+        # Copy Primary Header from input to output
+        if not primary_added:
+            pri_hdu = fits.PrimaryHDU(header=tag_hdr[0].header.copy())
+            hdu_list.append(pri_hdu)
+            primary_added = True
+
+        # Copy EVENTS extension header to SCI, ERR, DQ extensions
+        sci_hdu = fits.ImageHDU(data=accum, header=tag_hdr[1].header.copy(), name='SCI')
+        err_hdu = fits.ImageHDU(data=err, header=tag_hdr[1].header.copy(), name='ERR')
+        dq_hdu = fits.ImageHDU(header=tag_hdr[1].header.copy(), name='DQ')
+        hdu_list.append(sci_hdu)
+        hdu_list.append(err_hdu)
+        hdu_list.append(dq_hdu)
+
+
         starttime = stoptime
         stoptime += increment
+
+    # Write output file
+    out_hdul = fits.HDUList(hdu_list)
+    out_hdul.writeto(output, overwrite=True)
 
 
 def exp_range(starttime, stoptime, gti_data, tzero_mjd):
@@ -192,7 +220,7 @@ def exp_range_py(starttime, stoptime, events_data, gti_data, tzero_mjd):
         if len(masked_events) > 0:
             masked_time += masked_events['TIME'][-1] - masked_events['TIME'][0]
 
-    good_events = imset_events[gti_mask] # All events in the imset within the GTI(s)
+    good_events = imset_events[gti_mask]  # All events in the imset within the GTI(s)
     expstart = tzero_mjd + good_events['TIME'][0]/sec_per_day  # exposure start in MJD for imset
     expstop = tzero_mjd + good_events['TIME'][-1] / sec_per_day  # exposure stop in MJD for imset
     exp_time = imset_events['TIME'][-1] - imset_events['TIME'][0] - masked_time  # exposure time in seconds
@@ -200,14 +228,21 @@ def exp_range_py(starttime, stoptime, events_data, gti_data, tzero_mjd):
     return exp_time, expstart, expstop, good_events
 
 
-def events_to_accum(events_table, size_x, size_y):
+def events_to_accum(events_table, size_x, size_y, highres):
     print(size_x, size_y)
     axis1 = events_table['AXIS1']
     axis2 = events_table['AXIS2']
-    accum, xedges, yedges = np.histogram2d(axis2, axis1, bins=[size_y, size_x], range=[[0, size_y*2], [0, size_x*2]])
+    if highres:
+        range_y = size_y
+        range_x = size_x
+    else:
+        range_y = size_y * 2
+        range_x = size_x * 2
+    accum, xedges, yedges = np.histogram2d(axis2, axis1, bins=[size_y, size_x], range=[[1, range_y], [1, range_x]])
     return accum
 
 
 
+
 if __name__ == "__main__":
-    inttag("ob3001xqq_tag.fits", "test.fits", rcount=10, verbose=True, highres = False)
+    inttag("ob3001xqq_tag.fits", "test.fits", increment=200, rcount=3, verbose=True, highres=True)
