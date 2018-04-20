@@ -2,8 +2,8 @@
 
 import sys
 import getopt
-import glob
 import math
+import numpy as np
 
 from astropy.io import fits
 
@@ -119,39 +119,49 @@ class Doppinfo(object):
             be printed.
         """
 
+
+
+
         self.input = input
         self.update = update
         self.quiet = quiet
+        self.obs = {}
 
-        self.obs = None
-        self.orbit = None
         # unit vector (3-element list) pointing toward the target
         self.target = None
 
-        instrument = self.getInstrumentName()
-        self.obs = observation.initObservation(input, instrument)
-        self.obs.getInfo()
+        instrument, nextend = self.getInitInfo()
+        self.sci_num = nextend // 3
+        dt /= SEC_PER_DAY  # convert dt to days
 
-        dt /= SEC_PER_DAY               # convert dt to days
-        if spt is None:
-            spt = self.findSptName()
+        for sci_ext in np.arange(self.sci_num)+1:
 
-        self.orbit = orbit.HSTOrbit(spt)
 
-        self.getDoppParam()
+            self.obs = observation.initObservation(input, instrument, sci_ext)
+            self.obs.getInfo()
 
-        if not quiet:
-            print("# orbitper  doppzero      doppmag      doppmag_v    file")
-            print("  %.7g  %.6f  %.8f  %.8f   %s" %
-                  (self.orbitper, self.doppzero, self.doppmag,
-                   self.doppmag_v, self.input))
-            self.printDopplerShift(dt)
+            if spt is None:
+                spt = self.findSptName()
 
-        if update:
-            self.updateKeywords(input)
+            self.orbit = orbit.HSTOrbit(spt)
 
-    def getInstrumentName(self):
+            self.getDoppParam()
+
+            if not quiet:
+                print("# orbitper  doppzero      doppmag      doppmag_v    file")
+                print("  %.7g  %.6f  %.8f  %.8f   %s" %
+                    (self.orbitper, self.doppzero, self.doppmag,
+                    self.doppmag_v, self.input))
+                self.printDopplerShift(dt)
+
+            # Maybe shouldn't be in loop
+            if update:
+                self.updateKeywords(input, sci_ext)
+
+    def getInitInfo(self):
         """Find out what instrument was used for this exposure.
+        Overloading this function to minimize fits open calls, but this should
+        really be re-factored.
 
         Returns
         -------
@@ -161,9 +171,11 @@ class Doppinfo(object):
 
         fd = fits.open(self.input, mode="readonly")
         instrument = fd[0].header.get("instrume", "missing")
+        nextend = fd[0].header['nextend']
         fd.close()
 
-        return instrument
+
+        return instrument, nextend
 
     def findSptName(self):
         """Get the name of the support file.
@@ -327,7 +339,7 @@ class Doppinfo(object):
                         (SPEED_OF_LIGHT * self.obs.dispersion)
         return doppmag
 
-    def pixelsToRv(self, doppmag):
+    def pixelsToRv(self, doppmag, okey):
         """Convert Doppler shift in pixels to radial velocity.
 
         Parameters
@@ -356,6 +368,8 @@ class Doppinfo(object):
             during the orbit.
         """
 
+
+
         expstart = self.obs.expstart
         expend = self.obs.expend
         expmiddle = (expstart + expend) / 2.
@@ -365,12 +379,12 @@ class Doppinfo(object):
         if dt > 0.:
             print("# time (MJD)   shift   radvel  %s" % self.input)
 
-            # Add 1.e-5 to expend to include end of interval, in case
+            # Add 1.e-4 to expend to include end of interval, in case
             # increment divides exposure time evenly.
             done = False
             time = expstart
             while not done:
-                if time <= expend+1.e-5:
+                if time <= expend+1.e-4:
                     radvel = self.get_rv(time)
                     doppmag = self.rvToPixels(radvel)
                     print("%12.6f %7.2f %8.3f" % (time, doppmag, radvel))
@@ -495,7 +509,7 @@ class Doppinfo(object):
 
         return dx * spacing + x_middle
 
-    def updateKeywords(self, input):
+    def updateKeywords(self, input, sci_ext):
         """Update keywords in the first extension header.
 
         Parameters
@@ -505,17 +519,17 @@ class Doppinfo(object):
         """
 
         fd = fits.open(input, mode="update")
-        hdr = fd[1].header
+        hdr = fd['sci', sci_ext].header
 
         old_orbitper  = hdr.get("orbitper", -999)
         old_doppzero  = hdr.get("doppzero", -999)
         old_doppmag   = hdr.get("doppmag", -999)
         old_doppmag_v = hdr.get("doppmagv", -999)
 
-        hdr.update("orbitper", self.orbitper)
-        hdr.update("doppzero", self.doppzero)
-        hdr.update("doppmag", self.doppmag)
-        hdr.update("doppmagv", self.doppmag_v)
+        hdr["orbitper"] = self.orbitper
+        hdr["doppzero"] = self.doppzero
+        hdr["doppmag"] = self.doppmag
+        hdr["doppmagv"] = self.doppmag_v
 
         fd.close()
 
