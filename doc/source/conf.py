@@ -52,6 +52,9 @@ master_doc = 'index'
 project = u'stistools'
 copyright = u'2018, Warren Hack, Nadia Dencheva, Chris Sontag, Megan Sosey, Michael Droettboom'
 
+# Autodoc settings
+autoclass_content = 'both'
+
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
@@ -73,6 +76,10 @@ release = '1.0.6 (14-Aug-2012)'
 
 # List of documents that shouldn't be included in the build.
 #unused_docs = []
+
+# This is a fix for warnings because of sphinx-autodoc interaction for classes, however it removes
+# method table from the docs.
+numpydoc_show_class_members = False
 
 # List of directories, relative to source directory, that shouldn't be searched
 # for source files.
