@@ -11,7 +11,7 @@ This package provides data processing tools for working with STIS data.
 Contents:
  
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    basic2d
    calstis

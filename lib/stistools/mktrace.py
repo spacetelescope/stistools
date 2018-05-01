@@ -13,12 +13,13 @@ Refine a STIS trace table.
 - A new trace table is written to the current directory and
   the relevant keywords are updates in the header of the input file.
 
-:Usage:
+Example
+-------
 
-Simple example of running mktrace on a STIS file named 'file.fits':
+Simple example of running mktrace on a STIS file named 'file.fits'::
+
   >>>import mktrace
   >>>mktrace.mktrace('file.fits', [tracecen=509.4], [weights=[(x1,x2),(x3,x4)])
-
 
 :Authors:
 
