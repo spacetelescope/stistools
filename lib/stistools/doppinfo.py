@@ -7,8 +7,8 @@ import numpy as np
 
 from astropy.io import fits
 
-import observation
-import orbit
+from . import observation
+from . import orbit
 
 __version__ = "2.0"
 __vdate__ = "2012-08-28"
