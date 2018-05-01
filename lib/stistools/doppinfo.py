@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 import sys
-import getopt
 import math
 import numpy as np
 
@@ -23,71 +22,16 @@ SEC_PER_DAY    = 86400.0
 NPTS   = 64
 NPTS_D = 64.
 
-def main(args):
-    """Get command-line arguments and call Doppinfo.
-
-    The command-line options are:
-        -u (update keywords in input file)
-    Following the command-line option, there should be a list of one
-    or more raw files.
-    """
-
-    if len(args) < 1:
-        print("No input file was specified.")
-        prtOptions()
-        sys.exit()
-
-    try:
-        (options, infiles) = getopt.getopt(args, "uq:", ["spt=", "dt="])
-    except Exception as error:
-        print(str(error))
-        prtOptions()
-        sys.exit()
-
-    if len(options) == 0:
-        for i in range(len(infiles)):
-            if infiles[i][0] == '-':
-                print("Command-line options must precede "
-                      "the input file name.")
-                prtOptions()
-                sys.exit()
-
-    # default values
-    update = False
-    quiet = False
-    sptfile = None
-    dt = 0.
-
-    for i in range(len(options)):
-        if options[i][0] == "-u":
-            update = True
-        if options[i][0] == "-q":
-            quiet = True
-        elif options[i][0] == "--spt":
-            sptfile = options[i][1]
-        elif options[i][0] == "--dt":
-            dt = float(options[i][1])
-
-    for i in range(len(infiles)):
-        try:
-            d = Doppinfo(infiles[i], spt=sptfile, dt=dt,
-                         update=update, quiet=quiet)
-        except ValueError as e:
-            print("Skipping %s (%s)." % (infiles[i], e))
-
-def prtOptions():
-    """Print the command-line option."""
-
-    print("The command-line options are:")
-    print("  -u (update input file)")
-    print("  -q (quiet, i.e. don't print info)")
-    print("  --spt filename (support file to use)")
-    print("  --dt time interval (seconds) for printing Doppler shift")
-    print("")
-    print("Following the options, list one or more raw file names.")
 
 class Doppinfo(object):
-    """Compute Doppler parameters."""
+    """Compute Doppler parameters and information from HST orbital elements.
+    This class previously supported both COS and STIS data, but now only
+    supports STIS data.  The class will print doppler shift information for all
+    imsets contained in the input image.
+
+    Results will be printed to standard out.  To have the DOPPZERO, DOPPMAG,
+    and DOPPPMAGV keywords inserted/updated in the header you can set update to
+    True."""
 
     def __init__(self, input, spt=None, dt=0., update=False, quiet=False):
         """Compute Doppler parameters.
@@ -130,7 +74,7 @@ class Doppinfo(object):
         # unit vector (3-element list) pointing toward the target
         self.target = None
 
-        instrument, nextend = self.getInitInfo()
+        instrument, nextend = self._getInitInfo()
         self.sci_num = nextend // 3
         dt /= SEC_PER_DAY  # convert dt to days
 
@@ -141,11 +85,11 @@ class Doppinfo(object):
             self.obs.getInfo()
 
             if spt is None:
-                spt = self.findSptName()
+                spt = self._findSptName()
 
             self.orbit = orbit.HSTOrbit(spt)
 
-            self.getDoppParam()
+            self._getDoppParam()
 
             if not quiet:
                 print("# orbitper  doppzero      doppmag      doppmag_v    file")
@@ -158,7 +102,7 @@ class Doppinfo(object):
             if update:
                 self.updateKeywords(input, sci_ext)
 
-    def getInitInfo(self):
+    def _getInitInfo(self):
         """Find out what instrument was used for this exposure.
         Overloading this function to minimize fits open calls, but this should
         really be re-factored.
@@ -177,7 +121,7 @@ class Doppinfo(object):
 
         return instrument, nextend
 
-    def findSptName(self):
+    def _findSptName(self):
         """Get the name of the support file.
 
         Returns
@@ -202,7 +146,7 @@ class Doppinfo(object):
 
         return spt
 
-    def getDoppParam(self):
+    def _getDoppParam(self):
         """Compute Doppler parameters.
 
         The following attributes will be assigned:

@@ -24,6 +24,7 @@ Contents:
    radialvel
    r_util
    gettable
+   doppinfo
 
 Indices and tables
 ==================
