@@ -95,15 +95,14 @@ def inttag(input, output, starttime=None, increment=None,
     stoptime = starttime + increment
 
     imset_hdr_ver = 0  # output header value corresponding to imset
+    texptime = 0  # total exposure time
     hdu_list = []
-    primary_added = False
     for imset in range(rcount):
 
         # Get Exposure Times
         #exp_time, expstart, expstop = exp_range(starttime, stoptime, gti_data, tzero_mjd)
         exp_time, expstart, expstop, good_events = exp_range_py(starttime, stoptime, events_data, gti_data, tzero_mjd)
 
-        #print(exp_time, expstart, expstop, good_events)
         #if exp_time <= 0.:
         if len(good_events) == 0:
             if verbose:
@@ -116,7 +115,7 @@ def inttag(input, output, starttime=None, increment=None,
 
         if imset_hdr_ver == 1:  # If first science header, texpstart keyword value is expstart
             texpstart = expstart
-        texpstop = expstop  # texpstop will be expstop of last imset
+        texpend = expstop  # texpend will be expstop of last imset
 
         if verbose:
             print("imset: {}, start: {}, stop: {}, exposure time: {}".format(imset_hdr_ver,
@@ -124,25 +123,59 @@ def inttag(input, output, starttime=None, increment=None,
                                                                             stoptime,
                                                                             exp_time))
 
+        # Convert events table to accum image
         accum = events_to_accum(good_events, siz_ax1, siz_ax2, highres)
+
         # Calculate errors from accum image
         # Note: C takes the square root of the counts, inttag.py uses a more robust confidence interval
         conf_int = astropy.stats.poisson_conf_interval(accum, interval='sherpagehrels', sigma=1)
-        err = conf_int[1] - accum  # Error is the difference between the data and the upper confidence boundary
-
-        #plt.imshow(accum, vmin=0, vmax=10, origin='lower')
-        #plt.show()
-
-        # Copy Primary Header from input to output
-        if not primary_added:
-            pri_hdu = fits.PrimaryHDU(header=tag_hdr[0].header.copy())
-            hdu_list.append(pri_hdu)
-            primary_added = True
+        err = conf_int[1] - accum  # Error is the difference between upper confidence boundary and the data
 
         # Copy EVENTS extension header to SCI, ERR, DQ extensions
         sci_hdu = fits.ImageHDU(data=accum, header=tag_hdr[1].header.copy(), name='SCI')
         err_hdu = fits.ImageHDU(data=err, header=tag_hdr[1].header.copy(), name='ERR')
         dq_hdu = fits.ImageHDU(header=tag_hdr[1].header.copy(), name='DQ')
+
+        # Populate extensions
+        for hdu in [sci_hdu, err_hdu, dq_hdu]:
+            hdu.header['EXPTIME'] = exp_time
+            hdu.header['EXPSTART'] = expstart
+            hdu.header['EXPEND'] = expstop
+
+            # Check if image-specific WCS keywords already exist in the tag file (older tag files do)
+            keyword_list = list(hdu.header.keys())
+            if not any("CTYPE" in keyword for keyword in keyword_list):
+                n, k = [keyword[-1] for keyword in keyword_list if "TCTYP" in keyword]
+                # Rename keywords
+                for val, i in zip([n,k], ['1', '2']):
+                    hdu.header.rename_keyword('TCTYP' + val, 'CTYPE' + i)
+                    hdu.header.rename_keyword('TCRPX' + val, 'CRPIX' + i)
+                    hdu.header.rename_keyword('TCRVL' + val, 'CRVAL' + i)
+                    hdu.header.rename_keyword('TCUNI' + val, 'CUNIT' + i)
+                hdu.header.rename_keyword('TC{}_{}'.format(n, n), 'CD{}_{}'.format(1, 1))
+                hdu.header.rename_keyword('TC{}_{}'.format(n, k), 'CD{}_{}'.format(1, 2))
+                hdu.header.rename_keyword('TC{}_{}'.format(k, n), 'CD{}_{}'.format(2, 1))
+                hdu.header.rename_keyword('TC{}_{}'.format(k, k), 'CD{}_{}'.format(2, 2))
+
+
+
+
+
+            #hdu.header['LTM1_1'] = 0
+            #hdu.header['LTM2_2'] = 0
+            #hdu.header['LTV1'] = 0
+            #hdu.header['LTV2'] = 0
+
+            if not highres:
+                pass
+                #hdu.header['CD1_1'] = 1
+                #hdu.header['CD1_2'] = 0
+                #hdu.header['CD2_1'] = 0
+                #hdu.header['CD2_2'] = 1
+                #hdu.header['CRPIX1'] = 1
+                #hdu.header['CRPIX2'] = 1
+
+
         hdu_list.append(sci_hdu)
         hdu_list.append(err_hdu)
         hdu_list.append(dq_hdu)
@@ -150,8 +183,17 @@ def inttag(input, output, starttime=None, increment=None,
 
         starttime = stoptime
         stoptime += increment
+        texptime += exp_time
+
+    pri_hdu = fits.PrimaryHDU(header=tag_hdr[0].header.copy())
+    pri_hdu.header['NEXTEND'] = imset_hdr_ver * 3  # Three extensions per imset (SCI, ERR, DQ)
+    pri_hdu.header['NRPTEXP'] = imset_hdr_ver
+    pri_hdu.header['TEXPSTRT'] = texpstart
+    pri_hdu.header['TEXPEND'] = texpend
+    pri_hdu.header['TEXPTIME'] = texptime
 
     # Write output file
+    hdu_list = [pri_hdu] + hdu_list
     out_hdul = fits.HDUList(hdu_list)
     out_hdul.writeto(output, overwrite=True)
 
@@ -240,8 +282,6 @@ def events_to_accum(events_table, size_x, size_y, highres):
         range_x = size_x * 2
     accum, xedges, yedges = np.histogram2d(axis2, axis1, bins=[size_y, size_x], range=[[1, range_y], [1, range_x]])
     return accum
-
-
 
 
 if __name__ == "__main__":
