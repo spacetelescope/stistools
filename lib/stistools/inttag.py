@@ -75,16 +75,25 @@ def inttag(input, output, starttime=None, increment=None,
     # want to allow this, leaving it out for now
 
     # Get Header Info
-    cen1 = tag_hdr[0].header['CENTERA1']  # xcenter in c code
-    cen2 = tag_hdr[0].header['CENTERA2']  # ycenter in c code
-    siz_ax1 = tag_hdr[0].header['SIZAXIS1']  # nx in c code
-    siz_ax2 = tag_hdr[0].header['SIZAXIS2']  # ny in c code
+    cenx = tag_hdr[0].header['CENTERA1']  # xcenter in c code
+    ceny = tag_hdr[0].header['CENTERA2']  # ycenter in c code
+    siz_axx = tag_hdr[0].header['SIZAXIS1']  # nx in c code
+    siz_axy = tag_hdr[0].header['SIZAXIS2']  # ny in c code
     tzero_mjd = tag_hdr[1].header['EXPSTART']  # MJD zero point
 
-    # Adjust axis sizes for highres
+    xcorner = ((cenx - siz_axx / 2.) - 1) * 2
+    ycorner = ((ceny - siz_axy / 2.) - 1) * 2
+
+    # Adjust axis sizes for highres, determine binning
+    bin_n = 2
     if highres:
-        siz_ax1 *= 2
-        siz_ax2 *= 2
+        siz_axx *= 2
+        siz_axy *= 2
+        bin_n = 1
+
+    ltvx = ((bin_n - 2.) / 2. - xcorner) / bin_n
+    ltvy = ((bin_n - 2.) / 2. - ycorner) / bin_n
+    ltm = 2. / bin_n
 
     # Read in start and stop time parameters
     if starttime is None:
@@ -124,7 +133,7 @@ def inttag(input, output, starttime=None, increment=None,
                                                                             exp_time))
 
         # Convert events table to accum image
-        accum = events_to_accum(good_events, siz_ax1, siz_ax2, highres)
+        accum = events_to_accum(good_events, siz_axx, siz_axy, highres)
 
         # Calculate errors from accum image
         # Note: C takes the square root of the counts, inttag.py uses a more robust confidence interval
@@ -141,13 +150,14 @@ def inttag(input, output, starttime=None, increment=None,
             hdu.header['EXPTIME'] = exp_time
             hdu.header['EXPSTART'] = expstart
             hdu.header['EXPEND'] = expstop
+            hdu.header['EXTVER'] = imset_hdr_ver
 
             # Check if image-specific WCS keywords already exist in the tag file (older tag files do)
             keyword_list = list(hdu.header.keys())
             if not any("CTYPE" in keyword for keyword in keyword_list):
                 n, k = [keyword[-1] for keyword in keyword_list if "TCTYP" in keyword]
                 # Rename keywords
-                for val, i in zip([n,k], ['1', '2']):
+                for val, i in zip([n, k], ['1', '2']):
                     hdu.header.rename_keyword('TCTYP' + val, 'CTYPE' + i)
                     hdu.header.rename_keyword('TCRPX' + val, 'CRPIX' + i)
                     hdu.header.rename_keyword('TCRVL' + val, 'CRVAL' + i)
@@ -157,29 +167,25 @@ def inttag(input, output, starttime=None, increment=None,
                 hdu.header.rename_keyword('TC{}_{}'.format(k, n), 'CD{}_{}'.format(2, 1))
                 hdu.header.rename_keyword('TC{}_{}'.format(k, k), 'CD{}_{}'.format(2, 2))
 
-
-
-
-
-            #hdu.header['LTM1_1'] = 0
-            #hdu.header['LTM2_2'] = 0
-            #hdu.header['LTV1'] = 0
-            #hdu.header['LTV2'] = 0
+            # Time tag events table keywords
+            hdu.header['WCSAXES'] = 2
+            hdu.header['LTM1_1'] = ltm
+            hdu.header['LTM2_2'] = ltm
+            hdu.header['LTV1'] = ltvx
+            hdu.header['LTV2'] = ltvy
 
             if not highres:
                 pass
-                #hdu.header['CD1_1'] = 1
-                #hdu.header['CD1_2'] = 0
-                #hdu.header['CD2_1'] = 0
-                #hdu.header['CD2_2'] = 1
-                #hdu.header['CRPIX1'] = 1
-                #hdu.header['CRPIX2'] = 1
-
+                hdu.header['CD1_1'] *= 2
+                hdu.header['CD1_2'] *= 2
+                hdu.header['CD2_1'] *= 2
+                hdu.header['CD2_2'] *= 2
+                hdu.header['CRPIX1'] = (hdu.header['CRPIX1'] + 0.5) / 2.
+                hdu.header['CRPIX2'] = (hdu.header['CRPIX2'] + 0.5) / 2.
 
         hdu_list.append(sci_hdu)
         hdu_list.append(err_hdu)
         hdu_list.append(dq_hdu)
-
 
         starttime = stoptime
         stoptime += increment
@@ -285,4 +291,4 @@ def events_to_accum(events_table, size_x, size_y, highres):
 
 
 if __name__ == "__main__":
-    inttag("ob3001xqq_tag.fits", "test.fits", increment=200, rcount=3, verbose=True, highres=True)
+    inttag("ob3001xqq_tag.fits", "test.fits", rcount=3, verbose=True, highres=False)
