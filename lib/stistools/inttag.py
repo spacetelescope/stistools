@@ -56,22 +56,18 @@ def inttag(tagfile, output, starttime=None, increment=None,
     # Read in Events Data and GTI
     events_data = tag_hdr[1].data
     if allevents:  # If allevents, ignore GTI and generate gti_data based on the time of the first and last event
-        gti_data = np.rec.array([(events_data['TIME'][0], events_data['TIME'][-1])], formats = ">f8,>f8",names='START,STOP')
-    else:
+        gti_data = np.rec.array([(events_data['TIME'][0], events_data['TIME'][-1])],
+                                formats=">f8,>f8", names='START, STOP')
+    else:  # Otherwise, retrieve the GTIs from the GTI extension
         gti_data = tag_hdr['GTI'].data
 
+        # C code checked if it could retrieve a GTI table,
+        # If not, it used the events table. Not sure if we
+        # want to allow this, leaving it out for now
+
     # Determine start and stop times for counting events
-
-    # If the user sets the allevents flag, the time interval is determined by the
-    # first and last event in the events table. Otherwise, it is determined by the
-    # first START and the last STOP in the GTI Table
-
     gti_start = gti_data['START'][0]
     gti_stop = gti_data['STOP'][-1]
-
-    # C code checked if it could retrieve a GTI table,
-    # If not, it used the events table. Not sure if we
-    # want to allow this, leaving it out for now
 
     # Get Header Info
     cenx = tag_hdr[0].header['CENTERA1']  # xcenter in c code
@@ -109,7 +105,6 @@ def inttag(tagfile, output, starttime=None, increment=None,
 
         # Get Exposure Times
         exp_time, expstart, expstop, good_events = exp_range(starttime, stoptime, events_data, gti_data, tzero_mjd)
-
         if len(good_events) == 0:
             if verbose:
                 print("Skipping imset, due to no overlap with GTI\n", starttime, stoptime)
@@ -230,7 +225,20 @@ def exp_range(starttime, stoptime, events_data, gti_data, tzero_mjd):
 
         Returns
         -------
-        exp_time:
+        exp_time: float
+            Total exposure time in seconds for the given imset. This number accounts for any exposure time lost
+            to non-GTI time (if the user is not using allevents).
+
+        expstart: float
+
+            Start time of the imset exposure
+
+        expstop: float
+
+            Stop time of the imset exposure
+
+        good_events: float
+            The events list within the imset exposure time and within the GTIs.
 
 
 """
@@ -250,15 +258,12 @@ def exp_range(starttime, stoptime, events_data, gti_data, tzero_mjd):
         mask = (imset_events['TIME'] > gti[0]) * (imset_events['TIME'] < gti[1])
         gti_mask = np.logical_or(gti_mask, mask)  # OR global gti mask with local gti mask
 
-
-
     good_events = imset_events[gti_mask]  # All events in the imset within the GTI(s)
     if len(good_events) == 0:
         exp_time = 0
         expstart = tzero_mjd
         expstop = tzero_mjd
-        return exp_time, expstart, expstop, imset_events
-    bad_events = imset_events[~gti_mask]
+        return exp_time, expstart, expstop, good_events
     expstart = tzero_mjd + good_events['TIME'][0] / sec_per_day  # exposure start in MJD for imset
     expstop = tzero_mjd + good_events['TIME'][-1] / sec_per_day  # exposure stop in MJD for imset
 
@@ -270,18 +275,18 @@ def exp_range(starttime, stoptime, events_data, gti_data, tzero_mjd):
                 continue
             gaps.append((gti_data[i - 1][1], gti[0]))
 
+    # Calculate exposure time lost due to non-GTI overlap
     exptime_loss = 0
     for gap in gaps:
-        if gap[1] < stoptime and gap[0] > starttime:
+        if gap[1] <= stoptime and gap[0] >= starttime:
             exptime_loss += gap[1] - gap[0]
-        elif gap[1] > stoptime and gap[0] < stoptime:
+        elif gap[1] >= stoptime and gap[0] <= stoptime:
             exptime_loss += stoptime - gap[0]
-        elif gap[1] > starttime and gap[0] < starttime:
+        elif gap[1] >= starttime and gap[0] <= starttime:
             exptime_loss += gap[1] - starttime
         else:
             continue
 
-    print(exptime_loss)
     exp_time = stoptime - starttime - exptime_loss  # exposure time in seconds
 
     return exp_time, expstart, expstop, good_events
@@ -330,4 +335,4 @@ def events_to_accum(events_data, size_x, size_y, highres):
 
 
 if __name__ == "__main__":
-    inttag("gtigap_tag.fits", "test.fits", increment=50, rcount=24, verbose=True, highres=False, allevents = True)
+    inttag("gtigap_tag.fits", "test.fits",  increment=200, rcount=6, verbose=True, highres=False, allevents = False)
