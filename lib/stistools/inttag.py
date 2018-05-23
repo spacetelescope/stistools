@@ -53,21 +53,21 @@ def inttag(tagfile, output, starttime=None, increment=None,
     # Open Input File (_tag.fits)
     tag_hdr = fits.open(tagfile)
 
-    # Read in GTI (Good Time Interval) Table
-    gti_data = tag_hdr['GTI'].data
+    # Read in Events Data and GTI
     events_data = tag_hdr[1].data
+    if allevents:  # If allevents, ignore GTI and generate gti_data based on the time of the first and last event
+        gti_data = np.rec.array([(events_data['TIME'][0], events_data['TIME'][-1])], formats = ">f8,>f8",names='START,STOP')
+    else:
+        gti_data = tag_hdr['GTI'].data
 
     # Determine start and stop times for counting events
 
     # If the user sets the allevents flag, the time interval is determined by the
     # first and last event in the events table. Otherwise, it is determined by the
     # first START and the last STOP in the GTI Table
-    if allevents:
-        gti_start = tag_hdr[1].data['TIME'][0]
-        gti_stop = tag_hdr[1].data['TIME'][-1]
-    else:
-        gti_start = gti_data['START'][0]
-        gti_stop = gti_data['STOP'][-1]
+
+    gti_start = gti_data['START'][0]
+    gti_stop = gti_data['STOP'][-1]
 
     # C code checked if it could retrieve a GTI table,
     # If not, it used the events table. Not sure if we
@@ -262,15 +262,15 @@ def exp_range(starttime, stoptime, events_data, gti_data, tzero_mjd):
     expstart = tzero_mjd + good_events['TIME'][0] / sec_per_day  # exposure start in MJD for imset
     expstop = tzero_mjd + good_events['TIME'][-1] / sec_per_day  # exposure stop in MJD for imset
 
-    exptime_loss = 0
+    # Determine GTI gap regions
     gaps = []
     if len(gti_data) > 1:
         for i, gti in enumerate(gti_data):
             if i == 0:
                 continue
             gaps.append((gti_data[i - 1][1], gti[0]))
+
     exptime_loss = 0
-    print(starttime, stoptime, gaps)
     for gap in gaps:
         if gap[1] < stoptime and gap[0] > starttime:
             exptime_loss += gap[1] - gap[0]
@@ -330,4 +330,4 @@ def events_to_accum(events_data, size_x, size_y, highres):
 
 
 if __name__ == "__main__":
-    inttag("gtigap_tag.fits", "test.fits", increment=50, rcount=24, verbose=True, highres=False)
+    inttag("gtigap_tag.fits", "test.fits", increment=50, rcount=24, verbose=True, highres=False, allevents = True)
