@@ -144,6 +144,7 @@ def inttag(tagfile, output, starttime=None, increment=None,
             hdu.header['EXPEND'] = expstop
             hdu.header['EXTVER'] = imset_hdr_ver
 
+
             # Check if image-specific WCS keywords already exist in the tag file (older tag files do)
             keyword_list = list(hdu.header.keys())
             if not any("CTYPE" in keyword for keyword in keyword_list):
@@ -169,7 +170,6 @@ def inttag(tagfile, output, starttime=None, increment=None,
 
             # Convert keyword values to lowres scale if not highres
             if not highres:
-                pass
                 hdu.header['CD1_1'] *= 2
                 hdu.header['CD1_2'] *= 2
                 hdu.header['CD2_1'] *= 2
@@ -194,6 +194,8 @@ def inttag(tagfile, output, starttime=None, increment=None,
     pri_hdu.header['TEXPSTRT'] = texpstart
     pri_hdu.header['TEXPEND'] = texpend
     pri_hdu.header['TEXPTIME'] = texptime
+    pri_hdu.header['BINAXIS1'] = bin_n
+    pri_hdu.header['BINAXIS2'] = bin_n
     if not highres:
         pri_hdu.header['LORSCORR'] = "COMPLETE"  # Corr flag detailing MAMA data conversion to low res
 
