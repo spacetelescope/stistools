@@ -3,6 +3,7 @@ import numpy as np
 from astropy.io import fits
 import astropy.stats
 from astropy import units as u
+from datetime import datetime as dt
 
 
 def inttag(tagfile, output, starttime=None, increment=None,
@@ -137,12 +138,24 @@ def inttag(tagfile, output, starttime=None, increment=None,
         err_hdu = fits.ImageHDU(data=err, header=tag_hdr[1].header.copy(), name='ERR')
         dq_hdu = fits.ImageHDU(header=tag_hdr[1].header.copy(), name='DQ')
 
+        # Generate datetime for 'DATE' header keyword
+        dtstr = str(dt.utcnow())
+        date, h, m, s = [dtstr.split()[0], dtstr.split()[1].split(':')[0], dtstr.split()[1].split(':')[1],
+                         str(round(float(dtstr.split()[1].split(':')[-1])))]
+        if len(s) == 1:
+            s = '0' + s
+
+        dtval = date + 'T' + h + ':' + m + ':' + s
+
         # Populate extensions
-        for hdu in [sci_hdu, err_hdu, dq_hdu]:
+        for idx, hdu in enumerate([sci_hdu, err_hdu, dq_hdu]):
+
             hdu.header['EXPTIME'] = exp_time
             hdu.header['EXPSTART'] = expstart
             hdu.header['EXPEND'] = expstop
             hdu.header['EXTVER'] = imset_hdr_ver
+            hdu.header['DATE'] = (dtval, "Date FITS file was generated")
+            hdu.header['ORIGIN'] = "stistools inttag.py"
 
 
             # Check if image-specific WCS keywords already exist in the tag file (older tag files do)
@@ -177,6 +190,11 @@ def inttag(tagfile, output, starttime=None, increment=None,
                 hdu.header['CRPIX1'] = (hdu.header['CRPIX1'] + 0.5) / 2.
                 hdu.header['CRPIX2'] = (hdu.header['CRPIX2'] + 0.5) / 2.
 
+            # Populate DQ header with dq specific keywords
+            if idx == 2:
+                hdu.header['NPIX1'] = siz_axx
+                hdu.header['NPIX2'] = siz_axy
+
         # Append imset extensions to header list
         hdu_list.append(sci_hdu)
         hdu_list.append(err_hdu)
@@ -189,6 +207,8 @@ def inttag(tagfile, output, starttime=None, increment=None,
 
     # Copy tag file primary header to output header
     pri_hdu = fits.PrimaryHDU(header=tag_hdr[0].header.copy())
+
+    # Add/Modify primary header keywords
     pri_hdu.header['NEXTEND'] = imset_hdr_ver * 3  # Three extensions per imset (SCI, ERR, DQ)
     pri_hdu.header['NRPTEXP'] = imset_hdr_ver
     pri_hdu.header['TEXPSTRT'] = texpstart
@@ -196,6 +216,10 @@ def inttag(tagfile, output, starttime=None, increment=None,
     pri_hdu.header['TEXPTIME'] = texptime
     pri_hdu.header['BINAXIS1'] = bin_n
     pri_hdu.header['BINAXIS2'] = bin_n
+    pri_hdu.header['FILENAME'] = output.split('/')[-1]
+    pri_hdu.header['DATE'] = (dtval, "Date FITS file was generated")
+    pri_hdu.header['ORIGIN'] = "stistools inttag.py"
+
     if not highres:
         pri_hdu.header['LORSCORR'] = "COMPLETE"  # Corr flag detailing MAMA data conversion to low res
 
