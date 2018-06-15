@@ -2,13 +2,12 @@
 
 from math import modf, sqrt
 import os
-import sys
 import argparse
 
 from astropy.io import fits
 import numpy as np
 
-"""
+__doc__ = """
 Analyze STIS target acquisition images. :func:`tastis` will print general
 information about each input target acquisition image, and will analyze both
 types of STIS target acquisitions: ACQs and ACQ/PEAKs
@@ -67,20 +66,6 @@ MIN_SPECTROSCOPIC_FLUX = 20000.
 PLATESCALE = 0.0508
 COSTHETA = 0.70711
 SINTHETA = 0.70711
-
-
-def prtOptions():
-    """Print a list of command-line options and arguments."""
-
-    print("The command-line options are:")
-    print("  --version (print the version number and exit)")
-    print("  -r (print the full version string and exit)")
-    print("  -v (verbose)")
-    print("  -u update ")
-    print("")
-    print("Following the options, list one or more input files")
-    print("  (enclosed in quotes if more than one file name is specified")
-    print("  and/or if wildcards are used) and one output file name.")
 
 
 def tastis(raw_filename, update=False):
@@ -425,13 +410,13 @@ def _calculate_slews(keywords):
         # Slew calculations for ACQ/PEAKs.
         if keywords['search'] == "LINEARAXIS2":
             finalx = int(keywords['box_step']/2) * \
-                     keywords['peakstep']/(PLATESCALE*1000.0)
+                keywords['peakstep']/(PLATESCALE*1000.0)
             finaly = 0.0
 
         elif keywords['search'] == "LINEARAXIS1":
             finalx = 0.0
             finaly = int(keywords['box_step']/2) * \
-                     keywords['peakstep']/(PLATESCALE*1000.0)
+                keywords['peakstep']/(PLATESCALE*1000.0)
 
         elif keywords['search'] == 'SPIRAL':
             x, finaly = modf(sqrt(keywords['box_step']) / 2)
@@ -443,7 +428,6 @@ def _calculate_slews(keywords):
         # Final slews in pixels.
         keywords['a1total_pix'] = keywords['otaslwa1']/10.0 + finaly
         keywords['a2total_pix'] = keywords['otaslwa2']/10.0 + finalx
-
 
         if keywords['search'] == "SPIRAL":
             if abs(keywords['a2total_pix']) < 0.05:

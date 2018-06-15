@@ -25,6 +25,7 @@ Contents:
    radialvel
    ocrreject
    r_util
+   tastis
    gettable
 
 Indices and tables
