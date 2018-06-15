@@ -10,6 +10,7 @@ from . import x2d
 from . import mktrace
 from . import sshift
 from . import stisnoise
+from . import tastis
 from . import wx2d
 
 # These lines allow TEAL to print out the names of TEAL-enabled tasks
