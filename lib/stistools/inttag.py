@@ -5,6 +5,53 @@ import astropy.stats
 from astropy import units as u
 from datetime import datetime as dt
 
+__doc__ = """
+ The task :func:`inttag` converts an events table of TIMETAG mode STIS data into a raw, time-integrated ACCUM image. By 
+ default, :func:`inttag` only integrates over the good time intervals (GTI), though the user can choose to integrate 
+ over the entire exposure time by setting allevents=True. The output image can be calibrated as any other raw image.
+
+The input file for inttag is an event stream table of TIMETAG mode produced by generic conversion. The data will be 
+Doppler corrected (as required for medium and high resolution spectroscopic modes). This file will consist of a primary 
+header with no data, and two binary table extensions. The primary header is identical in structure to the primary header 
+of an ACCUM mode image. The first binary table (EXTNAME=EVENTS) contains a list of the events themselves (i.e. science 
+data as an event stream), and the second binary table (EXTNAME=GTI) contains a list of good time intervals for the 
+TIMETAG exposure. Columns "TIME", "AXIS1", and "AXIS2" in the EVENTS table are read. Columns "START" and "STOP" in the 
+GTI table are read.
+
+The output image is a time integrated (ACCUM mode) image with the same structure as any other STIS MAMA raw image 
+(i.e. primary header followed by a single or series of triplet extensions: SCI, ERR, DQ). The number of triplets is 
+determined by the value of rcount. The time interval in the Nth triplet covers from (starttime + (N-1)*increment) to 
+(starttime + N*increment). The exposure time in each interval need not be identical, because events are included in the 
+image only if they occur during "good time intervals" (as determined by the GTI extension table). The keyword OBSMODE 
+in the primary header of the output image will still be set to "TIME-TAG".
+
+The output science image is ready to be calibrated (see calstis, crreject, basic2d, x2d, x1d). 
+
+Examples
+--------
+
+:func:`inttag with default values:
+
+>>> import stistools
+>>> stistools.tastis.tastis("oddv01050_tag.fits", "oddv01050_raw.fits")
+
+:func:`inttag with highres output:
+
+>>> import stistools
+>>> stistools.tastis.tastis("oddv01050_tag.fits", "oddv01050_raw.fits", highres=True)
+
+:func:`inttag with multiple output imsets (5 count regions of 200s each):
+
+>>> import stistools
+>>> stistools.tastis.tastis("oddv01050_tag.fits", "oddv01050_raw.fits", rcount = 5, increment = 200)
+
+"""
+
+__taskname__ = "inttag"
+__version__ = "1.0"
+__vdate__ = "19-June-2018"
+__author__ = "Python: Doug Branton, C code: R. Katsanis, N. Zarate, Phil Hodge"
+
 
 def inttag(tagfile, output, starttime=None, increment=None,
            rcount=1, highres=False, allevents=False, verbose=True):
