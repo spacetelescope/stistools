@@ -60,3 +60,35 @@ def test_accum_rcount():
         output_data = fits.open(output)['SCI', sci+1].data
 
         assert (np.sum(output_data != iraf_data) / np.sum(output_data == iraf_data) < threshold) == True
+
+
+def test_primary_hdr_nogap():
+    """Compare generated primary header keywords (with no gti gap in data)"""
+    iraf_file = 'data/inttag/ob3001xqq_raw.fits'
+    output = "data/inttag/test.fits"
+    inttag("data/inttag/ob3001xqq_tag.fits", output)
+    iraf_hdr = fits.open(iraf_file)[0].header
+    output_hdr = fits.open(output)[0].header
+
+    assert output_hdr['NEXTEND'] == iraf_hdr['NEXTEND']
+    assert output_hdr['TDATEOBS'] == iraf_hdr['TDATEOBS']
+    assert output_hdr['TTIMEOBS'] == iraf_hdr['TTIMEOBS']
+    assert output_hdr['TEXPTIME'] == pytest.approx(iraf_hdr['TEXPTIME'], 0.1)
+    assert output_hdr['TEXPSTRT'] == pytest.approx(iraf_hdr['TEXPSTRT'], 0.1)
+    assert output_hdr['TEXPEND'] == pytest.approx(iraf_hdr['TEXPEND'], 0.1)
+
+
+def test_primary_hdr_gap():
+    """Compare generated primary header keywords (with some gti gap in data)"""
+    iraf_file = 'data/inttag/gtigap.fits'
+    output = "data/inttag/test.fits"
+    inttag("data/inttag/gtigap_tag.fits", output)
+    iraf_hdr = fits.open(iraf_file)[0].header
+    output_hdr = fits.open(output)[0].header
+
+    assert output_hdr['NEXTEND'] == iraf_hdr['NEXTEND']
+    assert output_hdr['TDATEOBS'] == iraf_hdr['TDATEOBS']
+    assert output_hdr['TTIMEOBS'] == iraf_hdr['TTIMEOBS']
+    assert output_hdr['TEXPTIME'] == pytest.approx(iraf_hdr['TEXPTIME'], 0.1)
+    assert output_hdr['TEXPSTRT'] == pytest.approx(iraf_hdr['TEXPSTRT'], 0.1)
+    assert output_hdr['TEXPEND'] == pytest.approx(iraf_hdr['TEXPEND'], 0.1)
