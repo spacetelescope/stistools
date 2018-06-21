@@ -118,158 +118,158 @@ def inttag(tagfile, output, starttime=None, increment=None,
         tag_sci_hdr = tag_hdr[1].header
         tzero_mjd = tag_sci_hdr['EXPSTART']  # MJD zero point
 
-        # Determine start and stop times for counting events
-        gti_start = gti_data['START'][0]
-        gti_stop = gti_data['STOP'][-1]
+    # Determine start and stop times for counting events
+    gti_start = gti_data['START'][0]
+    gti_stop = gti_data['STOP'][-1]
 
-        # Calculate corners from array size and centers
-        xcorner = ((cenx - siz_axx / 2.) - 1) * 2
-        ycorner = ((ceny - siz_axy / 2.) - 1) * 2
+    # Calculate corners from array size and centers
+    xcorner = ((cenx - siz_axx / 2.) - 1) * 2
+    ycorner = ((ceny - siz_axy / 2.) - 1) * 2
 
-        # Adjust axis sizes for highres, determine binning
-        bin_n = 2
-        if highres:
-            siz_axx *= 2
-            siz_axy *= 2
-            bin_n = 1
+    # Adjust axis sizes for highres, determine binning
+    bin_n = 2
+    if highres:
+        siz_axx *= 2
+        siz_axy *= 2
+        bin_n = 1
 
-        ltvx = ((bin_n - 2.) / 2. - xcorner) / bin_n
-        ltvy = ((bin_n - 2.) / 2. - ycorner) / bin_n
-        ltm = 2. / bin_n
+    ltvx = ((bin_n - 2.) / 2. - xcorner) / bin_n
+    ltvy = ((bin_n - 2.) / 2. - ycorner) / bin_n
+    ltm = 2. / bin_n
 
-        # Read in start and stop time parameters
-        if starttime is None:
-            starttime = gti_start  # The first START time in the GTI (or first event)
+    # Read in start and stop time parameters
+    if starttime is None:
+        starttime = gti_start  # The first START time in the GTI (or first event)
 
-        if increment is None:
-            increment = (gti_stop - gti_start)/rcount
-        stoptime = starttime + increment
+    if increment is None:
+        increment = (gti_stop - gti_start)/rcount
+    stoptime = starttime + increment
 
-        imset_hdr_ver = 0  # output header value corresponding to imset
-        texptime = 0  # total exposure time
-        hdu_list = []
-        for imset in range(rcount):
+    imset_hdr_ver = 0  # output header value corresponding to imset
+    texptime = 0  # total exposure time
+    hdu_list = []
+    for imset in range(rcount):
 
-            # Get Exposure Times
-            exp_time, expstart, expstop, good_events = exp_range(starttime, stoptime, events_data, gti_data, tzero_mjd)
-            if len(good_events) == 0:
-                if verbose:
-                    print("Skipping imset, due to no overlap with GTI\n", starttime, stoptime)
-                starttime = stoptime
-                stoptime += increment
-                continue
-
-            imset_hdr_ver += 1
-
-            if imset_hdr_ver == 1:  # If first science header, texpstart keyword value is expstart
-                texpstart = expstart
-            texpend = expstop  # texpend will be expstop of last imset
-
+        # Get Exposure Times
+        exp_time, expstart, expstop, good_events = exp_range(starttime, stoptime, events_data, gti_data, tzero_mjd)
+        if len(good_events) == 0:
             if verbose:
-                print("imset: {}, start: {}, stop: {}, exposure time: {}".format(imset_hdr_ver, starttime, stoptime,
-                                                                                 exp_time))
-
-            # Convert events table to accum image
-            accum = events_to_accum(good_events, siz_axx, siz_axy, highres)
-
-            # Calculate errors from accum image
-            # Note: C version takes the square root of the counts, inttag.py uses a more robust confidence interval
-            conf_int = astropy.stats.poisson_conf_interval(accum, interval='sherpagehrels', sigma=1)
-            err = conf_int[1] - accum  # error is the difference between upper confidence boundary and the data
-
-            # Copy EVENTS extension header to SCI, ERR, DQ extensions
-            sci_hdu = fits.ImageHDU(data=accum, header=tag_sci_hdr.copy(), name='SCI')
-            err_hdu = fits.ImageHDU(data=err, header=tag_sci_hdr.copy(), name='ERR')
-            dq_hdu = fits.ImageHDU(header=tag_sci_hdr.copy(), name='DQ')
-
-            # Generate datetime for 'DATE' header keyword
-            dtstr = str(dt.utcnow())
-            date, h, m, s = [dtstr.split()[0], dtstr.split()[1].split(':')[0], dtstr.split()[1].split(':')[1],
-                             str(round(float(dtstr.split()[1].split(':')[-1])))]
-            if len(s) == 1:
-                s = '0' + s
-
-            dtval = date + 'T' + h + ':' + m + ':' + s
-
-            # Populate extensions
-            for idx, hdu in enumerate([sci_hdu, err_hdu, dq_hdu]):
-
-                hdu.header['EXPTIME'] = exp_time
-                hdu.header['EXPSTART'] = expstart
-                hdu.header['EXPEND'] = expstop
-                hdu.header['EXTVER'] = imset_hdr_ver
-                hdu.header['DATE'] = (dtval, "Date FITS file was generated")
-                hdu.header['ORIGIN'] = "stistools inttag.py"
-
-                # Check if image-specific WCS keywords already exist in the tag file (older tag files do)
-                keyword_list = list(hdu.header.keys())
-                if not any("CTYPE" in keyword for keyword in keyword_list):
-                    n, k = [keyword[-1] for keyword in keyword_list if "TCTYP" in keyword]
-
-                    # Rename keywords
-                    for val, i in zip([n, k], ['1', '2']):
-                        hdu.header.rename_keyword('TCTYP' + val, 'CTYPE' + i)
-                        hdu.header.rename_keyword('TCRPX' + val, 'CRPIX' + i)
-                        hdu.header.rename_keyword('TCRVL' + val, 'CRVAL' + i)
-                        hdu.header.rename_keyword('TCUNI' + val, 'CUNIT' + i)
-                    hdu.header.rename_keyword('TC{}_{}'.format(n, n), 'CD{}_{}'.format(1, 1))
-                    hdu.header.rename_keyword('TC{}_{}'.format(n, k), 'CD{}_{}'.format(1, 2))
-                    hdu.header.rename_keyword('TC{}_{}'.format(k, n), 'CD{}_{}'.format(2, 1))
-                    hdu.header.rename_keyword('TC{}_{}'.format(k, k), 'CD{}_{}'.format(2, 2))
-
-                # Time tag events table keywords
-                hdu.header['WCSAXES'] = 2
-                hdu.header['LTM1_1'] = ltm
-                hdu.header['LTM2_2'] = ltm
-                hdu.header['LTV1'] = ltvx
-                hdu.header['LTV2'] = ltvy
-
-                # Convert keyword values to lowres scale if not highres
-                if not highres:
-                    hdu.header['CD1_1'] *= 2
-                    hdu.header['CD1_2'] *= 2
-                    hdu.header['CD2_1'] *= 2
-                    hdu.header['CD2_2'] *= 2
-                    hdu.header['CRPIX1'] = (hdu.header['CRPIX1'] + 0.5) / 2.
-                    hdu.header['CRPIX2'] = (hdu.header['CRPIX2'] + 0.5) / 2.
-
-                # Populate DQ header with dq specific keywords
-                if idx == 2:
-                    hdu.header['NPIX1'] = siz_axx
-                    hdu.header['NPIX2'] = siz_axy
-
-            # Append imset extensions to header list
-            hdu_list.append(sci_hdu)
-            hdu_list.append(err_hdu)
-            hdu_list.append(dq_hdu)
-
-            # Prepare start and stop times for next image in imset
+                print("Skipping imset, due to no overlap with GTI\n", starttime, stoptime)
             starttime = stoptime
             stoptime += increment
-            texptime += exp_time
+            continue
 
-        # Copy tag file primary header to output header
-        pri_hdu = fits.PrimaryHDU(header=tag_pri_hdr.copy())
+        imset_hdr_ver += 1
 
-        # Add/Modify primary header keywords
-        pri_hdu.header['NEXTEND'] = imset_hdr_ver * 3  # Three extensions per imset (SCI, ERR, DQ)
-        pri_hdu.header['NRPTEXP'] = imset_hdr_ver
-        pri_hdu.header['TEXPSTRT'] = texpstart
-        pri_hdu.header['TEXPEND'] = texpend
-        pri_hdu.header['TEXPTIME'] = texptime
-        pri_hdu.header['BINAXIS1'] = bin_n
-        pri_hdu.header['BINAXIS2'] = bin_n
-        pri_hdu.header['FILENAME'] = output.split('/')[-1]
-        pri_hdu.header['DATE'] = (dtval, "Date FITS file was generated")
-        pri_hdu.header['ORIGIN'] = "stistools inttag.py"
+        if imset_hdr_ver == 1:  # If first science header, texpstart keyword value is expstart
+            texpstart = expstart
+        texpend = expstop  # texpend will be expstop of last imset
 
-        if not highres:
-            pri_hdu.header['LORSCORR'] = "COMPLETE"  # Corr flag detailing MAMA data conversion to low res
+        if verbose:
+            print("imset: {}, start: {}, stop: {}, exposure time: {}".format(imset_hdr_ver, starttime, stoptime,
+                                                                             exp_time))
 
-        # Write output file
-        hdu_list = [pri_hdu] + hdu_list
-        out_hdul = fits.HDUList(hdu_list)
-        out_hdul.writeto(output, overwrite=True)
+        # Convert events table to accum image
+        accum = events_to_accum(good_events, siz_axx, siz_axy, highres)
+
+        # Calculate errors from accum image
+        # Note: C version takes the square root of the counts, inttag.py uses a more robust confidence interval
+        conf_int = astropy.stats.poisson_conf_interval(accum, interval='sherpagehrels', sigma=1)
+        err = conf_int[1] - accum  # error is the difference between upper confidence boundary and the data
+
+        # Copy EVENTS extension header to SCI, ERR, DQ extensions
+        sci_hdu = fits.ImageHDU(data=accum, header=tag_sci_hdr.copy(), name='SCI')
+        err_hdu = fits.ImageHDU(data=err, header=tag_sci_hdr.copy(), name='ERR')
+        dq_hdu = fits.ImageHDU(header=tag_sci_hdr.copy(), name='DQ')
+
+        # Generate datetime for 'DATE' header keyword
+        dtstr = str(dt.utcnow())
+        date, h, m, s = [dtstr.split()[0], dtstr.split()[1].split(':')[0], dtstr.split()[1].split(':')[1],
+                         str(round(float(dtstr.split()[1].split(':')[-1])))]
+        if len(s) == 1:
+            s = '0' + s
+
+        dtval = date + 'T' + h + ':' + m + ':' + s
+
+        # Populate extensions
+        for idx, hdu in enumerate([sci_hdu, err_hdu, dq_hdu]):
+
+            hdu.header['EXPTIME'] = exp_time
+            hdu.header['EXPSTART'] = expstart
+            hdu.header['EXPEND'] = expstop
+            hdu.header['EXTVER'] = imset_hdr_ver
+            hdu.header['DATE'] = (dtval, "Date FITS file was generated")
+            hdu.header['ORIGIN'] = "stistools inttag.py"
+
+            # Check if image-specific WCS keywords already exist in the tag file (older tag files do)
+            keyword_list = list(hdu.header.keys())
+            if not any("CTYPE" in keyword for keyword in keyword_list):
+                n, k = [keyword[-1] for keyword in keyword_list if "TCTYP" in keyword]
+
+                # Rename keywords
+                for val, i in zip([n, k], ['1', '2']):
+                    hdu.header.rename_keyword('TCTYP' + val, 'CTYPE' + i)
+                    hdu.header.rename_keyword('TCRPX' + val, 'CRPIX' + i)
+                    hdu.header.rename_keyword('TCRVL' + val, 'CRVAL' + i)
+                    hdu.header.rename_keyword('TCUNI' + val, 'CUNIT' + i)
+                hdu.header.rename_keyword('TC{}_{}'.format(n, n), 'CD{}_{}'.format(1, 1))
+                hdu.header.rename_keyword('TC{}_{}'.format(n, k), 'CD{}_{}'.format(1, 2))
+                hdu.header.rename_keyword('TC{}_{}'.format(k, n), 'CD{}_{}'.format(2, 1))
+                hdu.header.rename_keyword('TC{}_{}'.format(k, k), 'CD{}_{}'.format(2, 2))
+
+            # Time tag events table keywords
+            hdu.header['WCSAXES'] = 2
+            hdu.header['LTM1_1'] = ltm
+            hdu.header['LTM2_2'] = ltm
+            hdu.header['LTV1'] = ltvx
+            hdu.header['LTV2'] = ltvy
+
+            # Convert keyword values to lowres scale if not highres
+            if not highres:
+                hdu.header['CD1_1'] *= 2
+                hdu.header['CD1_2'] *= 2
+                hdu.header['CD2_1'] *= 2
+                hdu.header['CD2_2'] *= 2
+                hdu.header['CRPIX1'] = (hdu.header['CRPIX1'] + 0.5) / 2.
+                hdu.header['CRPIX2'] = (hdu.header['CRPIX2'] + 0.5) / 2.
+
+            # Populate DQ header with dq specific keywords
+            if idx == 2:
+                hdu.header['NPIX1'] = siz_axx
+                hdu.header['NPIX2'] = siz_axy
+
+        # Append imset extensions to header list
+        hdu_list.append(sci_hdu)
+        hdu_list.append(err_hdu)
+        hdu_list.append(dq_hdu)
+
+        # Prepare start and stop times for next image in imset
+        starttime = stoptime
+        stoptime += increment
+        texptime += exp_time
+
+    # Copy tag file primary header to output header
+    pri_hdu = fits.PrimaryHDU(header=tag_pri_hdr.copy())
+
+    # Add/Modify primary header keywords
+    pri_hdu.header['NEXTEND'] = imset_hdr_ver * 3  # Three extensions per imset (SCI, ERR, DQ)
+    pri_hdu.header['NRPTEXP'] = imset_hdr_ver
+    pri_hdu.header['TEXPSTRT'] = texpstart
+    pri_hdu.header['TEXPEND'] = texpend
+    pri_hdu.header['TEXPTIME'] = texptime
+    pri_hdu.header['BINAXIS1'] = bin_n
+    pri_hdu.header['BINAXIS2'] = bin_n
+    pri_hdu.header['FILENAME'] = output.split('/')[-1]
+    pri_hdu.header['DATE'] = (dtval, "Date FITS file was generated")
+    pri_hdu.header['ORIGIN'] = "stistools inttag.py"
+
+    if not highres:
+        pri_hdu.header['LORSCORR'] = "COMPLETE"  # Corr flag detailing MAMA data conversion to low res
+
+    # Write output file
+    hdu_list = [pri_hdu] + hdu_list
+    out_hdul = fits.HDUList(hdu_list)
+    out_hdul.writeto(output, overwrite=True)
 
 
 def exp_range(starttime, stoptime, events_data, gti_data, tzero_mjd):
@@ -404,4 +404,4 @@ def events_to_accum(events_data, size_x, size_y, highres):
 
 
 if __name__ == "__main__":
-    inttag("tests/data/gtigap_tag.fits", "test.fits",  increment=200, rcount=6, verbose=True, highres=False, allevents = False)
+    inttag("tests/data/inttag/gtigap_tag.fits", "test.fits",  increment=200, rcount=6, verbose=True, highres=False, allevents=False)
