@@ -92,3 +92,45 @@ def test_primary_hdr_gap():
     assert output_hdr['TEXPTIME'] == pytest.approx(iraf_hdr['TEXPTIME'], 0.1)
     assert output_hdr['TEXPSTRT'] == pytest.approx(iraf_hdr['TEXPSTRT'], 0.1)
     assert output_hdr['TEXPEND'] == pytest.approx(iraf_hdr['TEXPEND'], 0.1)
+
+
+def test_science_hdr_lores():
+    """Compare generated science header keywords in lores mode"""
+    iraf_file = 'data/inttag/lores.fits'
+    output = "data/inttag/test.fits"
+    inttag("data/inttag/oddv01050_tag.fits", output)
+    iraf_hdr = fits.open(iraf_file)[1].header
+    output_hdr = fits.open(output)[1].header
+
+    assert output_hdr['WCSAXES'] == iraf_hdr['WCSAXES']
+    assert output_hdr['LTM1_1'] == iraf_hdr['LTM1_1']
+    assert output_hdr['LTM2_2'] == iraf_hdr['LTM2_2']
+    assert output_hdr['LTV1'] == iraf_hdr['LTV1']
+    assert output_hdr['LTV2'] == iraf_hdr['LTV2']
+    assert output_hdr['CD1_1'] == iraf_hdr['CD1_1']
+    assert output_hdr['CD1_2'] == iraf_hdr['CD1_2']
+    assert output_hdr['CD2_1'] == iraf_hdr['CD2_1']
+    assert output_hdr['CD2_2'] == iraf_hdr['CD2_2']
+    assert output_hdr['CRPIX1'] == iraf_hdr['CRPIX1']
+    assert output_hdr['CRPIX2'] == iraf_hdr['CRPIX2']
+
+
+def test_science_hdr_hires():
+    """Compare generated science header keywords in lores mode"""
+    iraf_file = 'data/inttag/hires.fits'
+    output = "data/inttag/test.fits"
+    inttag("data/inttag/oddv01050_tag.fits", output, highres=True)
+    iraf_hdr = fits.open(iraf_file)[1].header
+    output_hdr = fits.open(output)[1].header
+
+    assert output_hdr['WCSAXES'] == iraf_hdr['WCSAXES']
+    assert output_hdr['LTM1_1'] == iraf_hdr['LTM1_1']
+    assert output_hdr['LTM2_2'] == iraf_hdr['LTM2_2']
+    assert output_hdr['LTV1'] == iraf_hdr['LTV1']
+    assert output_hdr['LTV2'] == iraf_hdr['LTV2']
+    assert output_hdr['CD1_1'] == iraf_hdr['CD1_1']
+    assert output_hdr['CD1_2'] == iraf_hdr['CD1_2']
+    assert output_hdr['CD2_1'] == iraf_hdr['CD2_1']
+    assert output_hdr['CD2_2'] == iraf_hdr['CD2_2']
+    assert output_hdr['CRPIX1'] == iraf_hdr['CRPIX1']
+    assert output_hdr['CRPIX2'] == iraf_hdr['CRPIX2']
