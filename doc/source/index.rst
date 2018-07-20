@@ -14,6 +14,7 @@ Contents:
    :maxdepth: 2
 
    basic2d
+   x1d
    calstis
    sshift
    stisnoise
@@ -22,6 +23,7 @@ Contents:
    wavelen
    wx2d
    radialvel
+   ocrreject
    r_util
    gettable
 
