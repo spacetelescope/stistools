@@ -1,13 +1,10 @@
-from __future__ import division, print_function   # confidence high
-import os
 import math
-
 import numpy as np
-
 from astropy.io import fits
 
 STRING_WILDCARD = "ANY"
 INT_WILDCARD = -1
+
 
 def getTable(table, filter, sortcol=None,
              exactly_one=False, at_least_one=False):
@@ -112,6 +109,7 @@ def getTable(table, filter, sortcol=None,
 
     return newdata
 
+
 def sortrows(rowdata, sortcol, ascend=True):
     """Return a copy of rowdata, sorted on sortcol."""
 
@@ -126,6 +124,7 @@ def sortrows(rowdata, sortcol, ascend=True):
         index = np.array(ind)
 
     return rowdata[index]
+
 
 def rotateTrace(trace_info, expstart):
     """Rotate a2displ, if MJD and DEGPERYR are in the trace table.

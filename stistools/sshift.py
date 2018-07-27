@@ -6,7 +6,6 @@ along-the-slit dithering to reject hot pixels and cosmic rays.  The
 POSTARG2 keyword is used to determine the number of rows to be
 shifted.
 """
-from __future__ import division, print_function  # confidence high
 
 from astropy.io import fits
 
@@ -227,9 +226,9 @@ Author:
             outfile = re.sub('flt\.', 'sfl.', infile, count=1)
 
         if binaxis2 == 1:
-            print('%18s: %3d' % (infile, npixel))
+            print('{:>18}: {:3}'.format(infile, npixel))
         else:
-            print('%18s: %3d  binned' % (infile, npixel))
+            print('{:>18}: {:3}  binned'.format(infile, npixel))
         shiftimage(infile, outfile, shift=npixel)
         fin.close()
 

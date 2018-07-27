@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-from __future__ import division, print_function  # confidence unknown
 import os
 import sys
 import getopt
@@ -240,7 +239,7 @@ def x1d(input, output="",
             files = glob.glob(in2)
             infiles.extend(files)
     if input1 and not infiles:
-        print("No file name matched the string '%s'" % input)
+        print("No file name matched the string '{}'".format(input))
         return 2
 
     if output:
@@ -257,14 +256,14 @@ def x1d(input, output="",
 
     n_infiles = len(infiles)
     if outfiles and len(outfiles) != n_infiles:
-        print("You specified %d input files but %d output files." %
+        print("You specified {} input files but {} output files.".format
               (n_infiles, len(outfiles)))
         print("The number of input and output files must be the same.")
         return 2
 
     if trailer:
         if verbose and os.access(trailer, os.F_OK):
-            print("Appending to trailer file %s" % trailer)
+            print("Appending to trailer file {}".format(trailer))
         f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
@@ -381,14 +380,14 @@ def x1d(input, output="",
             arglist.append("%.10g" % xoffset)
 
         if verbose:
-            print("Running x1d on %s" % infile)
-            print("  %s" % str(arglist))
+            print("Running x1d on {}".format(infile))
+            print("  {}".format(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
             cumulative_status = 1
             if verbose:
-                print("Warning:  status = %d" % status)
+                print("Warning:  status = {}".format(status))
 
     if f_trailer is not None:
         f_trailer.close()

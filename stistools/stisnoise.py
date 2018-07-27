@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import division, print_function  # confidence medium
 import math
 
 from astropy.io import fits
@@ -207,8 +206,8 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
 
     amp = fin[0].header['CCDAMP']
     if verbose == 1:
-        print('Target: %s, Amp: %s, Gain: %d' %
-              (fin[0].header['TARGNAME'], amp, fin[0].header['CCDGAIN']))
+        print('Target: {}, Amp: {}, Gain: {}'.format(
+            fin[0].header['TARGNAME'], amp, fin[0].header['CCDGAIN']))
 
     # Check to ensure the SCI extension is being used
     if extname != 'SCI':

@@ -1,7 +1,7 @@
-from __future__ import division         # confidence high
 import os
 import os.path
 import copy
+
 
 def expandFileName(filename):
     """Expand environment variable in a file name.

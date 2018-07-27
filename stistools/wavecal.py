@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-from __future__ import division, print_function  # confidence unknown
 import os
 import sys
 import getopt
@@ -219,7 +218,7 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
             files = glob.glob(in2)
             infiles.extend(files)
     if input1 and not infiles:
-        print("No file name matched the string '%s'" % input)
+        print("No file name matched the string '{}'".format(input))
         return 2
 
     wavecal_files = []
@@ -243,7 +242,7 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
     n_infiles = len(infiles)
     if wavecal_files and len(wavecal_files) != n_infiles:
         same_length = False
-        print("You specified %d input files but %d wavecal files." %
+        print("You specified {} input files but {} wavecal files.".format
               (n_infiles, len(wavecal_files)))
         print("The number of input and wavecal files must be the same.")
     if dbgfiles and len(dbgfiles) != n_infiles:
@@ -254,7 +253,7 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
 
     if trailer:
         if verbose and os.access(trailer, os.F_OK):
-            print("Appending to trailer file %s" % trailer)
+            print("Appending to trailer file {}".format(trailer))
         f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
@@ -290,12 +289,12 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
         if not savetmp:
             for tmp_file in tempfnames:
                 if verbose:
-                    print(" ... deleting temporary file %s" % tmp_file)
+                    print(" ... deleting temporary file {}".format(tmp_file))
                 try:
                     os.remove(tmp_file)
                 except OSError:
-                    print("Warning:  couldn't delete temporary file %s." %
-                          tmp_file)
+                    print("Warning:  couldn't delete temporary file {}.".format
+                          (tmp_file))
 
     if f_trailer is not None:
         f_trailer.close()
@@ -368,12 +367,12 @@ def runBasic2d(wavecal, tempfnames, verbose, timestamps, fd_trailer):
         arglist.append("-flat")
 
         if verbose:
-            print("Running cs1.e on %s" % wavecal)
-            print("  %s" % str(arglist))
+            print("Running cs1.e on {}".format(wavecal))
+            print("  {}".format(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
-            raise RuntimeError("status = %d from cs1.e" % status)
+            raise RuntimeError("status = {} from cs1.e".format(status))
         tempfnames.append(fwv_file)
         flag = True
 
@@ -409,11 +408,11 @@ def runCs11(fwv_file, infile, tempfnames, verbose, timestamps, fd_trailer):
 
         if verbose:
             print("Running cs11.e")
-            print("  %s" % str(arglist))
+            print("  {}".format(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
-            raise RuntimeError("status = %d from cs11.e" % status)
+            raise RuntimeError("status = {} from cs11.e".format(status))
         tempfnames.append(cwv_file)
         flag = True
     else:
@@ -466,8 +465,8 @@ def runX2d(cwv_file, angle, tempfnames,
             arglist.append("%.20g" % angle)
 
         if verbose:
-            print("Running x2d on %s" % cwv_file)
-            print("  %s" % str(arglist))
+            print("Running x2d on {}".format(cwv_file))
+            print("  {}".format(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
@@ -493,8 +492,8 @@ def runWavecal(w2d_file, dbg, angle, verbose, timestamps, fd_trailer):
         arglist.append(dbg)
 
     if verbose:
-        print("Running cs4.e on %s" % w2d_file)
-        print("  %s" % str(arglist))
+        print("Running cs4.e on {}".format(w2d_file))
+        print("  {}".format(arglist))
     status = subprocess.call(arglist, stdout=fd_trailer,
                              stderr=subprocess.STDOUT)
     if status:
@@ -514,7 +513,7 @@ def runCs12(w2d_file, infile, option, verbose, timestamps, fd_trailer):
 
     if verbose:
         print("Running cs12.e")
-        print("  %s" % str(arglist))
+        print("  {}".format(arglist))
     status = subprocess.call(arglist, stdout=fd_trailer,
                              stderr=subprocess.STDOUT)
     if status:
