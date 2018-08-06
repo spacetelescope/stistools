@@ -1,4 +1,5 @@
 import os
+from astropy.io import fits
 
 from ..calstis import calstis
 from .resources import BaseSTIS
@@ -13,7 +14,7 @@ class TestSTIS(BaseSTIS):
         """
 
         # Prepare input files.
-        input_file = self.get_data("input", "oci402010_raw.fits")
+        input_file = self.get_input_file("input", "oci402010_raw.fits")
         input_trl = self.get_data("input", "oci402010_trl.fits")
         input_epc1 = self.get_data("input", "oci402dnj_epc.fits")
         input_epc2 = self.get_data("input", "oci402doj_epc.fits")
@@ -26,7 +27,7 @@ class TestSTIS(BaseSTIS):
         reffile_crj = 'reference_stis_01_crj.fits'
         reffile_sx2 = 'reference_stis_01_sx2.fits'
 
-        calstis(input_file, trailer=input_trl,  outroot=outroot)
+        calstis("oci402010_raw.fits", outroot=outroot)
 
         # Compare results
         outputs = [(outfile, reffile_flt), (outcrj, reffile_crj),
