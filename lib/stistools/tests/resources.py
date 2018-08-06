@@ -77,7 +77,7 @@ def ref_from_image(input_image):
 
     reffile_lookup = ['BPIXTAB', 'DARKFILE', 'PFLTFILE', 'LFLTFILE', 'PHOTTAB',
                       'IMPHTTAB', 'APERTAB', 'CCDTAB', 'BIASFILE', 'CRREJTAB',
-                      'IDCTAB']
+                      'IDCTAB', 'TDSTAB']
 
     ref_files = []
     hdr = fits.getheader(input_image, ext=0)
