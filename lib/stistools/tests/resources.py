@@ -112,7 +112,7 @@ class BaseCal(object):
     use_ftp_crds = True
     timeout = 30  # seconds
     tree = 'dev'
-    results_root = 'stistool-results'
+    results_root = 'datb-stistools/results'
 
     # Numpy default for allclose comparison
     rtol = 1e-7
