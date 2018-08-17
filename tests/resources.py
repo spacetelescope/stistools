@@ -77,7 +77,11 @@ def ref_from_image(input_image):
 
     reffile_lookup = ['BPIXTAB', 'DARKFILE', 'PFLTFILE', 'LFLTFILE', 'PHOTTAB',
                       'IMPHTTAB', 'APERTAB', 'CCDTAB', 'BIASFILE', 'CRREJTAB',
-                      'IDCTAB', 'TDSTAB']
+                      'IDCTAB', 'TDSTAB', 'SPTRCTAB', 'SDCTAB', 'PHOTTAB',
+                      'PCTAB', 'TDCTAB', 'MLINTAB', 'GACTAB', 'WCPTAB',
+                      'LAMPTAB', 'APDESTAB', 'XTRACTAB', 'DISPTAB', 'INANGTAB',
+                      'CDSTAB', 'ECHSCTAB', 'EXSTAB', 'HALOTAB', 'TELTAB',
+                      'RIPTAB', 'SRWTAB']
 
     ref_files = []
     hdr = fits.getheader(input_image, ext=0)
@@ -106,17 +110,17 @@ def raw_from_asn(asn_file, suffix='_raw.fits'):
 
 # Base classes for actual tests.
 # NOTE: Named in a way so pytest will not pick them up here.
-#@pytest.mark.require_bigdata
+# @pytest.mark.require_bigdata
 class BaseCal(object):
     prevdir = os.getcwd()
     use_ftp_crds = True
     timeout = 30  # seconds
-    tree = 'dev'
+    tree = ''
     results_root = 'datb-stistools/results'
 
     # Numpy default for allclose comparison
-    rtol = 1e-7
-    atol = 0
+    rtol = 5e-7
+    atol = 2e-15
 
     # To be defined by instrument
     refstr = ''
@@ -182,6 +186,9 @@ class BaseCal(object):
         downloaded, if necessary.
         """
         filename = self.get_data(*args)
+
+        print(filename)
+
         ref_files = ref_from_image(filename)
         print("Looking for REF_FILES: {}".format(ref_files))
 
@@ -198,7 +205,7 @@ class BaseCal(object):
                     download_crds(refdir, refname, timeout=self.timeout)
         return filename
 
-    def compare_outputs(self, outputs, raise_error=True):
+    def compare_outputs(self, outputs, raise_error=True, delete_history=False):
         """
         Compare output with "truth" using appropriate
         diff routine; namely,
@@ -242,8 +249,22 @@ class BaseCal(object):
 
             if actual.endswith('fits'):
                 # Working with FITS files...
-                fdiff = FITSDiff(actual, desired, rtol=self.rtol, atol=self.atol,
+                if delete_history is True:
+                    actual = fits.open(actual)
+                    desired = fits.open(desired)
+                    if 'HISTORY' in actual[0].header:
+                        del actual[0].header['HISTORY']
+                    if 'HISTORY' in desired[0].header:
+                        del desired[0].header['HISTORY']
+
+                fdiff = FITSDiff(actual, desired, rtol=self.rtol,
+                                 atol=self.atol,
                                  ignore_keywords=self.ignore_keywords)
+
+                if delete_history is True:
+                    actual.close()
+                    desired.close()
+
                 creature_report += fdiff.report()
                 if not fdiff.identical:
                     # Only keep track of failed results which need to
@@ -281,27 +302,26 @@ class BaseCal(object):
                 print("Renaming {} as new 'truth' file: {}".format(
                       files[0], files[1]))
                 shutil.move(files[0], files[1])
-            log_pattern = [os.path.join(os.path.dirname(x), '*.log') for x in new_truths]
+            log_pattern = [os.path.join(os.path.dirname(x), '*.log')
+                           for x in new_truths]
             upload_results(pattern=new_truths + log_pattern,
                            testname=testname,
-                           target= tree)
+                           target=tree)
 
         if not all_okay and raise_error:
             raise AssertionError(os.linesep + creature_report)
-
 
         return creature_report
 
 
 class BaseSTIS(BaseCal):
+
     refstr = 'oref'
     prevref = os.environ.get(refstr)
-    input_loc = 'calstis'
-    ref_loc = 'calstis/ref'
-    ignore_keywords = ['origin', 'filename', 'date', 'iraf-tlm', 'fitsdate',
-                       'upwtim', 'wcscdate', 'upwcsver', 'pywcsver',
-                       'history', 'prod_ver', 'rulefile']
-
+    input_loc = ''
+    ref_loc = '/ref'
+    ignore_keywords = ['date', 'filename', 'iraf-tlm', 'fitsdate', 'history']
+                #''cal_ver']
 
     def read_image(self, filename):
         """
@@ -312,7 +332,6 @@ class BaseSTIS(BaseCal):
         image = hdu[1].data
         hdu.close()
         return image
-
 
 
 def add_suffix(fname, suffix, range=None):

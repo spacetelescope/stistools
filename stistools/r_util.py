@@ -3,6 +3,7 @@ import os.path
 import copy
 
 
+
 def expandFileName(filename):
     """Expand environment variable in a file name.
 

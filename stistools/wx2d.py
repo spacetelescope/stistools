@@ -15,6 +15,7 @@ from . import r_util
 
 __version__ = "1.3 (2016 Feb 24)"
 
+
 def wx2d(input, output, wavelengths=None, helcorr="",
          algorithm="wavelet",
          trace=None, order=7, subdiv=8, psf_width=0., rows=None,
@@ -79,9 +80,8 @@ def wx2d(input, output, wavelengths=None, helcorr="",
     tracefile = trace_name(trace, phdu.header)
 
     # Update the primary header, in preparation for writing to a new file.
-    phdu.header.update("WX2DCORR", "COMPLETE",
-                       comment="this file is output from wx2d",
-                       before="X2DCORR")
+    phdu.header.set("WX2DCORR", "COMPLETE", "this file is output from wx2d",
+                    before="X2DCORR")
     is_an_array = isinstance(tracefile, N.ndarray)
     if is_an_array:
         phdu.header.add_history("trace array was specified explicitly")
@@ -93,17 +93,17 @@ def wx2d(input, output, wavelengths=None, helcorr="",
 
     # Write the primary header to the output file(s);
     # we'll append each extension in wx2d_imset.
-    phdu.header.update("nextend", 0)           # no extensions yet
-    phdu.header.update("filename", os.path.basename(output))
+    phdu.header.set("nextend", 0)           # no extensions yet
+    phdu.header.set("filename", os.path.basename(output))
     phdu.writeto(output)
     if wavelengths is not None:
-        phdu.header.update("filename", os.path.basename(wavelengths))
+        phdu.header.set("filename", os.path.basename(wavelengths))
         phdu.writeto(wavelengths)
     if subsampled is not None:
-        phdu.header.update("filename", os.path.basename(subsampled))
+        phdu.header.set("filename", os.path.basename(subsampled))
         phdu.writeto(subsampled)
     if convolved is not None:
-        phdu.header.update("filename", os.path.basename(convolved))
+        phdu.header.set("filename", os.path.basename(convolved))
         phdu.writeto(convolved)
 
     for imset0 in range(n_imsets):
@@ -113,6 +113,7 @@ def wx2d(input, output, wavelengths=None, helcorr="",
                    subsampled, convolved)
 
     ft.close()
+
 
 def wx2d_imset(ft, imset, output, wavelengths, helcorr,
                algorithm,
@@ -209,13 +210,13 @@ def wx2d_imset(ft, imset, output, wavelengths, helcorr,
         if ft[0].header.get("sclamp", default="NONE") != "NONE":
             helcorr = "OMIT"
         wl_hdu.data = wavelen.compute_wavelengths((original_nrows, ncols),
-                                                  ft[0].header, header, helcorr)
+                        ft[0].header, header, helcorr)
         ofd = fits.open(wavelengths, mode="update")
-        ofd[0].header.update("nextend", imset)
+        ofd[0].header.set("nextend", imset)
         if helcorr == "PERFORM":
-            ofd[0].header.update("helcorr", "COMPLETE")
+            ofd[0].header.set("helcorr", "COMPLETE")
         else:
-            ofd[0].header.update("helcorr", "OMIT")
+            ofd[0].header.set("helcorr", "OMIT")
         ofd.append(wl_hdu)
         ofd.close()
 
@@ -235,9 +236,10 @@ def wx2d_imset(ft, imset, output, wavelengths, helcorr,
 
     # Write the DQ HDU to the output file.
     ofd = fits.open(output, mode="update")
-    ofd[0].header.update("nextend", imset*3)
+    ofd[0].header.set("nextend", imset*3)
     ofd.append(hdu)
     ofd.close()
+
 
 def wavelet_resampling(hdu, img, errimg,
                        original_nrows, nrows, ncols, rows,
@@ -340,7 +342,7 @@ def wavelet_resampling(hdu, img, errimg,
     if subsampled is not None:
         hdu.data = sub5.copy()
         ofd = fits.open(subsampled, mode="update")
-        ofd[0].header.update("nextend", imset)
+        ofd[0].header.set("nextend", imset)
         ofd.append(hdu)
         ofd.close()
 
@@ -356,7 +358,7 @@ def wavelet_resampling(hdu, img, errimg,
         if convolved is not None:
             hdu.data = cnv.copy()
             ofd = fits.open(convolved, mode="update")
-            ofd[0].header.update("nextend", imset)
+            ofd[0].header.set("nextend", imset)
             ofd.append(hdu)
             ofd.close()
     else:
@@ -375,7 +377,7 @@ def wavelet_resampling(hdu, img, errimg,
         err_result = apply_trace(err5, a2center, a2displ,
                                  subdiv, offset, shifta2, "ERR")
 
-    return(result, err_result)
+    return result, err_result
 
 
 def kd_resampling(img, errimg,
@@ -433,7 +435,7 @@ def kd_resampling(img, errimg,
         err_result = apply_trace(image2, a2center, a2displ,
                                  subdiv, offset, shifta2, "ERR")
 
-    return (result, err_result)
+    return result, err_result
 
 
 def kd_apply_trace(image, a2center, a2displ, offset=0., shifta2=0.):
@@ -712,6 +714,7 @@ def extract_err(image, locn, subdiv):
 
     return spec
 
+
 def extract_i16(image, locn, subdiv):
     """Bitwise OR 'subdiv' rows of 'image', centered on 'locn'.
 
@@ -759,6 +762,7 @@ def extract_i16(image, locn, subdiv):
 
     return spec
 
+
 def interpolate_trace(a2center, a2displ, y, length):
     """Interpolate within the array of traces, and return a trace.
 
@@ -782,6 +786,7 @@ def interpolate_trace(a2center, a2displ, y, length):
         trace = r_util.interpolate(a2center, a2displ, y)
 
     return trace
+
 
 def trace_name(trace, phdr):
     """Return the 1dt table name or array.
@@ -817,6 +822,7 @@ def trace_name(trace, phdr):
         tracefile = trace
 
     return tracefile
+
 
 def get_trace(tracefile, phdr, hdr):
     """Read 1-D traces from the 1dt table (sptrctab).
@@ -855,7 +861,7 @@ def get_trace(tracefile, phdr, hdr):
     if is_an_array:
         a2center = [0.]
         a2displ = [tracefile]
-        return (a2center, a2displ)
+        return a2center, a2displ
 
     # These are the row-selection values.
     opt_elem = phdr.get("opt_elem", default="")
@@ -879,7 +885,7 @@ def get_trace(tracefile, phdr, hdr):
     if binaxis1 > 1 and len(a2displ) > 0:
         a2displ = bin_traces(a2displ, binaxis1, ltv)
 
-    return (a2center, a2displ)
+    return a2center, a2displ
 
 
 def bin_traces(a2displ, binaxis1, ltv):
@@ -936,10 +942,12 @@ def bin_traces(a2displ, binaxis1, ltv):
 
     return N.array(newtraces)
 
+
 def inv_haar(image):
     image[0::2] = (image[0::2] + image[1::2]) / 2.
     image[1::2] = (image[0::2] - image[1::2])
     return image
+
 
 def inv_avg_interp(order, image):
 
@@ -957,6 +965,7 @@ def inv_avg_interp(order, image):
         y[1:] = N.cumsum(image[j-side:j+side+1], axis=0)
         d[j] = -((y[j1] + y[j0]) - 2. * polynomial(x, y, order_2, n))
     return d
+
 
 def polynomial(x, y, z, n):
     """used for interpolation

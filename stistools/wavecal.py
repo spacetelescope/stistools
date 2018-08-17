@@ -50,6 +50,7 @@ __author__ = "Phil Hodge, STScI, November 2013."
 # MJD after which the external shutter was closed for CCD HITM wavecals.
 SH_CLOSED = 51126.0
 
+
 def main(args):
 
     if len(args) < 2:
@@ -101,6 +102,7 @@ def main(args):
 
     sys.exit(status)
 
+
 def prtOptions():
     """Print a list of command-line options and arguments."""
 
@@ -113,6 +115,7 @@ def prtOptions():
     print("")
     print("Following the options, list the input flt file names and")
     print("  the associated raw (or calibrated) wavecal file names.")
+
 
 def wavecal(input, wavecal, debugfile="", savetmp=False,
             option="linear", angle=None,
@@ -301,6 +304,7 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
 
     return 0
 
+
 def mkRandomNameW(prefix="wavecal_", suffix="_tmp.fits", n=100000000):
     MAX_TRIES = 100
     done = False
@@ -318,6 +322,7 @@ def mkRandomNameW(prefix="wavecal_", suffix="_tmp.fits", n=100000000):
         return filename
     else:
         return None
+
 
 def runBasic2d(wavecal, tempfnames, verbose, timestamps, fd_trailer):
 
@@ -376,7 +381,8 @@ def runBasic2d(wavecal, tempfnames, verbose, timestamps, fd_trailer):
         tempfnames.append(fwv_file)
         flag = True
 
-    return (flag, fwv_file)
+    return flag, fwv_file
+
 
 def runCs11(fwv_file, infile, tempfnames, verbose, timestamps, fd_trailer):
     """Subtract a fraction of the science image from the wavecal image."""
@@ -419,7 +425,8 @@ def runCs11(fwv_file, infile, tempfnames, verbose, timestamps, fd_trailer):
         cwv_file = fwv_file
         flag = False
 
-    return (flag, cwv_file)
+    return flag, cwv_file
+
 
 def runX2d(cwv_file, angle, tempfnames,
            verbose, timestamps, fd_trailer):
@@ -474,7 +481,8 @@ def runX2d(cwv_file, angle, tempfnames,
         tempfnames.append(w2d_file)
         flag = True
 
-    return (flag, w2d_file)
+    return flag, w2d_file
+
 
 def runWavecal(w2d_file, dbg, angle, verbose, timestamps, fd_trailer):
 
@@ -498,6 +506,7 @@ def runWavecal(w2d_file, dbg, angle, verbose, timestamps, fd_trailer):
                              stderr=subprocess.STDOUT)
     if status:
         raise RuntimeError("status = %d from cs4.e" % status)
+
 
 def runCs12(w2d_file, infile, option, verbose, timestamps, fd_trailer):
 
@@ -523,9 +532,11 @@ def runCs12(w2d_file, infile, option, verbose, timestamps, fd_trailer):
 # Interfaces used by TEAL #
 #-------------------------#
 
+
 def getHelpAsString(fulldoc=True):
     """Return documentation on the wavecal function."""
     return wavecal.__doc__
+
 
 def run(configobj=None):
     """TEAL interface for the wavecal function."""

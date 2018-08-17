@@ -118,8 +118,8 @@ def mktrace(fname, tracecen=0.0, weights=None):
 
     #print 'time', time.time()-start
     #the minus sign is for consistency withthe way x2d reports the rotation
-    print("Traces were rotated by {} degrees \n".format((-(sparams[1]-rparams[1])*180 / np.pi)))
-    print('trace is centered on row {}'.format(tr._a2center))
+    print("Traces were rotated by {:.10f} degrees \n".format((-(sparams[1]-rparams[1])*180 / np.pi)))
+    print('trace is centered on row {:.10f}'.format(tr._a2center))
     return tr
 
 
@@ -375,7 +375,7 @@ class Trace:
         tolerence = 3 * np.median(abs(smoytrace[wind] - med11smoytrace[wind]))
         if tolerence < 0.1:
             tolerence = 0.1
-        badpoint = np.where(diffmed > tolerence)[0]y
+        badpoint = np.where(diffmed > tolerence)[0]
         if len(badpoint) != 0:
             np.put(smoytrace, badpoint, med11smoytrace[badpoint])
 
