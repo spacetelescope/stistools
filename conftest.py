@@ -32,8 +32,8 @@ def pytest_addoption(parser):
 
     parser.addoption(
         "--env",
-        choices=['dev', 'stable'],
-        default='dev',
+        choices=['dev', 'stable', ''],
+        default='',
         help="specify what environment to test"
     )
 
