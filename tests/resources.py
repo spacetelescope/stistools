@@ -119,8 +119,8 @@ class BaseCal(object):
     results_root = 'datb-stistools/results'
 
     # Numpy default for allclose comparison
-    rtol = 1e-7
-    atol = 0
+    rtol = 5e-7
+    atol = 2e-15
 
     # To be defined by instrument
     refstr = ''
@@ -307,8 +307,8 @@ class BaseSTIS(BaseCal):
     prevref = os.environ.get(refstr)
     input_loc = ''
     ref_loc = '/ref'
-    ignore_keywords = ['date', 'filename', 'iraf-tlm', 'fitsdate', 'cal_ver',
-                       'history']
+    ignore_keywords = ['date', 'filename', 'iraf-tlm', 'fitsdate', 'history']
+                #''cal_ver']
 
     def read_image(self, filename):
         """

@@ -80,9 +80,8 @@ def wx2d (input, output, wavelengths=None, helcorr="",
     tracefile = trace_name (trace, phdu.header)
 
     # Update the primary header, in preparation for writing to a new file.
-    phdu.header.update ("WX2DCORR", "COMPLETE",
-                        comment="this file is output from wx2d",
-                        before="X2DCORR")
+    phdu.header.set("WX2DCORR", "COMPLETE", "this file is output from wx2d",
+                    before="X2DCORR")
     is_an_array = isinstance (tracefile, N.ndarray)
     if is_an_array:
         phdu.header.add_history ("trace array was specified explicitly")
@@ -94,17 +93,17 @@ def wx2d (input, output, wavelengths=None, helcorr="",
 
     # Write the primary header to the output file(s);
     # we'll append each extension in wx2d_imset.
-    phdu.header.update ("nextend", 0)           # no extensions yet
-    phdu.header.update ("filename", os.path.basename (output))
+    phdu.header.set("nextend", 0)           # no extensions yet
+    phdu.header.set("filename", os.path.basename (output))
     phdu.writeto (output)
     if wavelengths is not None:
-        phdu.header.update ("filename", os.path.basename (wavelengths))
+        phdu.header.set("filename", os.path.basename (wavelengths))
         phdu.writeto (wavelengths)
     if subsampled is not None:
-        phdu.header.update ("filename", os.path.basename (subsampled))
+        phdu.header.set("filename", os.path.basename (subsampled))
         phdu.writeto (subsampled)
     if convolved is not None:
-        phdu.header.update ("filename", os.path.basename (convolved))
+        phdu.header.set("filename", os.path.basename (convolved))
         phdu.writeto (convolved)
 
     for imset0 in range (n_imsets):
@@ -212,11 +211,11 @@ def wx2d_imset (ft, imset, output, wavelengths, helcorr,
         wl_hdu.data = wavelen.compute_wavelengths ((original_nrows, ncols),
                         ft[0].header, header, helcorr)
         ofd = pyfits.open (wavelengths, mode="update")
-        ofd[0].header.update ("nextend", imset)
+        ofd[0].header.set("nextend", imset)
         if helcorr == "PERFORM":
-            ofd[0].header.update ("helcorr", "COMPLETE")
+            ofd[0].header.set("helcorr", "COMPLETE")
         else:
-            ofd[0].header.update ("helcorr", "OMIT")
+            ofd[0].header.set("helcorr", "OMIT")
         ofd.append (wl_hdu)
         ofd.close()
 
@@ -236,7 +235,7 @@ def wx2d_imset (ft, imset, output, wavelengths, helcorr,
 
     # Write the DQ HDU to the output file.
     ofd = pyfits.open (output, mode="update")
-    ofd[0].header.update ("nextend", imset*3)
+    ofd[0].header.set("nextend", imset*3)
     ofd.append (hdu)
     ofd.close()
 
@@ -341,7 +340,7 @@ def wavelet_resampling (hdu, img, errimg,
     if subsampled is not None:
         hdu.data = sub5.copy()
         ofd = pyfits.open (subsampled, mode="update")
-        ofd[0].header.update ("nextend", imset)
+        ofd[0].header.set("nextend", imset)
         ofd.append (hdu)
         ofd.close()
 
@@ -357,7 +356,7 @@ def wavelet_resampling (hdu, img, errimg,
         if convolved is not None:
             hdu.data = cnv.copy()
             ofd = pyfits.open (convolved, mode="update")
-            ofd[0].header.update ("nextend", imset)
+            ofd[0].header.set("nextend", imset)
             ofd.append (hdu)
             ofd.close()
     else:
