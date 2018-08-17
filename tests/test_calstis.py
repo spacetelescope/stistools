@@ -34,23 +34,23 @@ class TestCalstis(BaseSTIS):
                    (outsx2, reffile_sx2)]
         self.compare_outputs(outputs)
 
-    def test_lev1_FUV(self):
-        """
-        This test is for level 1? FUV data
-        """
-
-        # Prepare input files.
-        self.get_input_file("input", "o5cl02040_raw.fits")
-        self.get_input_file("input", "o5cl02040_wav.fits")
-        outroot = "calstis_lev1_FUVspec"
-
-        # Run test
-        calstis("o5cl02040_raw.fits", outroot=outroot)
-
-        # Compare results
-        outputs = [(outroot+"_flt.fits", outroot+"_flt_ref.fits"),
-                   (outroot+"_x1d.fits", outroot+"_x1d_ref.fits")]
-        self.compare_outputs(outputs)
+    # def test_lev1_FUV(self):
+    #     """
+    #     This test is for level 1? FUV data
+    #     """
+    #
+    #     # Prepare input files.
+    #     self.get_input_file("input", "o5cl02040_raw.fits")
+    #     self.get_input_file("input", "o5cl02040_wav.fits")
+    #     outroot = "calstis_lev1_FUVspec"
+    #
+    #     # Run test
+    #     calstis("o5cl02040_raw_pando.fits", outroot=outroot)
+    #
+    #     # Compare results
+    #     outputs = [(outroot+"_flt.fits", outroot+"_flt_ref.fits"),
+    #                (outroot+"_x1d.fits", outroot+"_x1d_ref.fits")]
+    #     self.compare_outputs(outputs)
 
     def test_lev2_CCD(self):
         """
