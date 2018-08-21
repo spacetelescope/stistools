@@ -42,6 +42,7 @@ __version__ = "3.4"
 __vdate__ = "13-November-2013"
 __author__ = "Phil Hodge, STScI, November 2013."
 
+
 def main(args):
 
     if len(args) < 1:
@@ -85,6 +86,7 @@ def main(args):
 
     sys.exit(status)
 
+
 def prtOptions():
     """Print a list of command-line options and arguments."""
 
@@ -99,6 +101,7 @@ def prtOptions():
     print("  and/or if wildcards are used.")
     print("One or more output file names may be specified (the same number")
     print("  as the input file names).")
+
 
 def x1d(input, output="",
         backcorr="perform", ctecorr="perform", dispcorr="perform",
@@ -398,9 +401,11 @@ def x1d(input, output="",
 # Interfaces used by TEAL #
 #-------------------------#
 
+
 def getHelpAsString(fulldoc=True):
     """Return documentation on the x1d function."""
     return x1d.__doc__
+
 
 def run(configobj=None):
     """TEAL interface for the x1d function."""

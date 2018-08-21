@@ -92,9 +92,6 @@ Author:
     #                                 check for binned data and non-integral
     #                                 shifts.
     # 2004/09/24  PEB - version 1.6 - add keyword consistency checks
-
-    import types
-
     #  Setup input and output filename lists, so iteration can be done
     #  over a list of zipped filenames.
 
@@ -130,7 +127,6 @@ Author:
     proposid, obset_id, targname = None, None, None
     propaper, opt_elem, cenwave = None, None, None
     binaxis1, binaxis2 = None, None
-    samefiles = []
     for infile in input:
 
         #  Read the POSTARG2 keyword (in the primary header) and the
@@ -163,7 +159,8 @@ Author:
             obset_id = phdr['OBSET_ID']
         elif proposid != phdr['PROPOSID'] or obset_id != phdr['OBSET_ID']:
             raise ValueError(' Not all exposures are from the same visit;'
-                             ' placement of the spectrum on the detector will differ.')
+                             ' placement of the spectrum on the detector will'
+                             ' differ.')
 
         # Check that PROPAPER, OPT_ELEM, CENWAVE are the same.
         if propaper is None:
@@ -234,7 +231,8 @@ Author:
 
 
 if __name__ == '__main__':
-    import sys, getopt
+    import sys
+    import getopt
 
     output, shifts, scale, toler = None, None, None, None
 

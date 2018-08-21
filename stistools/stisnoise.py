@@ -316,4 +316,4 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
         fout.append(fits.ImageHDU(header=fin[1].header, data=outimage))
         fout.writeto(outfile)
 
-    return (freq, magnitude)
+    return freq, magnitude
