@@ -85,6 +85,7 @@ def main(args):
 
     sys.exit(status)
 
+
 def prtOptions():
     """Print a list of command-line options and arguments."""
 
@@ -240,7 +241,7 @@ def ocrreject(input, output,
         n_infiles = len(infiles)
         if n_outfiles != n_infiles:
             print("You specified {} input files but {} output files;".format(
-                (n_infiles, n_outfiles)))
+                n_infiles, n_outfiles))
             print("the number of input and output files must be the same.")
             return 2
 
@@ -345,6 +346,7 @@ def ocrreject(input, output,
 #-------------------------#
 # Interfaces used by TEAL #
 #-------------------------#
+
 
 def getHelpAsString(fulldoc=True):
     """Return documentation on the ocrreject function."""

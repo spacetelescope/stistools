@@ -375,7 +375,7 @@ class Trace:
         tolerence = 3 * np.median(abs(smoytrace[wind] - med11smoytrace[wind]))
         if tolerence < 0.1:
             tolerence = 0.1
-        badpoint = np.where(diffmed > tolerence)[0]y
+        badpoint = np.where(diffmed > tolerence)[0]
         if len(badpoint) != 0:
             np.put(smoytrace, badpoint, med11smoytrace[badpoint])
 
