@@ -30,15 +30,15 @@ Simple example of running mktrace on a STIS file named 'file.fits':
 
 import numpy as np
 from astropy.io import fits
+from astropy.modeling import models, fitting
 import os.path
 from scipy import signal
 from scipy import ndimage as ni
-
-from stsci.tools import gfit, linefit
+from stsci.tools import linefit
 from stsci.tools import fileutil as fu
 
-__version__ = '2.0.0'
-__vdate__ = '2017-03-20'
+__version__ = '3.0.0'
+__vdate__ = '2018-04-20'
 
 
 def mktrace(fname, tracecen=0.0, weights=None):
@@ -80,7 +80,8 @@ def mktrace(fname, tracecen=0.0, weights=None):
     wind = np.nonzero(wei)[0]
 
     tr = Trace(fname, kwinfo)
-    a2center, trace1024 = tr.generateTrace(data, kwinfo, tracecen=tracecen, wind=wind)
+    a2center, trace1024 = tr.generateTrace(data, kwinfo,
+                                           tracecen=tracecen, wind=wind)
     # compute the full frame a2center
     ffa2center = a2center*kwinfo['binaxis2']
     tr_ind, a2disp_ind = tr.getTraceInd(ffa2center)
@@ -118,8 +119,9 @@ def mktrace(fname, tracecen=0.0, weights=None):
 
     #print 'time', time.time()-start
     #the minus sign is for consistency withthe way x2d reports the rotation
-    print("Traces were rotated by {:.10f} degrees \n".format((-(sparams[1]-rparams[1])*180 / np.pi)))
-    print('trace is centered on row {:.10f}'.format(tr._a2center))
+    print("Traces were rotated by {:.10f} degrees \n".format(
+        - (sparams[1] - rparams[1]) * 180 / np.pi))
+    print('Trace is centered on row {:.10f}'.format(tr._a2center))
     return tr
 
 
@@ -137,10 +139,10 @@ def interp(y, n):
     """
     m = float(len(y))
     x = np.arange(m)
-    i = np.arange(n,dtype=np.float)
+    i = np.arange(n, dtype=np.float)
     xx = i * (m-1)/n
     xind = np.searchsorted(x, xx)-1
-    yy = y[xind]+(xx-x[xind])*(y[xind+1]-y[xind])/(x[xind+1]-x[xind])
+    yy = y[xind] + (xx - x[xind]) * (y[xind + 1] - y[xind]) / (x[xind + 1] - x[xind])
 
     return yy
 
@@ -404,11 +406,17 @@ class Trace:
         smoytrace = np.zeros(sizey).astype(np.float)
         boxcar_kernel = signal.boxcar(3) / 3.0
 
+        fitter = fitting.LevMarLSQFitter()
+
         for c in np.arange(sizey):
             col = specimage[:, c]
             col = col - np.median(col)
             smcol = ni.convolve(col, boxcar_kernel).astype(np.float)
-            fit = gfit.gfit1d(smcol, quiet=1, maxiter=15)
-            smoytrace[c] = fit.params[1]
+            #fit = gfit.gfit1d(smcol, quiet=1, maxiter=15)
+            x = np.arange(len(smcol)).astype(np.float)
+            gauss = models.Gaussian1D(amplitude=smcol.max(), mean=x.mean())
+            fit = fitter(gauss, x, smcol)
+            #smoytrace[c] = fit.params[1]
+            smoytrace[c] = fit.mean.value
 
         return np.array(smoytrace)
