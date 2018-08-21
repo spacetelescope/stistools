@@ -25,9 +25,9 @@ class TestMktrace(BaseSTIS):
 
         # Compare results
         captured = capsys.readouterr()
-        assert captured.out == "Traces were rotated by 0.006627 degrees \n" \
+        assert captured.out == "Traces were rotated by 0.006627392936879062 degrees \n" \
                                "\n" \
-                               "trace is centered on row 509.247549\n"
+                               "trace is centered on row 509.24754942929127\n"
 
         outputs = [("o45a03010_crj_1dt.fits", "o45a03010_crj_1dt_ref.fits"),
                    ("o45a03010_crj_1dt_interp.fits", "o45a03010_crj_1dt_interp_ref.fits"),
@@ -54,9 +54,9 @@ class TestMktrace(BaseSTIS):
 
         # Compare results
         captured = capsys.readouterr()
-        assert captured.out == "Traces were rotated by 0.031723 degrees \n" \
+        assert captured.out == "Traces were rotated by 0.03172332072767718 degrees \n" \
                                "\n" \
-                               "trace is centered on row 893.705969\n"
+                               "trace is centered on row 893.7059688463627\n"
 
         outputs = [("o8pp31020_crj_1dt.fits", "o8pp31020_crj_1dt_ref.fits"),
                    ("o8pp31020_crj_1dt_interp.fits", "o8pp31020_crj_1dt_interp_ref.fits"),
