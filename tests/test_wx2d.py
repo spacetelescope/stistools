@@ -11,8 +11,8 @@ class TestWx2d(BaseSTIS):
     input_loc = 'wx2d'
     ref_loc = 'wx2d'
 
-    # @pytest.mark.skip(reason="Fails on jenkins because of mis-matched number"
-    #                          "of cards. Need to find workaround")
+    @pytest.mark.skip(reason="Fails on jenkins because of mis-matched number"
+                             "of cards. Need to find workaround")
     def test_wx2d_t1(self):
         """
         Test for  wx2d using rows parameter
@@ -31,8 +31,8 @@ class TestWx2d(BaseSTIS):
                    ("o6ih10060_wl.fits", "o6ih10060_wl_ref.fits")]
         self.compare_outputs(outputs)
 
-    # @pytest.mark.skip(reason="Fails on jenkins because of mis-matched number"
-    #                          "of cards. Need to find workaround")
+    @pytest.mark.skip(reason="Fails on jenkins because of mis-matched number"
+                             "of cards. Need to find workaround")
     def test_wx2d_t2(self):
         """
         Test for wx2d
