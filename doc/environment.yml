@@ -1,6 +1,6 @@
 name: stistools
 channels:
-  - http://ssb.stsci.edu/astroconda
+  - http://ssb.stsci.edu/conda-dev
   - conda-forge
 dependencies:
   - numpy>=1.5.1

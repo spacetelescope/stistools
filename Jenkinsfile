@@ -13,8 +13,8 @@ bc0.name = "Install"
 bc0.test_configs = [data_config]
 bc0.build_cmds = ["conda env update --file=doc/environment.yml -q",
                   "with_env -n stistools python setup.py install",
-                  "with_env -n stistools conda install -q -y -c http://ssb.stsci.edu/astroconda hstcal",
-                  "with_env -n stistools conda install -q -y -c http://ssb.stsci.edu/astroconda crds"]
+                  "with_env -n stistools conda install -q -y -c http://ssb.stsci.edu/conda-dev hstcal",
+                  "with_env -n stistools conda install -q -y -c http://ssb.stsci.edu/conda-dev crds"]
 bc0.test_cmds = ["with_env -n stistools conda install -q -y pytest",
                  "with_env -n stistools conda install -q -y pytest-remotedata",
                  "with_env -n stistools conda list"]
