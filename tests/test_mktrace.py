@@ -9,6 +9,8 @@ class TestMktrace(BaseSTIS):
     input_loc = 'mktrace'
     ref_loc = 'mktrace'
 
+    atol = 1e-14
+
     def test_mktrace_t1(self, capsys):
         """
         This tests a basic usage of stis.mktrace. To plot the results run
