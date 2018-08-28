@@ -132,14 +132,13 @@ def odelaytime(table_names, earth_ephem, obs_ephem, distance, dist_unit,
 
 
 
-
-
 # odelay_do
 # call odelay_do (fin, nfin, parallax, earth_ephem, obs_ephem,
 # in_col, verbose)
 
+
 def get_ephem(ephem_tables, eph_type):
-    '''
+    """
      read an ephemeris of state vectors
     #
     #  Description:
@@ -181,7 +180,7 @@ def get_ephem(ephem_tables, eph_type):
     #------------------------------------------------------------------------------
         :param ephem_table:
         :return:
-    '''
+    """
 
     # Open the file name template string for the list of ephemeris tables.
     npts = 0
@@ -193,8 +192,8 @@ def get_ephem(ephem_tables, eph_type):
 
     # Count the total number of rows in all the input tables.
     # Not sure if I need this
-    #nrows = tbpsta (tp, TBL_NROWS)
-    #npts = npts + nrows
+    # nrows = tbpsta (tp, TBL_NROWS)
+    # npts = npts + nrows
 
     if npts == 0:
         raise ValueError("The following input tables are empty: "
@@ -206,7 +205,7 @@ def get_ephem(ephem_tables, eph_type):
 
     for tab_file in ephem_tables:
         # open table file
-        #tp = tbtopn (table, READ_ONLY, 0)
+        # tp = tbtopn (table, READ_ONLY, 0)
         current_tab = Table.read(tab_file, hdu=1)
 
         if eph_type == EARTH_EPHEMERIS:
@@ -226,16 +225,16 @@ def get_ephem(ephem_tables, eph_type):
             # scale the times, and add the zero point
             new_time = firstmjd + timescale * new_time
 
-
         if time == 0:
             time = new_time
         else:
             time.insert(-1, new_time)
 
         # pull "X", "Y", and "Z" columns
-	    #call tbcfnd1 (tp, "X", cp[2])
-	    #call tbcfnd1 (tp, "Y", cp[3])
-	    #call tbcfnd1 (tp, "Z", cp[4])
+        # call tbcfnd1 (tp, "X", cp[2])
+        # call tbcfnd1 (tp, "Y", cp[3])
+        # call tbcfnd1 (tp, "Z", cp[4])
+
         if x == 0:
             x = current_tab['X']
             y = current_tab['X']
@@ -245,8 +244,7 @@ def get_ephem(ephem_tables, eph_type):
             y.insert(-1, current_tab['Y'])
             z.insert(-1, current_tab['Z'])
 
-	    if eph_type == OBS_EPHEMERIS:
-
+        if eph_type == OBS_EPHEMERIS:
             # read header parameter, the zero-point epoch
             firstmjd = g_firstmjd(tab_file)
 
@@ -276,13 +274,12 @@ def get_ephem(ephem_tables, eph_type):
                 raise ValueError("unrecognized TIME unit in ephemeris "
                                  "table:{}".format(gridunit))
 
-
-	    # read the data (already did this)
+        # read the data (already did this)
         # tbcgtd - Read values for one column from a range of rows.
-	    #  time (or mjd) = cp[1] = Memd[time+k]
-	    #  x = cp[2] = Memd[x+k]
-	    #  y = cp[3] = Memd[y+k]
-	    #  z = cp[4] = Memd[z+k]
+        #  time (or mjd) = cp[1] = Memd[time+k]
+        #  x = cp[2] = Memd[x+k]
+        #  y = cp[3] = Memd[y+k]
+        #  z = cp[4] = Memd[z+k]
 
         # convert the state vectors to AU
         for col in (x,y,z):
@@ -290,9 +287,9 @@ def get_ephem(ephem_tables, eph_type):
             if colunit == "AU":
                 pass
             elif colunit == "KM":
-                #call adivkd (Memd[x+k], KMPERAU, Memd[x+k], nrows)
+                # call adivkd (Memd[x+k], KMPERAU, Memd[x+k], nrows)
                 # ADIVK -- Divide a vector by a constant
-                col = col/KMPERAU
+                col /= KMPERAU
             else:
                 raise ValueError("unrecognized {} unit in ephemeris table: "
                                  "{}".format(col.name, col.dtype))
