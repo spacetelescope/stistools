@@ -23,7 +23,6 @@ Relationship to the IRAF/PyRAF stistools Package
 
 The intent of this package is to provide the user community with many of the useful tools contained within the original IRAF/PyRAF
 stistools package in Python. This is consistent with a larger effort to transition the user community from IRAF/PyRAF to Python,
->>>>>>> updated index format
 which can be read about `here <https://stak-notebooks.readthedocs.io/en/latest/index.html>`_. At this time, there remains several tools
 from the original IRAF/PyRAF version of the package that are still in development in the Python package. In this transitional period,
 it’s recommended that STIS users familiarize themselves with this package. Understanding that many of the users of this package
@@ -51,8 +50,10 @@ Pipeline Software
    x2d
    wavecal
    calstis
-   wavelen
    ocrreject
+   basic2d
+   x1d
+   x2d
 
 =======================
 Analysis Tools
