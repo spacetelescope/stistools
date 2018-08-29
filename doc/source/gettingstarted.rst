@@ -81,3 +81,4 @@ Then the following command may be used to assign and obtain the best references 
 .. code-block:: sh
 
     $ crds bestrefs --update-bestrefs --sync-references=1 --files *.fits
+
