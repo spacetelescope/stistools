@@ -29,17 +29,18 @@ Getting Started
    :maxdepth: 2
 
    Installation and Setup <gettingstarted.rst>
+
 =======================
 Pipeline Software
 =======================
 .. toctree::
    :maxdepth: 2
 
+   calstis
+   ocrreject
    basic2d
    x1d
-   calstis
-   wavelen
-   ocrreject
+   x2d
 
 =======================
 Analysis Tools
@@ -47,15 +48,16 @@ Analysis Tools
 .. toctree::
    :maxdepth: 2
 
-   sshift <sshift.rst>
-   stisnoise <stisnoise.rst>
-   mktrace <mktrace.rst>
-   evaldisp <evaldisp.rst>
+   sshift
+   stisnoise
+   mktrace
+   evaldisp
    wx2d
    radialvel
    r_util
    gettable
    inttag
+   wavelen
 
 Indices and tables
 ==================
