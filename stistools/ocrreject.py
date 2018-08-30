@@ -1,14 +1,5 @@
 #! /usr/bin/env python
 
-
-import os
-import sys
-import getopt
-import glob
-import subprocess
-
-from stsci.tools import parseinput, teal
-
 """
 Add STIS exposures, rejecting cosmic rays.
 
@@ -37,6 +28,16 @@ From command line::
 % ./ocrreject.py -v -s o3tt02020_flt.fits o3tt02020_crj.fits
 % ./ocrreject.py -r
 """
+from __future__ import division, print_function # confidence unknown
+import os
+import sys
+import getopt
+import glob
+import subprocess
+
+from stsci.tools import parseinput,teal
+
+
 
 __taskname__ = "ocrreject"
 __version__ = "3.4"

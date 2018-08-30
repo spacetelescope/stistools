@@ -1,13 +1,5 @@
 #! /usr/bin/env python
 
-import os
-import sys
-import getopt
-import glob
-import subprocess
-
-from stsci.tools import parseinput, teal
-
 """
 Extract 1-D spectrum.
 
@@ -36,6 +28,16 @@ From command line::
 % ./x1d.py -v o66p01020_flt.fits o66p01020_x1d.fits
 % ./x1d.py -r
 """
+from __future__ import division, print_function # confidence unknown
+import os
+import sys
+import getopt
+import glob
+import subprocess
+
+from stsci.tools import parseinput,teal
+
+
 
 __taskname__ = "x1d"
 __version__ = "3.4"
