@@ -1,13 +1,5 @@
 #! /usr/bin/env python
 
-import os
-import sys
-import getopt
-import glob
-import subprocess
-
-from stsci.tools import parseinput, teal
-
 """
 Calibrate STIS data.
 
@@ -42,6 +34,17 @@ From command line::
 % ./calstis.py -v -s o66p01020_raw.fits out/
 % ./calstis.py -r
 """
+
+from __future__ import division, print_function # confidence unknown
+import os
+import sys
+import getopt
+import glob
+import subprocess
+
+from stsci.tools import parseinput,teal
+
+
 
 __taskname__ = "calstis"
 __version__ = "3.4"

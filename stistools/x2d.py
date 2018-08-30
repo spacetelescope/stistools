@@ -1,13 +1,5 @@
 #! /usr/bin/env python
 
-import os
-import sys
-import getopt
-import glob
-import subprocess
-
-from stsci.tools import parseinput, teal
-
 """
 Rectify 2-D STIS spectral data.
 
@@ -36,6 +28,17 @@ From command line::
 % ./x2d.py -v o66p01020_flt.fits o66p01020_x2d.fits
 % ./x2d.py -r
 """
+
+from __future__ import division, print_function  # confidence unknown
+import os
+import sys
+import getopt
+import glob
+import subprocess
+
+from stsci.tools import parseinput,teal
+
+
 
 __taskname__ = "x2d"
 __version__ = "3.4"

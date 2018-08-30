@@ -1,14 +1,5 @@
 #! /usr/bin/env python
 
-
-import os
-import sys
-import getopt
-import glob
-import subprocess
-
-from stsci.tools import parseinput, teal
-
 """
 Perform basic 2-D calibration of STIS data.
 
@@ -37,6 +28,17 @@ From command line::
 % ./basic2d.py -v -s o66p01020_raw.fits o66p01020_flt.fits
 % ./basic2d.py -r
 """
+
+from __future__ import division, print_function # confidence unknown
+import os
+import sys
+import getopt
+import glob
+import subprocess
+
+from stsci.tools import parseinput,teal
+
+
 
 __taskname__ = "basic2d"
 __version__ = "3.4"
