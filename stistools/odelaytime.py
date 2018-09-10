@@ -111,15 +111,17 @@ JD_TO_MJD = 2400000.5   #d0	# subtract from JD to get MJD
 
 RADIAN = 57.295779513082320877
 
+# Need to figure out what/if default for distance parameter
 
-
-def odelaytime(table_names, earth_ephem, distance, dist_unit,
-               in_col, obs_ephem=[], verbose=False):
+def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=5.0,
+               dist_unit="arcsec", in_col="TIME", verbose=False):
 
     parallax = distance
 
     # convert distance to parsec first
-    if dist_unit == "au":
+    if dist_unit == "arcsec":
+        pass
+    elif dist_unit == "au":
         parallax /= AUPERPC
     elif dist_unit == "ly":
         parallax /= LYPERPC
@@ -169,7 +171,7 @@ def odelaytime(table_names, earth_ephem, distance, dist_unit,
                   " will be applied to this file".format(in_table_file))
             continue
         else:
-            in_hdul[0].header['DELAYCOR'] == "PERFORM"
+            in_hdul[0].header['DELAYCOR'] = "PERFORM"
 
         mjd1 = in_hdul[0].header['TEXPSTRT']
         mjd2 = in_hdul[0].header['TEXPEND']
@@ -180,7 +182,6 @@ def odelaytime(table_names, earth_ephem, distance, dist_unit,
             nextend = in_hdul[0].header['NEXTEND']
         else:
             nextend = 1
-
 
         if filetype == "EVENTS_TABLE":
             # assume (for now) that the last extension is a GTI table
@@ -212,6 +213,7 @@ def odelaytime(table_names, earth_ephem, distance, dist_unit,
         # present.  We do this here before making any change, to avoid
         # the possibility of correcting only part of the input file.
         if not ext_exist(in_table_file, in_col, nevents_tab, nsci_ext):
+            print("missing extensions... ")
             continue
 
         # calculate the target's positional vector
@@ -228,7 +230,7 @@ def odelaytime(table_names, earth_ephem, distance, dist_unit,
 
         if filetype == "EVENTS_TABLE":
             # update times in GTI table
-            if 'GIT' in in_hdul:
+            if 'GTI' in in_hdul:
                 gti_tab = in_hdul['GTI'].data
                 nrows = len(gti_tab)
                 for row in gti_tab:
@@ -275,6 +277,7 @@ def odelaytime(table_names, earth_ephem, distance, dist_unit,
                 print("  start time: ", datetime.now())
 
             # go through each row
+            print(nrows)
             for r_indx in range(nrows):
                 row = events_tab.data[r_indx]
                 tm = row[in_col]
@@ -294,10 +297,11 @@ def odelaytime(table_names, earth_ephem, distance, dist_unit,
                 # write the corrected time back to the time column
                 row[in_col] = tm + (delta_sec - t0_delay)
 
-                if verbose:
+                if verbose and r_indx in np.arange(0, 100000, 10000):
                     # print percent done
-                    print("    Percentage done:  {}".
-                          format(int(100*(r_indx/nrows))))
+                    # print("    Percentage done:  {}".
+                    #      format(int(100*(r_indx/nrows))))
+                    print(r_indx)
 
             # add delaytime to EXPSTART and EXPEND, and update header
             delta_sec = all_delay(mjd1, parallax, objvec,
@@ -373,7 +377,7 @@ def odelaytime(table_names, earth_ephem, distance, dist_unit,
                                          "delaytime has been applied")
         in_hdul[0].header['history'] = "Times corrected to solar system barycenter;"
 
-        if obs_ephem_table not None:
+        if obs_ephem_table is not None:
             in_hdul[0].header['history'] = "ORX table {}".format(obs_ephem)
         else:
             in_hdul[0].header['history'] = "no ORX tables were used."
@@ -383,10 +387,6 @@ def odelaytime(table_names, earth_ephem, distance, dist_unit,
 
         # close in file
         in_hdul.close()
-
-
-
-
 
 
 def get_ephem(ephem_tables, eph_type):
@@ -461,7 +461,7 @@ def get_ephem(ephem_tables, eph_type):
 
         else:
             # pull "TIME",
-            new_time = current_tab['Time']
+            new_time = current_tab['TIME']
 
             # read header parameter, the zero-point epoch
             firstmjd = g_firstmjd(tab_file)
@@ -476,7 +476,7 @@ def get_ephem(ephem_tables, eph_type):
 
             # this call pulls the units of said column into the
             # gridunit variable
-            gridunit = current_tab['Time'].unit.to_string().upper()
+            gridunit = current_tab['TIME'].unit.to_string().upper()
 
             # get the scale factor for converting the times to days
             if gridunit == "DAY":
@@ -493,6 +493,7 @@ def get_ephem(ephem_tables, eph_type):
 
             # scale the times, and add the zero point
             new_time = firstmjd + timescale * new_time
+            new_time.name = "Time"
 
         new_time.unit = cds.MJD
 
@@ -619,7 +620,7 @@ def ext_exist(ifile, in_col, nevents_tab, nsci_ext):
     with fits.open(ifile) as hdulist:
 
         # If the input is a time-tag file, look for events extensions.
-        for k in range(1, nevents_tab):
+        for k in range(1, nevents_tab+1):
             # can't tell exactly what i need to open, looks like
             # filename[EVENTS,k]
 
@@ -633,6 +634,8 @@ def ext_exist(ifile, in_col, nevents_tab, nsci_ext):
         # image sets, open all the extensions (specified by NEXTEND).
         # for k in range(1, nsci_ext):
         # I don't think I need this...
+
+    return True
 
 
 def all_delay(epoch, parallax, objvec, earth_table, npts_earth, obs_table,
@@ -819,8 +822,8 @@ def intrp_state(epoch, time, x, y, z, npts, nlag):
     i1 = 1
     i2 = npts
 
-    while i2 - i1 > 1:
-        icenter = (i1 + i2) / 2
+    while (i2 - i1) > 1:
+        icenter = int((i1 + i2) / 2)
         if epoch > time[icenter]:
             i1 = icenter
         else:
@@ -828,14 +831,14 @@ def intrp_state(epoch, time, x, y, z, npts, nlag):
 
     icenter = i1
 
-    istart = icenter - nlag / 2
+    istart = icenter - int(nlag / 2)
     istop = istart + nlag - 1
 
     # make sure the starting and stopping points are within limits
     if istart < 1 or istop > npts:
         raise ValueError("epoch = {:.4f}; ephemeris range = {:.4f} to {:.4f} \n"
                          "Input epoch is out of ephemeris range".
-                         format(epoch, time[1], time[npts]))
+                         format(epoch, time[0], time[npts-1]))
 
     # perform the interpolation
     # time (x input)  x (y input)  nlag (size of arrays)
@@ -858,7 +861,12 @@ def vpolin(xa, ya, in_x):
     # looks like it is a implomentation of neville's algorithm
     # It's taking nlag=10 numbers, assuming it's pulling those from
     # the start of the array.... although this is a bit dangerous
+    print("xa: ", xa)
+    print("ya: ", ya)
+    print("in_x: ", in_x)
     poly = lagrange(xa, ya)
+
+    print("out: ", poly(in_x))
 
     return poly(in_x)
 
