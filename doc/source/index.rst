@@ -18,11 +18,11 @@ tools are in active development, so there is more to come.
     `STIS Data Handbook <http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/>`_.
 
 
-Relationship to the IRAF/PyRAF stistools Package
+Relationship to the IRAF/PyRAF stis Package
 *******************************************
 
 The intent of this package is to provide the user community with many of the useful tools contained within the original IRAF/PyRAF
-stistools package in Python. This is consistent with a larger effort to transition the user community from IRAF/PyRAF to Python,
+stis package in Python. This is consistent with a larger effort to transition the user community from IRAF/PyRAF to Python,
 which can be read about `here <https://stak-notebooks.readthedocs.io/en/latest/index.html>`_. At this time, there remains several tools
 from the original IRAF/PyRAF version of the package that are still in development in the Python package. In this transitional period,
 it’s recommended that STIS users familiarize themselves with this package. Understanding that many of the users of this package
