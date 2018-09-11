@@ -11,6 +11,12 @@ Stistools is a package that provides Python-based data processing tools for work
 calibrations manually. Additionally, stistools features a selection of analysis tools independent from the pipeline. These analysis
 tools are in active development, so there is more to come.
 
+.. note::
+
+    The information here reflect the *latest* software info and might not
+    be in-sync with the
+    `STIS Data Handbook <http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/>`_.
+
 Relationship to the IRAF/PyRAF stis Package
 *******************************************
 
