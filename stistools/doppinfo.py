@@ -9,17 +9,17 @@ from astropy.io import fits
 from . import observation
 from . import orbit
 
-__version__ = "2.0"
-__vdate__ = "2012-08-28"
+__version__ = "3.0"
+__vdate__ = "2018-09-14"
 
 # multiply by DEG_RAD to convert from degrees to radians
-DEG_RAD        = (math.pi / 180.0)
-TWOPI          = (math.pi * 2.0)
+DEG_RAD = (math.pi / 180.0)
+TWOPI = (math.pi * 2.0)
 SPEED_OF_LIGHT = 299792.458             # km / s
-SEC_PER_DAY    = 86400.0
+SEC_PER_DAY = 86400.0
 
 # number of points for computing circular-orbit parameters
-NPTS   = 64
+NPTS = 64
 NPTS_D = 64.
 
 
@@ -39,7 +39,7 @@ class Doppinfo(object):
         Parameters
         ----------
         input: str
-            The name of an input file; COS and STIS data are supported.
+            The name of an input file; Only STIS data is supported.
 
         spt: str or None
             The name of the support (_spt.fits) file to use for getting
@@ -63,9 +63,6 @@ class Doppinfo(object):
             be printed.
         """
 
-
-
-
         self.input = input
         self.update = update
         self.quiet = quiet
@@ -80,7 +77,6 @@ class Doppinfo(object):
 
         for sci_ext in np.arange(self.sci_num)+1:
 
-
             self.obs = observation.initObservation(input, instrument, sci_ext)
             self.obs.getInfo()
 
@@ -92,10 +88,12 @@ class Doppinfo(object):
             self._getDoppParam()
 
             if not quiet:
-                print("# orbitper  doppzero      doppmag      doppmag_v    file")
-                print("  %.7g  %.6f  %.8f  %.8f   %s" %
-                    (self.orbitper, self.doppzero, self.doppmag,
-                    self.doppmag_v, self.input))
+                print("# orbitper  doppzero      doppmag      doppmag_v    "
+                      "file")
+                print("  {:.7g}  {:.6f}  {:.8f}   {:.8f}   {}[sci,{}]".
+                      format(self.orbitper, self.doppzero, self.doppmag,
+                             self.doppmag_v, self.input.split("/")[-1],
+                             sci_ext))
                 self.printDopplerShift(dt)
 
             # Maybe shouldn't be in loop
@@ -103,21 +101,14 @@ class Doppinfo(object):
                 self.updateKeywords(input, sci_ext)
 
     def _getInitInfo(self):
-        """Find out what instrument was used for this exposure.
-        Overloading this function to minimize fits open calls, but this should
-        really be re-factored.
-
-        Returns
-        -------
-        instrument: str
-            Instrument name, "COS" or "STIS".
+        """
+        Get nextend and instrument.
         """
 
         fd = fits.open(self.input, mode="readonly")
         instrument = fd[0].header.get("instrume", "missing")
         nextend = fd[0].header['nextend']
         fd.close()
-
 
         return instrument, nextend
 
@@ -142,7 +133,8 @@ class Doppinfo(object):
         if i >= 0:
             spt = self.input[0:i] + "spt.fits"
         else:
-            raise RuntimeError("Don't understand input file name '{}'".format(self.input))
+            raise RuntimeError("Don't understand input file name '{}'".
+                               format(self.input))
 
         return spt
 
@@ -175,8 +167,8 @@ class Doppinfo(object):
             delt = i * (orbit_period / NPTS_D)
             time = t_origin + delt
             radvel = self.get_rv(time)
-            sum_sin = sum_sin + radvel * math.sin(TWOPI * delt / orbit_period)
-            sum_cos = sum_cos + radvel * math.cos(TWOPI * delt / orbit_period)
+            sum_sin += radvel * math.sin(TWOPI * delt / orbit_period)
+            sum_cos += radvel * math.cos(TWOPI * delt / orbit_period)
 
         # Normalize by dividing by the sum of (sin**2) at NPTS equally spaced
         # times in one orbit.
@@ -212,8 +204,8 @@ class Doppinfo(object):
            theta = atan2(bcoeff, acoeff)
          """
 
-        self.doppzero = -math.atan2(bcoeff, acoeff) * orbit_period / TWOPI + \
-                        t_origin
+        self.doppzero = -math.atan2(bcoeff, acoeff) \
+            * orbit_period / TWOPI + t_origin
         self.doppmag_v = math.sqrt(acoeff*acoeff + bcoeff*bcoeff)
         self.doppmag = self.rvToPixels(self.doppmag_v)
 
@@ -258,9 +250,8 @@ class Doppinfo(object):
         (x, v) = self.orbit.getPos(time)
 
         # This is the component of velocity toward the target.
-        dot_product = self.target[0] * v[0] + \
-                      self.target[1] * v[1] + \
-                      self.target[2] * v[2]
+        dot_product = self.target[0] * v[0] + self.target[1] * v[1] + \
+            self.target[2] * v[2]
 
         # Change the sign to get the component away from the target.
         return -dot_product
@@ -280,10 +271,10 @@ class Doppinfo(object):
         """
 
         doppmag = radvel * self.obs.cenwave / \
-                        (SPEED_OF_LIGHT * self.obs.dispersion)
+            (SPEED_OF_LIGHT * self.obs.dispersion)
         return doppmag
 
-    def pixelsToRv(self, doppmag, okey):
+    def pixelsToRv(self, doppmag):
         """Convert Doppler shift in pixels to radial velocity.
 
         Parameters
@@ -298,7 +289,7 @@ class Doppinfo(object):
         """
 
         radvel = doppmag * SPEED_OF_LIGHT * self.obs.dispersion / \
-                        self.obs.cenwave
+            self.obs.cenwave
         return radvel
 
     def printDopplerShift(self, dt):
@@ -312,8 +303,6 @@ class Doppinfo(object):
             during the orbit.
         """
 
-
-
         expstart = self.obs.expstart
         expend = self.obs.expend
         expmiddle = (expstart + expend) / 2.
@@ -321,7 +310,7 @@ class Doppinfo(object):
         orbit_period = self.orbitper / SEC_PER_DAY       # days
 
         if dt > 0.:
-            print("# time (MJD)   shift   radvel  %s" % self.input)
+            print("# time (MJD)   shift   radvel")
 
             # Add 1.e-4 to expend to include end of interval, in case
             # increment divides exposure time evenly.
@@ -331,7 +320,8 @@ class Doppinfo(object):
                 if time <= expend+1.e-4:
                     radvel = self.get_rv(time)
                     doppmag = self.rvToPixels(radvel)
-                    print("%12.6f %7.2f %8.3f" % (time, doppmag, radvel))
+                    print("{:12.6f} {:7.2f} {:8.3f}".
+                          format(time, doppmag, radvel))
                     time += dt
                 else:
                     done = True
@@ -403,12 +393,11 @@ class Doppinfo(object):
             # assumes a circular orbit.
             if expend == expstart:
                 avg_radvel = self.get_rv(expmiddle)
-                avg_dopp = self.rvToPixels(avg_radvel)
             else:
                 avg_dopp = self.doppmag * \
-                (math.cos(TWOPI * (expstart - doppzero) / orbit_period) - \
-                 math.cos(TWOPI * (expend - doppzero) / orbit_period)) * \
-                        orbit_period / TWOPI / (expend - expstart)
+                    (math.cos(TWOPI * (expstart - doppzero) / orbit_period) -
+                    math.cos(TWOPI * (expend - doppzero) / orbit_period)) * \
+                    orbit_period / TWOPI / (expend - expstart)
                 avg_radvel = self.pixelsToRv(avg_dopp)
             mid_dopp = self.rvToPixels(mid_radvel)
             avg_dopp = self.rvToPixels(avg_radvel)
@@ -418,10 +407,13 @@ class Doppinfo(object):
                   "minimum Doppler  maximum Doppler")
             print("#   MJD        pixels   km/s    pixels   km/s    "
                   "pixels   km/s    pixels   km/s")
-            print("%12.6f %8.2f %6.3f  %8.2f %6.3f  "
-                  "%8.2f %6.3f  %8.2f %6.3f  %s" %
-                  (expmiddle, mid_dopp, mid_radvel, avg_dopp, avg_radvel,
-                   min_dopp, min_radvel, max_dopp, max_radvel, self.input))
+            print("{:12.6f} {:8.2f} {:6.3f}  {:8.2f} {:6.3f}  "
+                  "{:8.2f} {:6.3f}  {:8.2f} {:6.3f}  {}".
+                  format(expmiddle, mid_dopp, mid_radvel, avg_dopp, avg_radvel,
+                         min_dopp, min_radvel, max_dopp, max_radvel,
+                         self.input.split("/")[-1]))
+
+        print("")
 
     def peakQuadratic(self, y, x_middle, spacing):
         """Get the location of the maximum (or minimum) of a quadratic.
@@ -460,14 +452,17 @@ class Doppinfo(object):
         ----------
         input: str
             The name of an input file (modified in-place).
+
+        sci_ext: int
+            The number of the science extension.
         """
 
         fd = fits.open(input, mode="update")
         hdr = fd['sci', sci_ext].header
 
-        old_orbitper  = hdr.get("orbitper", -999)
-        old_doppzero  = hdr.get("doppzero", -999)
-        old_doppmag   = hdr.get("doppmag", -999)
+        old_orbitper = hdr.get("orbitper", -999)
+        old_doppzero = hdr.get("doppzero", -999)
+        old_doppmag = hdr.get("doppmag", -999)
         old_doppmag_v = hdr.get("doppmagv", -999)
 
         hdr["orbitper"] = self.orbitper
@@ -478,26 +473,30 @@ class Doppinfo(object):
         fd.close()
 
         if not self.quiet:
-            print("%s has been updated as follows:" % input)
+            print("{}[sci,{}] has been updated as follows:".
+                  format(input.split("/")[-1], sci_ext))
             if old_orbitper == -999:
-                print("orbitper:  %.4f (added)" % self.orbitper)
+                print("orbitper:  {:.4f} (added)".format(self.orbitper))
             else:
-                print("orbitper:  %.4f --> %.4f" %
-                      (old_orbitper, self.orbitper))
+                print("orbitper:  {:.4f} --> {:.4f}".
+                      format(old_orbitper, self.orbitper))
             if old_doppzero == -999:
-                print("doppzero:  %.7f (added)" % self.doppzero)
+                print("doppzero:  {:.7f} (added)".format(self.doppzero))
             else:
-                print("doppzero:  %.7f --> %.7f" %
-                      (old_doppzero, self.doppzero))
+                print("doppzero:  {:.7f} --> {:.7f}".
+                      format(old_doppzero, self.doppzero))
             if old_doppmag == -999:
-                print("doppmag:   %.6f (added)" % self.doppmag)
+                print("doppmag:   {:.6f} (added)".format(self.doppmag))
             else:
-                print("doppmag:   %.6f --> %.6f" % (old_doppmag, self.doppmag))
+                print("doppmag:   {:.6f} --> {:.6f}".
+                      format(old_doppmag, self.doppmag))
             if old_doppmag_v == -999:
-                print("doppmagv:  %.6f (added)" % self.doppmag_v)
+                print("doppmagv:  {:.6f} (added)".format(self.doppmag_v))
             else:
-                print("doppmagv:  %.6f --> %.6f" %
-                      (old_doppmag_v, self.doppmag_v))
+                print("doppmagv:  {:.6f} --> {:.6f}".
+                      format(old_doppmag_v, self.doppmag_v))
+
+            print("")
 
 if __name__ == "__main__":
 
