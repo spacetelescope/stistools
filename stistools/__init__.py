@@ -14,6 +14,7 @@ from . import wx2d
 from . import inttag
 from . import doppinfo
 from . import tastis
+from . import ctestis
 
 # These lines allow TEAL to print out the names of TEAL-enabled tasks
 # upon importing this package.
