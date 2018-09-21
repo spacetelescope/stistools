@@ -1,13 +1,12 @@
 #! /usr/bin/env python
 
-from __future__ import division, print_function # confidence unknown
 import os
 import sys
 import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput,teal
+from stsci.tools import parseinput, teal
 
 """
 Extract 1-D spectrum.
@@ -42,6 +41,7 @@ __taskname__ = "x1d"
 __version__ = "3.4"
 __vdate__ = "13-November-2013"
 __author__ = "Phil Hodge, STScI, November 2013."
+
 
 def main(args):
 
@@ -86,6 +86,7 @@ def main(args):
 
     sys.exit(status)
 
+
 def prtOptions():
     """Print a list of command-line options and arguments."""
 
@@ -100,6 +101,7 @@ def prtOptions():
     print("  and/or if wildcards are used.")
     print("One or more output file names may be specified (the same number")
     print("  as the input file names).")
+
 
 def x1d(input, output="",
         backcorr="perform", ctecorr="perform", dispcorr="perform",
@@ -240,7 +242,7 @@ def x1d(input, output="",
             files = glob.glob(in2)
             infiles.extend(files)
     if input1 and not infiles:
-        print("No file name matched the string '%s'" % input)
+        print("No file name matched the string '{}'".format(input))
         return 2
 
     if output:
@@ -257,14 +259,14 @@ def x1d(input, output="",
 
     n_infiles = len(infiles)
     if outfiles and len(outfiles) != n_infiles:
-        print("You specified %d input files but %d output files." %
+        print("You specified {} input files but {} output files.".format
               (n_infiles, len(outfiles)))
         print("The number of input and output files must be the same.")
         return 2
 
     if trailer:
         if verbose and os.access(trailer, os.F_OK):
-            print("Appending to trailer file %s" % trailer)
+            print("Appending to trailer file {}".format(trailer))
         f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
@@ -362,7 +364,7 @@ def x1d(input, output="",
                 arglist.append("%d" % bksorder)
             else:
                 raise RuntimeError("bksmode must be one of 'off',"
-                    " 'median', 'average'; you specified '%s'" % bksmode)
+                                   " 'median', 'average'; you specified '%s'" % bksmode)
 
         if algorithm:
             if algorithm == "unweighted":
@@ -374,21 +376,21 @@ def x1d(input, output="",
                 arglist.append("-idt")
             else:
                 raise RuntimeError("algorithm must be either 'unweighted'"
-                    " or 'sc2d'; you specified '%s'" % algorithm)
+                                   " or 'sc2d'; you specified '%s'" % algorithm)
 
         if xoffset is not None:
             arglist.append("-st")
             arglist.append("%.10g" % xoffset)
 
         if verbose:
-            print("Running x1d on %s" % infile)
-            print("  %s" % str(arglist))
+            print("Running x1d on {}".format(infile))
+            print("  {}".format(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
             cumulative_status = 1
             if verbose:
-                print("Warning:  status = %d" % status)
+                print("Warning:  status = {}".format(status))
 
     if f_trailer is not None:
         f_trailer.close()
@@ -399,9 +401,11 @@ def x1d(input, output="",
 # Interfaces used by TEAL #
 #-------------------------#
 
+
 def getHelpAsString(fulldoc=True):
     """Return documentation on the x1d function."""
     return x1d.__doc__
+
 
 def run(configobj=None):
     """TEAL interface for the x1d function."""

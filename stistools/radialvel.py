@@ -1,4 +1,3 @@
-from __future__ import division         # confidence high
 import numpy as N
 
 DEG_RAD = N.pi / 180.                   # degrees to radians
@@ -8,7 +7,8 @@ REFDATE = 51544.5               # MJD for 2000 Jan 1, 12h UT
 KM_AU = 1.4959787e8             # kilometers per astronomical unit
 SEC_DAY = 86400.                # seconds per day
 
-def radialVel (ra_targ, dec_targ, mjd):
+
+def radialVel(ra_targ, dec_targ, mjd):
     """Compute the heliocentric velocity of the Earth.
 
     This function computes the radial velocity of a target based on the
@@ -35,23 +35,24 @@ def radialVel (ra_targ, dec_targ, mjd):
     # Convert target position to rectangular coordinate unit vector.
     ra = ra_targ * DEG_RAD
     dec = dec_targ * DEG_RAD
-    target = N.zeros (3, dtype=N.float64)
-    target[0] = N.cos (dec) * N.cos (ra)
-    target[1] = N.cos (dec) * N.sin (ra)
-    target[2] = N.sin (dec)
+    target = N.zeros(3, dtype=N.float64)
+    target[0] = N.cos(dec) * N.cos(ra)
+    target[1] = N.cos(dec) * N.sin(ra)
+    target[2] = N.sin(dec)
 
     # Precess the target coordinates from J2000 to the current date.
-    target = precess (mjd, target)
+    target = precess(mjd, target)
 
     # Get the Earth's velocity vector (km/sec).
-    velocity = earthVel (mjd)
+    velocity = earthVel(mjd)
 
     # Dot product.
-    vel_r = N.dot (velocity, target)
+    vel_r = N.dot(velocity, target)
 
-    return (-vel_r)
+    return -vel_r
 
-def earthVel (mjd):
+
+def earthVel(mjd):
     """Compute and return the velocity of the Earth at the specified time.
 
     This function computes the Earth's orbital velocity around the Sun
@@ -124,33 +125,34 @@ def earthVel (mjd):
     L = ((280.461 + 0.9856474 * tdays) % 360.) * DEG_RAD
 
     #           1.915 degrees          0.02 degree
-    elong = L + 0.033423 * N.sin (g) + 0.000349 * N.sin (2.*g)
+    elong = L + 0.033423 * N.sin(g) + 0.000349 * N.sin(2.*g)
     elong_dot = L_dot + \
-                0.033423 * N.cos (g) * g_dot + \
-                                       0.000349 * N.cos (2.*g) * 2.*g_dot
+                0.033423 * N.cos(g) * g_dot + \
+                                       0.000349 * N.cos(2.*g) * 2.*g_dot
 
-    radius = 1.00014 - 0.01671 * N.cos (g) - 0.00014 * N.cos (2.*g)
-    radius_dot =       0.01671 * N.sin (g) * g_dot + \
-                                             0.00014 * N.sin (2.*g) * 2.*g_dot
+    radius = 1.00014 - 0.01671 * N.cos(g) - 0.00014 * N.cos(2.*g)
+    radius_dot =       0.01671 * N.sin(g) * g_dot + \
+                                             0.00014 * N.sin(2.*g) * 2.*g_dot
 
-    x_dot = radius_dot * N.cos (elong) - \
-                radius * N.sin (elong) * elong_dot
+    x_dot = radius_dot * N.cos(elong) - \
+                radius * N.sin(elong) * elong_dot
 
-    y_dot = radius_dot * N.cos (eps) * N.sin (elong) + \
-                radius * N.cos (eps) * N.cos (elong) * elong_dot
+    y_dot = radius_dot * N.cos(eps) * N.sin(elong) + \
+                radius * N.cos(eps) * N.cos(elong) * elong_dot
 
-    z_dot = radius_dot * N.sin (eps) * N.sin (elong) + \
-                radius * N.sin (eps) * N.cos (elong) * elong_dot
+    z_dot = radius_dot * N.sin(eps) * N.sin(elong) + \
+                radius * N.sin(eps) * N.cos(elong) * elong_dot
 
     # Convert to km/sec with Sun as origin.
-    velocity = N.zeros (3, dtype=N.float64)
+    velocity = N.zeros(3, dtype=N.float64)
     velocity[0] = -x_dot * KM_AU / SEC_DAY
     velocity[1] = -y_dot * KM_AU / SEC_DAY
     velocity[2] = -z_dot * KM_AU / SEC_DAY
 
     return velocity
 
-def precess (mjd, target):
+
+def precess(mjd, target):
     """Precess target coordinates from J2000 to the date mjd.
 
     Notes
@@ -185,44 +187,44 @@ def precess (mjd, target):
         i.e. either (3,) or (n,3)
     """
 
-    target_j2000 = N.array (target, dtype=N.float64)
+    target_j2000 = N.array(target, dtype=N.float64)
     target_mjd = target_j2000.copy()
 
     dt = (mjd - REFDATE) / 36525.
     dt2 = dt**2
     dt3 = dt**3
 
-    zeta  = (2306.2181 * dt + 0.30188 * dt2 + 0.017998 * dt3) * ARCSEC_RAD
+    zeta = (2306.2181 * dt + 0.30188 * dt2 + 0.017998 * dt3) * ARCSEC_RAD
 
-    z     = (2306.2181 * dt + 1.09468 * dt2 + 0.018203 * dt3) * ARCSEC_RAD
+    z = (2306.2181 * dt + 1.09468 * dt2 + 0.018203 * dt3) * ARCSEC_RAD
 
     theta = (2004.3109 * dt - 0.42665 * dt2 - 0.041833 * dt3) * ARCSEC_RAD
 
-    cos_zeta  = N.cos (zeta)
-    sin_zeta  = N.sin (zeta)
-    cos_z     = N.cos (z)
-    sin_z     = N.sin (z)
-    cos_theta = N.cos (theta)
-    sin_theta = N.sin (theta)
+    cos_zeta = N.cos(zeta)
+    sin_zeta = N.sin(zeta)
+    cos_z = N.cos(z)
+    sin_z = N.sin(z)
+    cos_theta = N.cos(theta)
+    sin_theta = N.sin(theta)
 
     # Create the rotation matrix.
-    a = N.identity (3, dtype=N.float64)
+    a = N.identity(3, dtype=N.float64)
 
-    a[0,0] =  cos_z * cos_theta * cos_zeta - sin_z * sin_zeta
-    a[0,1] = -cos_z * cos_theta * sin_zeta - sin_z * cos_zeta
-    a[0,2] = -cos_z * sin_theta
+    a[0, 0] =  cos_z * cos_theta * cos_zeta - sin_z * sin_zeta
+    a[0, 1] = -cos_z * cos_theta * sin_zeta - sin_z * cos_zeta
+    a[0, 2] = -cos_z * sin_theta
 
-    a[1,0] =  sin_z * cos_theta * cos_zeta + cos_z * sin_zeta
-    a[1,1] = -sin_z * cos_theta * sin_zeta + cos_z * cos_zeta
-    a[1,2] = -sin_z * sin_theta
+    a[1, 0] =  sin_z * cos_theta * cos_zeta + cos_z * sin_zeta
+    a[1, 1] = -sin_z * cos_theta * sin_zeta + cos_z * cos_zeta
+    a[1, 2] = -sin_z * sin_theta
 
-    a[2,0] =          sin_theta * cos_zeta
-    a[2,1] =         -sin_theta * sin_zeta
-    a[2,2] =          cos_theta
+    a[2, 0] =  sin_theta * cos_zeta
+    a[2, 1] = -sin_theta * sin_zeta
+    a[2, 2] =  cos_theta
 
     # Convert to matrix objects.
-    m_a = N.matrix (a)
-    m_target_j2000 = N.matrix (target_j2000)
+    m_a = N.matrix(a)
+    m_target_j2000 = N.matrix(target_j2000)
 
     # The prefix "m_" indicates that the product is actually a matrix.
     m_target_mjd = m_a * m_target_j2000.T

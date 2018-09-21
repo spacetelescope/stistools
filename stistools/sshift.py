@@ -6,38 +6,38 @@ along-the-slit dithering to reject hot pixels and cosmic rays.  The
 POSTARG2 keyword is used to determine the number of rows to be
 shifted.
 """
-from __future__ import division, print_function  # confidence high
 
-from astropy.io import fits as pyfits
+from astropy.io import fits
 
 
 __version__ = '1.7 (2010-Apr-27)'
 
+
 def shiftimage(infile, outfile, shift=0):
 
     """
-Shift each image extension of an input file by N rows and write the
-new image extension to the output file.
-"""
+    Shift each image extension of an input file by N rows and write the
+    new image extension to the output file.
+    """
 
-    fin  = pyfits.open(infile)           #  flat-fielded file
+    fin = fits.open(infile)           # flat-fielded file
 
-    fout = pyfits.HDUList()              #  shifted flat-field file
+    fout = fits.HDUList()              # shifted flat-field file
     phdr = fin[0].header
     phdr.add_history('SSHIFT complete ...')
     phdr.add_history('  all extensions were shifted by %d rows' % shift)
-    fout.append(pyfits.PrimaryHDU(header=phdr))
+    fout.append(fits.PrimaryHDU(header=phdr))
 
     for exten in fin[1:]:
         image = exten.data.copy()
-        image[:,:] = 0
-        if   shift > 0:
+        image[:, :] = 0
+        if shift > 0:
             image[shift:] = exten.data[:-shift]
         elif shift < 0:
             image[:shift] = exten.data[-shift:]
         else:
             image[:] = exten.data[:]
-        fout.append(pyfits.ImageHDU(header=exten.header, data=image))
+        fout.append(fits.ImageHDU(header=exten.header, data=image))
 
     fout.writeto(outfile)
 
@@ -92,9 +92,6 @@ Author:
     #                                 check for binned data and non-integral
     #                                 shifts.
     # 2004/09/24  PEB - version 1.6 - add keyword consistency checks
-
-    import types
-
     #  Setup input and output filename lists, so iteration can be done
     #  over a list of zipped filenames.
 
@@ -102,7 +99,7 @@ Author:
         input = [input]
     elif not input:
         raise ValueError(
-              'No input files found.  Possibly using wrong directory.')
+            'No input files found.  Possibly using wrong directory.')
 
     if output is None:
         output = len(input)*[None]
@@ -119,7 +116,7 @@ Author:
 
     if len(input) != len(output):
         raise ValueError(
-              'number of output files is not equal to number input files')
+            'number of output files is not equal to number input files')
 
     if shifts is not None:
         for shift in shifts:
@@ -128,9 +125,8 @@ Author:
 
     xposs, yposs, xpos0, ypos0 = [], [], None, None
     proposid, obset_id, targname = None, None, None
-    propaper, opt_elem, cenwave  = None, None, None
+    propaper, opt_elem, cenwave = None, None, None
     binaxis1, binaxis2 = None, None
-    samefiles = []
     for infile in input:
 
         #  Read the POSTARG2 keyword (in the primary header) and the
@@ -138,18 +134,18 @@ Author:
         #  relative shift of each input file.  Choose a reference
         #  position that is closest to Y-pixel 512.
 
-        infil = pyfits.open(infile)
-        phdr  = infil[0].header
+        infil = fits.open(infile)
+        phdr = infil[0].header
 
         if platescale is None:
-            #platescale = phdr['PLATESC']
+            # platescale = phdr['PLATESC']
             platescale = 0.05077
         else:
             platescale = float(platescale)
 
         if phdr['FLATCORR'].upper() != 'COMPLETE':
             raise ValueError(
-                  'Input file has not been flat-fielded corrected.')
+                'Input file has not been flat-fielded corrected.')
 
         #  Check that TARGNAME is the same.
         if targname is None:
@@ -162,17 +158,17 @@ Author:
             proposid = phdr['PROPOSID']
             obset_id = phdr['OBSET_ID']
         elif proposid != phdr['PROPOSID'] or obset_id != phdr['OBSET_ID']:
-            raise ValueError('%s %s' % 
-                  ('Not all exposures are from the same visit;',
-                   'placement of the spectrum on the detector will differ.'))
+            raise ValueError(' Not all exposures are from the same visit;'
+                             ' placement of the spectrum on the detector will'
+                             ' differ.')
 
-        #  Check that PROPAPER, OPT_ELEM, CENWAVE are the same.
+        # Check that PROPAPER, OPT_ELEM, CENWAVE are the same.
         if propaper is None:
             propaper = phdr['PROPAPER']
             opt_elem = phdr['OPT_ELEM']
-            cenwave  = phdr['CENWAVE']
+            cenwave = phdr['CENWAVE']
         elif propaper != phdr['PROPAPER'] or opt_elem != phdr['OPT_ELEM'] or \
-                 cenwave != phdr['CENWAVE']:
+             cenwave != phdr['CENWAVE']:
             raise ValueError('Different observing configurations have been used.')
 
         #  Check that BINAXIS1 and BINAXIS2 are the same.
@@ -183,16 +179,16 @@ Author:
             raise ValueError('Different binnings have been used.')
 
         #  Check that all POSTARG1 values are the same (within reason).
-        xpos  = phdr['POSTARG1']
+        xpos = phdr['POSTARG1']
         if xpos0 is None:
             xpos0 = xpos
         elif abs(xpos - xpos0) > 0.05:
             raise ValueError('POSTARG1 values of input files are not equal.')
 
         #  Get the POSTARG2 values and the one that is nearest to row 512.
-        ypos  = phdr['POSTARG2']/platescale
-        ypix  = infil[1].header['CRPIX2']-512
-        if ypos0 is None or abs(ypix+ypos) < abs(ypix+ypos0):
+        ypos = phdr['POSTARG2'] / platescale
+        ypix = infil[1].header['CRPIX2'] - 512
+        if ypos0 is None or abs(ypix + ypos) < abs(ypix + ypos0):
             ypos0 = ypos
 
         yposs.append(ypos)
@@ -204,10 +200,9 @@ Author:
         for ypos in yposs:
             dypos = ypos - ypos0
             if abs(abs(dypos) - int(abs(dypos)+0.5)) > tolerance:
-                raise ValueError('%s (%s pix) %s' % \
-                      ('POSTARG2 shift not within the specified tolerance',
-                       tolerance, 'of integer-pixel shift'))
-            #'POSTARG2 shift greater than specified tolerance: %d' % tolerance
+                raise ValueError("POSTARG2 shift not within the specified "
+                                 "tolerance {} pix of integer-pixel shift".format(tolerance))
+            # 'POSTARG2 shift greater than specified tolerance: %d' % tolerance
             # 'non-integral POSTARG2 value or incorrect plate scale.'
             if dypos < 0.:
                 ishift = -int(dypos-0.5)
@@ -220,7 +215,7 @@ Author:
     #  Process each file using corresponding pixel shift.
     print('input-file        pixel-shift')
     for infile, outfile, npixel in zip(input, output, shifts):
-        fin  = pyfits.open(infile)
+        fin = fits.open(infile)
 
         #  Use default output file name.
         if outfile is None:
@@ -228,15 +223,16 @@ Author:
             outfile = re.sub('flt\.', 'sfl.', infile, count=1)
 
         if binaxis2 == 1:
-            print('%18s: %3d' % (infile, npixel))
+            print('{:>18}: {:3}'.format(infile, npixel))
         else:
-            print('%18s: %3d  binned' % (infile, npixel))
+            print('{:>18}: {:3}  binned'.format(infile, npixel))
         shiftimage(infile, outfile, shift=npixel)
         fin.close()
 
 
 if __name__ == '__main__':
-    import sys, getopt
+    import sys
+    import getopt
 
     output, shifts, scale, toler = None, None, None, None
 
@@ -263,4 +259,4 @@ if __name__ == '__main__':
                tolerance=toler)
     else:
         print("""Usage: sshift [-o|--output 'files'] [-s|--shifts 'shifts']
-       [-p|--platescale scale] [-t|--tolerance tol] [-h|--help] input-files""")
+        [-p|--platescale scale] [-t|--tolerance tol] [-h|--help] input-files""")

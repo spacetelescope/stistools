@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-from __future__ import division, print_function  # confidence unknown
 import os
 import sys
 import getopt
@@ -8,9 +7,9 @@ import glob
 import subprocess
 
 import numpy.random as rn               # used by mkRandomName
-from astropy.io import fits as pyfits
+from astropy.io import fits
 
-from stsci.tools import parseinput,teal
+from stsci.tools import parseinput, teal
 
 """
 Perform wavelength calibration of STIS data.
@@ -50,6 +49,7 @@ __author__ = "Phil Hodge, STScI, November 2013."
 
 # MJD after which the external shutter was closed for CCD HITM wavecals.
 SH_CLOSED = 51126.0
+
 
 def main(args):
 
@@ -102,6 +102,7 @@ def main(args):
 
     sys.exit(status)
 
+
 def prtOptions():
     """Print a list of command-line options and arguments."""
 
@@ -114,6 +115,7 @@ def prtOptions():
     print("")
     print("Following the options, list the input flt file names and")
     print("  the associated raw (or calibrated) wavecal file names.")
+
 
 def wavecal(input, wavecal, debugfile="", savetmp=False,
             option="linear", angle=None,
@@ -219,7 +221,7 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
             files = glob.glob(in2)
             infiles.extend(files)
     if input1 and not infiles:
-        print("No file name matched the string '%s'" % input)
+        print("No file name matched the string '{}'".format(input))
         return 2
 
     wavecal_files = []
@@ -243,7 +245,7 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
     n_infiles = len(infiles)
     if wavecal_files and len(wavecal_files) != n_infiles:
         same_length = False
-        print("You specified %d input files but %d wavecal files." %
+        print("You specified {} input files but {} wavecal files.".format
               (n_infiles, len(wavecal_files)))
         print("The number of input and wavecal files must be the same.")
     if dbgfiles and len(dbgfiles) != n_infiles:
@@ -254,7 +256,7 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
 
     if trailer:
         if verbose and os.access(trailer, os.F_OK):
-            print("Appending to trailer file %s" % trailer)
+            print("Appending to trailer file {}".format(trailer))
         f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
@@ -290,17 +292,18 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
         if not savetmp:
             for tmp_file in tempfnames:
                 if verbose:
-                    print(" ... deleting temporary file %s" % tmp_file)
+                    print(" ... deleting temporary file {}".format(tmp_file))
                 try:
                     os.remove(tmp_file)
                 except OSError:
-                    print("Warning:  couldn't delete temporary file %s." %
-                          tmp_file)
+                    print("Warning:  couldn't delete temporary file {}.".format
+                          (tmp_file))
 
     if f_trailer is not None:
         f_trailer.close()
 
     return 0
+
 
 def mkRandomNameW(prefix="wavecal_", suffix="_tmp.fits", n=100000000):
     MAX_TRIES = 100
@@ -320,12 +323,13 @@ def mkRandomNameW(prefix="wavecal_", suffix="_tmp.fits", n=100000000):
     else:
         return None
 
+
 def runBasic2d(wavecal, tempfnames, verbose, timestamps, fd_trailer):
 
     flag = False                # initial value
 
     # First check whether the wavecal file is already calibrated.
-    fd = pyfits.open(wavecal)
+    fd = fits.open(wavecal)
     dqicorr = fd[0].header.get("dqicorr", default="missing")
     blevcorr = fd[0].header.get("blevcorr", default="missing")
     darkcorr = fd[0].header.get("darkcorr", default="missing")
@@ -368,22 +372,23 @@ def runBasic2d(wavecal, tempfnames, verbose, timestamps, fd_trailer):
         arglist.append("-flat")
 
         if verbose:
-            print("Running cs1.e on %s" % wavecal)
-            print("  %s" % str(arglist))
+            print("Running cs1.e on {}".format(wavecal))
+            print("  {}".format(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
-            raise RuntimeError("status = %d from cs1.e" % status)
+            raise RuntimeError("status = {} from cs1.e".format(status))
         tempfnames.append(fwv_file)
         flag = True
 
-    return (flag, fwv_file)
+    return flag, fwv_file
+
 
 def runCs11(fwv_file, infile, tempfnames, verbose, timestamps, fd_trailer):
     """Subtract a fraction of the science image from the wavecal image."""
 
     # Check whether we need to run cs11.e.
-    fd = pyfits.open(fwv_file)
+    fd = fits.open(fwv_file)
     sclamp = fd[0].header.get("sclamp", default="missing")
     detector = fd[0].header.get("detector", default="missing")
     texpstrt = fd[0].header.get("texpstrt", default="missing")
@@ -409,25 +414,26 @@ def runCs11(fwv_file, infile, tempfnames, verbose, timestamps, fd_trailer):
 
         if verbose:
             print("Running cs11.e")
-            print("  %s" % str(arglist))
+            print("  {}".format(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
-            raise RuntimeError("status = %d from cs11.e" % status)
+            raise RuntimeError("status = {} from cs11.e".format(status))
         tempfnames.append(cwv_file)
         flag = True
     else:
         cwv_file = fwv_file
         flag = False
 
-    return (flag, cwv_file)
+    return flag, cwv_file
+
 
 def runX2d(cwv_file, angle, tempfnames,
            verbose, timestamps, fd_trailer):
 
     flag = False                # initial value
 
-    fd = pyfits.open(cwv_file)
+    fd = fits.open(cwv_file)
     opt_elem = fd[0].header.get("opt_elem", default="missing")
     x2dcorr = fd[0].header.get("x2dcorr", default="missing")
     fd.close()
@@ -466,8 +472,8 @@ def runX2d(cwv_file, angle, tempfnames,
             arglist.append("%.20g" % angle)
 
         if verbose:
-            print("Running x2d on %s" % cwv_file)
-            print("  %s" % str(arglist))
+            print("Running x2d on {}".format(cwv_file))
+            print("  {}".format(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
@@ -475,7 +481,8 @@ def runX2d(cwv_file, angle, tempfnames,
         tempfnames.append(w2d_file)
         flag = True
 
-    return (flag, w2d_file)
+    return flag, w2d_file
+
 
 def runWavecal(w2d_file, dbg, angle, verbose, timestamps, fd_trailer):
 
@@ -493,12 +500,13 @@ def runWavecal(w2d_file, dbg, angle, verbose, timestamps, fd_trailer):
         arglist.append(dbg)
 
     if verbose:
-        print("Running cs4.e on %s" % w2d_file)
-        print("  %s" % str(arglist))
+        print("Running cs4.e on {}".format(w2d_file))
+        print("  {}".format(arglist))
     status = subprocess.call(arglist, stdout=fd_trailer,
                              stderr=subprocess.STDOUT)
     if status:
         raise RuntimeError("status = %d from cs4.e" % status)
+
 
 def runCs12(w2d_file, infile, option, verbose, timestamps, fd_trailer):
 
@@ -514,7 +522,7 @@ def runCs12(w2d_file, infile, option, verbose, timestamps, fd_trailer):
 
     if verbose:
         print("Running cs12.e")
-        print("  %s" % str(arglist))
+        print("  {}".format(arglist))
     status = subprocess.call(arglist, stdout=fd_trailer,
                              stderr=subprocess.STDOUT)
     if status:
@@ -524,9 +532,11 @@ def runCs12(w2d_file, infile, option, verbose, timestamps, fd_trailer):
 # Interfaces used by TEAL #
 #-------------------------#
 
+
 def getHelpAsString(fulldoc=True):
     """Return documentation on the wavecal function."""
     return wavecal.__doc__
+
 
 def run(configobj=None):
     """TEAL interface for the wavecal function."""

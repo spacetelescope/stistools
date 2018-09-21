@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 
-from __future__ import division, print_function # confidence unknown
+
 import os
 import sys
 import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput,teal
+from stsci.tools import parseinput, teal
 
 """
 Add STIS exposures, rejecting cosmic rays.
@@ -42,6 +42,7 @@ __taskname__ = "ocrreject"
 __version__ = "3.4"
 __vdate__ = "13-November-2013"
 __author__ = "Phil Hodge, STScI, November 2013."
+
 
 def main(args):
 
@@ -84,6 +85,7 @@ def main(args):
 
     sys.exit(status)
 
+
 def prtOptions():
     """Print a list of command-line options and arguments."""
 
@@ -96,6 +98,7 @@ def prtOptions():
     print("Following the options, list one or more input files")
     print("  (enclosed in quotes if more than one file name is specified")
     print("  and/or if wildcards are used) and one output file name.")
+
 
 def ocrreject(input, output,
               all=True, crrejtab="", scalense="", initgues="",
@@ -215,7 +218,7 @@ def ocrreject(input, output,
             files = glob.glob(in2)
             infiles.extend(files)
     if input1 and not infiles:
-        print("No file name matched the string '%s'" % input)
+        print("No file name matched the string '{}'".format(input))
         return 2
 
     outfiles = []
@@ -230,21 +233,21 @@ def ocrreject(input, output,
     n_outfiles = len(outfiles)
     if all:
         if n_outfiles != 1:
-            print("You specified %d output files; when all is True," %
-                  n_outfiles)
+            print("You specified {} output files; when all is True,".format(
+                n_outfiles))
             print("output must be exactly one file name.")
             return 2
     else:
         n_infiles = len(infiles)
         if n_outfiles != n_infiles:
-            print("You specified %d input files but %d output files;" %
-                  (n_infiles, n_outfiles))
+            print("You specified {} input files but {} output files;".format(
+                n_infiles, n_outfiles))
             print("the number of input and output files must be the same.")
             return 2
 
     if trailer:
         if verbose and os.access(trailer, os.F_OK):
-            print("Appending to trailer file %s" % trailer)
+            print("Appending to trailer file {}".format(trailer))
         f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
@@ -303,13 +306,13 @@ def ocrreject(input, output,
         arglist.extend(optional_args)
 
         if verbose:
-            print("'%s'" % str(arglist))
-            print("Running ocrreject on %s" % infilestr)
-        del(infilestr)
+            print("'{}'".format(str(arglist)))
+            print("Running ocrreject on {}".format(infilestr))
+        del infilestr
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status and verbose:
-            print("Warning:  status = %d" % status)
+            print("Warning:  status = {}".format(status))
         cumulative_status = status
 
     else:
@@ -326,14 +329,14 @@ def ocrreject(input, output,
             arglist.extend(optional_args)
 
         if verbose:
-            print("Running ocrreject on %s" % infile)
-            print("  %s" % str(arglist))
+            print("Running ocrreject on {}".format(infile))
+            print("  {}".format(str(arglist)))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
             cumulative_status = 1
             if verbose:
-                print("Warning:  status = %d" % status)
+                print("Warning:  status = {}".format(status))
 
     if f_trailer is not None:
         f_trailer.close()
@@ -344,9 +347,11 @@ def ocrreject(input, output,
 # Interfaces used by TEAL #
 #-------------------------#
 
+
 def getHelpAsString(fulldoc=True):
     """Return documentation on the ocrreject function."""
     return ocrreject.__doc__
+
 
 def run(configobj=None):
     """TEAL interface for the ocrreject function."""

@@ -1,13 +1,12 @@
 #! /usr/bin/env python
 
-from __future__ import division, print_function  # confidence unknown
 import os
 import sys
 import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput,teal
+from stsci.tools import parseinput, teal
 
 """
 Rectify 2-D STIS spectral data.
@@ -42,6 +41,7 @@ __taskname__ = "x2d"
 __version__ = "3.4"
 __vdate__ = "13-November-2013"
 __author__ = "Phil Hodge, STScI, November 2013."
+
 
 def main(args):
 
@@ -87,6 +87,7 @@ def main(args):
 
     sys.exit(status)
 
+
 def prtOptions():
     """Print a list of command-line options and arguments."""
 
@@ -101,6 +102,7 @@ def prtOptions():
     print("  and/or if wildcards are used.")
     print("One or more output file names may be specified (the same number")
     print("  as the input file names).")
+
 
 def x2d(input, output="",
         helcorr="perform", fluxcorr="perform", statflag=True,
@@ -198,7 +200,7 @@ def x2d(input, output="",
             files = glob.glob(in2)
             infiles.extend(files)
     if input1 and not infiles:
-        print("No file name matched the string '%s'" % input)
+        print("No file name matched the string '{}'".format(input))
         return 2
 
     if output:
@@ -215,14 +217,14 @@ def x2d(input, output="",
 
     n_infiles = len(infiles)
     if outfiles and len(outfiles) != n_infiles:
-        print("You specified %d input files but %d output files." %
+        print("You specified {} input files but {} output files.".format
               (n_infiles, len(outfiles)))
         print("The number of input and output files must be the same.")
         return 2
 
     if trailer:
         if verbose and os.access(trailer, os.F_OK):
-            print("Appending to trailer file %s" % trailer)
+            print("Appending to trailer file {}".format(trailer))
         f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
@@ -257,21 +259,21 @@ def x2d(input, output="",
                 arglist.append("-wgt_err")
             elif err_alg != "wgt_var":
                 raise RuntimeError("err_alg must be either 'wgt_err'"
-                    " or 'wgt_var'; you specified '%s'" % err_alg)
+                                   " or 'wgt_var'; you specified '%s'" % err_alg)
 
         if blazeshift is not None:
             arglist.append("-b")
             arglist.append("%.10g" % blazeshift)
 
         if verbose:
-            print("Running x2d on %s" % infile)
-            print("  %s" % str(arglist))
+            print("Running x2d on {}".format(infile))
+            print("  {}".format(arglist))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
             cumulative_status = 1
             if verbose:
-                print("Warning:  status = %d" % status)
+                print("Warning:  status = {}".format(status))
 
     if f_trailer is not None:
         f_trailer.close()
@@ -282,9 +284,11 @@ def x2d(input, output="",
 # Interfaces used by TEAL #
 #-------------------------#
 
+
 def getHelpAsString(fulldoc=True):
     """Return documentation on the x2d function."""
     return x2d.__doc__
+
 
 def run(configobj=None):
     """TEAL interface for the x2d function."""

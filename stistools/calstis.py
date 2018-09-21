@@ -1,13 +1,12 @@
 #! /usr/bin/env python
 
-from __future__ import division, print_function # confidence unknown
 import os
 import sys
 import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput,teal
+from stsci.tools import parseinput, teal
 
 """
 Calibrate STIS data.
@@ -48,6 +47,7 @@ __taskname__ = "calstis"
 __version__ = "3.4"
 __vdate__ = "13-November-2013"
 __author__ = "Phil Hodge, STScI, November 2013."
+
 
 def main(args):
 
@@ -99,6 +99,7 @@ def main(args):
 
     sys.exit(status)
 
+
 def prtOptions():
     """Print a list of command-line options and arguments."""
 
@@ -115,6 +116,7 @@ def prtOptions():
     print("  and/or if wildcards are used.")
     print("An output directory (include a trailing '/') or a root name for")
     print("  the output files may be specified.")
+
 
 def calstis(input, wavecal="", outroot="", savetmp=False,
             verbose=False, timestamps=False,
@@ -189,12 +191,12 @@ def calstis(input, wavecal="", outroot="", savetmp=False,
             files = glob.glob(in2)
             infiles.extend(files)
     if input1 and not infiles:
-        print("No file name matched the string '%s'" % input)
+        print("No file name matched the string '{}'".format(input))
         return 2
 
     if trailer:
         if verbose and os.access(trailer, os.F_OK):
-            print("Appending to trailer file %s" % trailer)
+            print("Appending to trailer file {}".format(trailer))
         f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
@@ -218,14 +220,14 @@ def calstis(input, wavecal="", outroot="", savetmp=False,
             arglist.append("%s" % wavecal)
 
         if verbose:
-            print("Running calstis on %s" % infile)
-            print("  %s" % str(arglist))
+            print("Running calstis on {}".format(infile))
+            print("  {}".format(str(arglist)))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
             cumulative_status = 1
             if verbose:
-                print("Warning:  status = %d" % status)
+                print("Warning:  status = {}".format(status))
 
     if f_trailer is not None:
         f_trailer.close()
@@ -239,6 +241,7 @@ def calstis(input, wavecal="", outroot="", savetmp=False,
 def getHelpAsString(fulldoc=True):
     """Return documentation on the calstis function."""
     return calstis.__doc__
+
 
 def run(configobj=None):
     """TEAL interface for the calstis function."""

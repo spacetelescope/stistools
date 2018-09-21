@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 
-from __future__ import division, print_function # confidence unknown
+
 import os
 import sys
 import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput,teal
+from stsci.tools import parseinput, teal
 
 """
 Perform basic 2-D calibration of STIS data.
@@ -42,6 +42,7 @@ __taskname__ = "basic2d"
 __version__ = "3.4"
 __vdate__ = "13-November-2013"
 __author__ = "Phil Hodge, STScI, November 2013."
+
 
 def main(args):
 
@@ -87,6 +88,7 @@ def main(args):
 
     sys.exit(status)
 
+
 def prtOptions():
     """Print a list of command-line options and arguments."""
 
@@ -102,15 +104,16 @@ def prtOptions():
     print("One or more output file names may be specified (the same number")
     print("  as the input file names).")
 
+
 def basic2d(input, output="", outblev="",
-           dqicorr="perform", atodcorr="omit", blevcorr="perform",
-           doppcorr="perform",
-           lorscorr="perform", glincorr="perform", lflgcorr="perform",
-           biascorr="perform", darkcorr="perform", flatcorr="perform",
-           shadcorr="omit", photcorr="perform", statflag=True,
-           darkscale="",
-           verbose=False, timestamps=False,
-           trailer="", print_version=False, print_revision=False):
+            dqicorr="perform", atodcorr="omit", blevcorr="perform",
+            doppcorr="perform",
+            lorscorr="perform", glincorr="perform", lflgcorr="perform",
+            biascorr="perform", darkcorr="perform", flatcorr="perform",
+            shadcorr="omit", photcorr="perform", statflag=True,
+            darkscale="",
+            verbose=False, timestamps=False,
+            trailer="", print_version=False, print_revision=False):
     """Perform basic 2-D calibration of STIS raw data.
 
     Some calibration steps are relevant only for CCD or only for MAMA, and
@@ -241,7 +244,7 @@ def basic2d(input, output="", outblev="",
             files = glob.glob(in2)
             infiles.extend(files)
     if input1 and not infiles:
-        print("No file name matched the string '%s'" % input)
+        print("No file name matched the string '{}'".format(input))
         return 2
 
     if output:
@@ -272,8 +275,8 @@ def basic2d(input, output="", outblev="",
     n_infiles = len(infiles)
     if outfiles and len(outfiles) != n_infiles:
         same_length = False
-        print("You specified %d input files but %d output files." %
-              (n_infiles, len(outfiles)))
+        print("You specified {} input files but {} output files.".format(
+            n_infiles, len(outfiles)))
         print("The number of input and output files must be the same.")
     if outblev_txt and len(outblev_txt) != n_infiles:
         same_length = False
@@ -283,7 +286,7 @@ def basic2d(input, output="", outblev="",
 
     if trailer:
         if verbose and os.access(trailer, os.F_OK):
-            print("Appending to trailer file %s" % trailer)
+            print("Appending to trailer file {}".format(trailer))
         f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
@@ -333,14 +336,14 @@ def basic2d(input, output="", outblev="",
             arglist.append("-stat")
 
         if verbose:
-            print("Running basic2d on %s" % infile)
-            print("  %s" % str(arglist))
+            print("Running basic2d on {}".format(infile))
+            print("  {}".format(str(arglist)))
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status:
             cumulative_status = 1
             if verbose:
-                print("Warning:  status = %d" % status)
+                print("Warning:  status = {}".format(status))
 
     if f_trailer is not None:
         f_trailer.close()
@@ -351,9 +354,11 @@ def basic2d(input, output="", outblev="",
 # Interfaces used by TEAL #
 #-------------------------#
 
+
 def getHelpAsString(fulldoc=True):
     """Return documentation on the basic2d function."""
     return basic2d.__doc__
+
 
 def run(configobj=None):
     """TEAL interface for the basic2d function."""
