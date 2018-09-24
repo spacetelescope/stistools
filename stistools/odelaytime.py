@@ -3,7 +3,7 @@
 from datetime import datetime
 from math import cos, sin
 import numpy as np
-from scipy.interpolate import lagrange
+from scipy.interpolate import lagrange, interp1d
 
 from astropy.io import fits
 from astropy.table import Table, vstack, hstack
@@ -98,7 +98,7 @@ MINPERDAY = 1440   #D0		# number of min in a day
 HRPERDAY = 24     #D0		# number of hours in a day
 
 LYPERPC	= 3.261633   #D0	# light years per parsec
-KMPERPC	= 3.085678   #D13	# kilometers per parsec
+KMPERPC	= 3.085678e13  #D13	# kilometers per parsec
 AUPERPC	= 206264.8062470964  #D0	# how many AU in one parsec
 KMPERAU	= KMPERPC/AUPERPC
 CLIGHT = 499.00479   #D0	# light travel time (in sec) of 1 AU
@@ -113,8 +113,8 @@ RADIAN = 57.295779513082320877
 
 # Need to figure out what/if default for distance parameter
 
-def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=5.0,
-               dist_unit="arcsec", in_col="TIME", verbose=False):
+def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=100000.0,
+               dist_unit="pc", in_col="TIME", verbose=False):
 
     parallax = distance
 
@@ -133,7 +133,7 @@ def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=5.0,
 
     # check that distance is non-zero (pc)
     if parallax <= 0:
-        raise ValueError("non-postive distance: {}".format(parallax))
+        raise ValueError("non-positive distance: {}".format(parallax))
 
     # I don't think I need this part
     # call smark(sp)
@@ -145,6 +145,7 @@ def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=5.0,
     # time_o, x_o, y_o, z_o, npts_obs
     # obs_ephem_table will be None if no file names were provided
     obs_ephem_table = get_ephem(obs_ephem, OBS_EPHEMERIS)
+
     if obs_ephem_table is None:
         npts_obs = 0
     else:
@@ -276,15 +277,17 @@ def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=5.0,
             if verbose:
                 print("  start time: ", datetime.now())
 
+            # pull out just the time array
+            time_array = events_tab.data['TIME']
+
             # go through each row
             print(nrows)
             for r_indx in range(nrows):
-                row = events_tab.data[r_indx]
-                tm = row[in_col]
+                tm = time_array[r_indx]
 
                 # if the time is within INTERVAL of the previous time,
                 # apply the same delaytime, otherwise recalculate
-                if r_indx == 1 or (tm - tm_prev) > INTERVAL:
+                if r_indx == 0 or (tm - tm_prev) > INTERVAL:
                     epoch = mjd1 + tm / SECPERDAY
 
                     delta_sec = all_delay(epoch, parallax, objvec,
@@ -295,13 +298,17 @@ def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=5.0,
                     tm_prev = tm
 
                 # write the corrected time back to the time column
-                row[in_col] = tm + (delta_sec - t0_delay)
+                time_array[r_indx] = tm + (delta_sec - t0_delay)
 
                 if verbose and r_indx in np.arange(0, 100000, 10000):
                     # print percent done
                     # print("    Percentage done:  {}".
                     #      format(int(100*(r_indx/nrows))))
-                    print(r_indx)
+                    #print(r_indx)
+                    pass
+
+            # re-stuff time array
+            in_hdul['EVENTS', e_indx].data[in_col] = time_array
 
             # add delaytime to EXPSTART and EXPEND, and update header
             delta_sec = all_delay(mjd1, parallax, objvec,
@@ -311,7 +318,9 @@ def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=5.0,
                                   npts_obs)
             events_tab.header['EXPSTART'] = mjd1 + delta_sec/SECPERDAY
 
-            delta_sec = all_delay(mjd1, parallax, objvec,
+
+            # DOUBLE CHECK FOR TYPO, should probably be mjd2
+            delta_sec = all_delay(mjd2, parallax, objvec,
                                   earth_ephem_table,
                                   len(earth_ephem_table),
                                   obs_ephem_table,
@@ -364,6 +373,7 @@ def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=5.0,
         delta_sec = all_delay(mjd1, parallax, objvec, earth_ephem_table,
                               len(earth_ephem_table), obs_ephem_table,
                               npts_obs)
+
         in_hdul[0].header['TEXPSTRT'] = mjd1 + delta_sec/SECPERDAY
 
         mjd2 = in_hdul[0].header['TEXPEND']
@@ -461,7 +471,8 @@ def get_ephem(ephem_tables, eph_type):
 
         else:
             # pull "TIME",
-            new_time = current_tab['TIME']
+            # This isn't right I guess, can be either Time or TIME
+            new_time = current_tab['Time']
 
             # read header parameter, the zero-point epoch
             firstmjd = g_firstmjd(tab_file)
@@ -476,7 +487,8 @@ def get_ephem(ephem_tables, eph_type):
 
             # this call pulls the units of said column into the
             # gridunit variable
-            gridunit = current_tab['TIME'].unit.to_string().upper()
+            # here tooo.....
+            gridunit = current_tab['Time'].unit.to_string().upper()
 
             # get the scale factor for converting the times to days
             if gridunit == "DAY":
@@ -495,7 +507,7 @@ def get_ephem(ephem_tables, eph_type):
             new_time = firstmjd + timescale * new_time
             new_time.name = "Time"
 
-        new_time.unit = cds.MJD
+        #new_time.unit = cds.MJD
 
         if time is None:
             time = Table([new_time])
@@ -513,7 +525,6 @@ def get_ephem(ephem_tables, eph_type):
                 pass
             elif colunit == "KM":
                 col /= KMPERAU
-                col.unit = cds.AU
             else:
                 raise ValueError("unrecognized {} unit in ephemeris table: "
                                  "{}".format(col.name, col.dtype))
@@ -556,7 +567,6 @@ def get_ephem(ephem_tables, eph_type):
             last_copied_time = col_table['Time'][indx]
 
     return final_table
-
 
 def g_firstmjd(tab_file):
     '''
@@ -678,6 +688,7 @@ def all_delay(epoch, parallax, objvec, earth_table, npts_earth, obs_table,
         xyz_obs = intrp_state(epoch, obs_table['Time'], obs_table['X'],
                               obs_table['Y'], obs_table['Z'], npts_obs,
                               NLAN_OBS)
+
     else:
         xyz_obs = [0, 0, 0]
 
@@ -757,14 +768,14 @@ def relativ(epoch):
     time = (epoch - 33282.) * 86400.
 
     # Calculate orbital parameters at time of observation
-    ecc_e = 1.673014**-2 - 1.325**-14 * time        # Escobal (1.5)
+    ecc_e = 1.673014e-2 - 1.325e-14 * time        # Escobal (1.5)
 
-    m_anom_e = 6.248291  + 1.99096871**-7 * time    # Moyer II (44)
-    m_elon_m = 2.518411  + 2.462600818**-6 * time	# Moyer II (45)
-    l_m_lj = 5.652593  + 1.82313637**-7 * time	    # Moyer II (46)
-    l_m_ls = 2.125474  + 1.92339923**-7 * time	    # Moyer II (47)
-    m_anom_j = 5.286877  + 1.6785063**-8 * time	    # Moyer II (48)
-    m_anom_s = 1.165341  + 0.6758558**-8 * time	    # Moyer II (49)
+    m_anom_e = 6.248291  + 1.99096871e-7 * time    # Moyer II (44)
+    m_elon_m = 2.518411  + 2.462600818e-6 * time	# Moyer II (45)
+    l_m_lj = 5.652593  + 1.82313637e-7 * time	    # Moyer II (46)
+    l_m_ls = 2.125474  + 1.92339923e-7 * time	    # Moyer II (47)
+    m_anom_j = 5.286877  + 1.6785063e-8 * time	    # Moyer II (48)
+    m_anom_s = 1.165341  + 0.6758558e-8 * time	    # Moyer II (49)
 
     e_anom_e = m_anom_e + ecc_e * sin(m_anom_e)     # Moyer II (40)
 
@@ -775,13 +786,13 @@ def relativ(epoch):
 
     # Daily motion of Earth around Sun correction has amplitude of millisecs
 
-    delta_t = (9.9153**-2 * ecc_e) * sin(e_anom_e) + \
-               1.548**-6 * sin (m_elon_m) + \
-               5.21**-6 * sin(m_anom_j) + \
-     		   2.45**-6 * sin(m_anom_s) + \
-     		   20.73**-6 * sin(l_m_lj) + \
-     		   4.58**-6 * sin(l_m_ls) + \
-     		   1.00**-6 * sin(omega_j) + 0.26**-6 * sin(omega_s) # Added by Starlink
+    delta_t = (9.9153e-2 * ecc_e) * sin(e_anom_e) + \
+               1.548e-6 * sin (m_elon_m) + \
+               5.21e-6 * sin(m_anom_j) + \
+     		   2.45e-6 * sin(m_anom_s) + \
+     		   20.73e-6 * sin(l_m_lj) + \
+     		   4.58e-6 * sin(l_m_ls) + \
+     		   1.00e-6 * sin(omega_j) + 0.26e-6 * sin(omega_s) # Added by Starlink
 
     return delta_t
 
@@ -844,12 +855,10 @@ def intrp_state(epoch, time, x, y, z, npts, nlag):
     # time (x input)  x (y input)  nlag (size of arrays)
     # epoch (x value to be calc) xyz[1] (output y) dxyz[1] (error)
     xyz = np.zeros((3))
-    xyz[0] = vpolin(time[istart-1: istart+nlag],
-                             x[istart-1: istart+nlag], epoch)
-    xyz[1] = vpolin(time[istart-1: istart+nlag],
-                             y[istart-1: istart+nlag], epoch)
-    xyz[2] = vpolin(time[istart-1: istart+nlag],
-                             z[istart-1: istart+nlag], epoch)
+    time_in = time[istart-1: istart+nlag]
+    xyz[0] = vpolin(time_in, x[istart-1: istart+nlag], epoch)
+    xyz[1] = vpolin(time_in, y[istart-1: istart+nlag], epoch)
+    xyz[2] = vpolin(time_in, z[istart-1: istart+nlag], epoch)
 
     return xyz
 
@@ -858,15 +867,11 @@ def vpolin(xa, ya, in_x):
     """Lagrange interpolation on input data arrays"""
 
     # try and use scipy lagrange interpolation here,
-    # looks like it is a implomentation of neville's algorithm
+    # looks like it is a implementation of neville's algorithm
     # It's taking nlag=10 numbers, assuming it's pulling those from
     # the start of the array.... although this is a bit dangerous
-    print("xa: ", xa)
-    print("ya: ", ya)
-    print("in_x: ", in_x)
-    poly = lagrange(xa, ya)
-
-    print("out: ", poly(in_x))
+    poly = interp1d(xa, ya, kind="cubic")
+    #poly = lagrange(xa, ya)
 
     return poly(in_x)
 
@@ -919,7 +924,7 @@ def geo_delay(stvec, objvec, parallax):
 
     # Low precision correction includes first two terms in series expansion.
     # Amplitude of second term is on the order of 1 millisec.
-    geomdelt = ob_dot_st - (pxau / 2.0) *rsqrterm
+    geomdelt = ob_dot_st - (pxau / 2.0) * rsqrterm
 
     # This was commented out in the code during time of port
     """
