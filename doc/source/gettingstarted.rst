@@ -60,7 +60,7 @@ attempting to use stistools. When in your environment, you can now interact with
 
 
 =====================
-Setting up CRDS (Optional)
+Setting up CRDS (Recommended)
 =====================
 
 Some calibration tasks in stistools require additional reference files to successfully run. In the past, users were expected to
