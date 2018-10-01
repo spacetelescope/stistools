@@ -1,16 +1,5 @@
 #! /usr/bin/env python
 
-import os
-import sys
-import getopt
-import glob
-import subprocess
-
-import numpy.random as rn               # used by mkRandomName
-from astropy.io import fits
-
-from stsci.tools import parseinput, teal
-
 """
 Perform wavelength calibration of STIS data.
 
@@ -29,11 +18,6 @@ In Python with TEAL:
 >>> from stsci.tools import teal
 >>> teal.teal("wavecal")
 
-In Pyraf:
-
->>> import stistools
->>> teal wavecal
-
 From command line::
 
 % ./wavecal.py -v -s o66p01020_flt.fits o66p01020_wav.fits
@@ -41,6 +25,20 @@ From command line::
 % ./wavecal.py -r
 
 """
+
+from __future__ import division, print_function  # confidence unknown
+import os
+import sys
+import getopt
+import glob
+import subprocess
+
+import numpy.random as rn               # used by mkRandomName
+from astropy.io import fits as pyfits
+
+from stsci.tools import parseinput,teal
+
+
 
 __taskname__ = "wavecal"
 __version__ = "3.4"
