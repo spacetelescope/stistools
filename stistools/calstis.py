@@ -24,11 +24,6 @@ In Python with TEAL:
 >>> from stsci.tools import teal
 >>> teal.teal("calstis")
 
-In Pyraf:
-
->>> import stistools
->>> teal calstis
-
 From command line::
 
 % ./calstis.py -v -s o66p01020_raw.fits out/
