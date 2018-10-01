@@ -18,11 +18,6 @@ In Python with TEAL:
 >>> from stsci.tools import teal
 >>> teal.teal("x2d")
 
-In Pyraf:
-
->>> import stistools
->>> teal x2d
-
 From command line::
 
 % ./x2d.py -v o66p01020_flt.fits o66p01020_x2d.fits

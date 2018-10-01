@@ -18,11 +18,6 @@ In Python with TEAL:
 >>> from stsci.tools import teal
 >>> teal.teal("ocrreject")
 
-In Pyraf:
-
->>> import stistools
->>> teal ocrreject
-
 From command line::
 
 % ./ocrreject.py -v -s o3tt02020_flt.fits o3tt02020_crj.fits

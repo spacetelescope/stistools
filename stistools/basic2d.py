@@ -18,11 +18,6 @@ In Python with TEAL:
 >>> from stsci.tools import teal
 >>> teal.teal("basic2d")
 
-In Pyraf:
-
->>> import stistools
->>> teal basic2d
-
 From command line::
 
 % ./basic2d.py -v -s o66p01020_raw.fits o66p01020_flt.fits
