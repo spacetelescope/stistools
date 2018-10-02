@@ -54,6 +54,7 @@ Pipeline Software
    basic2d
    x1d
    x2d
+   wavecal
 
 =======================
 Analysis Tools
