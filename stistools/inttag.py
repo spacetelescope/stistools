@@ -402,6 +402,3 @@ def events_to_accum(events_data, size_x, size_y, highres):
 
     return accum
 
-
-if __name__ == "__main__":
-    inttag("tests/data/inttag/gtigap_tag.fits", "test.fits",  increment=200, rcount=6, verbose=True, highres=False, allevents=False)
