@@ -4,6 +4,7 @@ from datetime import datetime
 from math import cos, sin
 import numpy as np
 from scipy.interpolate import lagrange, interp1d
+#import vpolin
 
 from astropy.io import fits
 from astropy.table import Table, vstack, hstack
@@ -114,22 +115,23 @@ RADIAN = 57.295779513082320877
 # Need to figure out what/if default for distance parameter
 
 def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=100000.0,
-               dist_unit="pc", in_col="TIME", verbose=False):
+               dist_unit="pc", in_col="TIME", verbose=False, obs_timecol = "TIME"):
 
     parallax = distance
 
     # convert distance to parsec first
-    if dist_unit == "arcsec":
-        pass
-    elif dist_unit == "au":
-        parallax /= AUPERPC
-    elif dist_unit == "ly":
-        parallax /= LYPERPC
-    elif dist_unit == "km":
-        parallax /= KMPERPC
-    else:
-        if dist_unit != "pc":
-            raise ValueError("illegal distance unit: {}".format(dist_unit))
+    if dist_unit != "arcsec":
+
+        if dist_unit == "au":
+            parallax /= AUPERPC
+        elif dist_unit == "ly":
+            parallax /= LYPERPC
+        elif dist_unit == "km":
+            parallax /= KMPERPC
+        else:
+            if dist_unit != "pc":
+                raise ValueError("illegal distance unit: {}".format(dist_unit))
+        parallax = 1. / parallax
 
     # check that distance is non-zero (pc)
     if parallax <= 0:
@@ -144,7 +146,8 @@ def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=100000.0,
     earth_ephem_table = get_ephem(earth_ephem, EARTH_EPHEMERIS)
     # time_o, x_o, y_o, z_o, npts_obs
     # obs_ephem_table will be None if no file names were provided
-    obs_ephem_table = get_ephem(obs_ephem, OBS_EPHEMERIS)
+    obs_ephem_table = get_ephem(obs_ephem, OBS_EPHEMERIS,
+                                time_col_name=obs_timecol)
 
     if obs_ephem_table is None:
         npts_obs = 0
@@ -295,7 +298,9 @@ def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=100000.0,
                                           len(earth_ephem_table),
                                           obs_ephem_table,
                                           npts_obs)
+
                     tm_prev = tm
+
 
                 # write the corrected time back to the time column
                 time_array[r_indx] = tm + (delta_sec - t0_delay)
@@ -399,7 +404,7 @@ def odelaytime(table_names, earth_ephem, obs_ephem=None, distance=100000.0,
         in_hdul.close()
 
 
-def get_ephem(ephem_tables, eph_type):
+def get_ephem(ephem_tables, eph_type, time_col_name=None):
     """
      read an ephemeris of state vectors
     #
@@ -453,7 +458,6 @@ def get_ephem(ephem_tables, eph_type):
         return None
 
     # Now loop over the list of input tables and read the data.
-    k = 0
     previous_mjd = 0
 
     for tab_file in ephem_tables:
@@ -472,7 +476,7 @@ def get_ephem(ephem_tables, eph_type):
         else:
             # pull "TIME",
             # This isn't right I guess, can be either Time or TIME
-            new_time = current_tab['Time']
+            new_time = current_tab[time_col_name]
 
             # read header parameter, the zero-point epoch
             firstmjd = g_firstmjd(tab_file)
@@ -488,7 +492,7 @@ def get_ephem(ephem_tables, eph_type):
             # this call pulls the units of said column into the
             # gridunit variable
             # here tooo.....
-            gridunit = current_tab['Time'].unit.to_string().upper()
+            gridunit = current_tab[time_col_name].unit.to_string().upper()
 
             # get the scale factor for converting the times to days
             if gridunit == "DAY":
@@ -506,8 +510,6 @@ def get_ephem(ephem_tables, eph_type):
             # scale the times, and add the zero point
             new_time = firstmjd + timescale * new_time
             new_time.name = "Time"
-
-        #new_time.unit = cds.MJD
 
         if time is None:
             time = Table([new_time])
@@ -596,7 +598,7 @@ def g_firstmjd(tab_file):
         doy = int(rest[0])
         hour = int(rest[1])
         min = int(rest[2])
-        sec = int(rest[3])
+        sec = rest[3]
         day = doy + hour/24. + min/1400. + sec/86400.
 
         # Evaluate this expression with month = 1 because here 'day' is
@@ -674,7 +676,7 @@ def all_delay(epoch, parallax, objvec, earth_table, npts_earth, obs_table,
     reldelt = relativ(epoch)
 
     # calculate the geometric delay time
-    # I should really put this line into a try, add a custom intrp_state
+    # Should really put this line into a try, add a custom intrp_state
     # Error, and catch it to give the better error message:
     # "epoch = MJD %f, outside the earth_ephem range"), -> (epoch)
     xyz_earth = intrp_state(epoch, earth_table['Time'], earth_table['X'],
@@ -787,7 +789,7 @@ def relativ(epoch):
     # Daily motion of Earth around Sun correction has amplitude of millisecs
 
     delta_t = (9.9153e-2 * ecc_e) * sin(e_anom_e) + \
-               1.548e-6 * sin (m_elon_m) + \
+               1.548e-6 * sin(m_elon_m) + \
                5.21e-6 * sin(m_anom_j) + \
      		   2.45e-6 * sin(m_anom_s) + \
      		   20.73e-6 * sin(l_m_lj) + \
@@ -855,10 +857,10 @@ def intrp_state(epoch, time, x, y, z, npts, nlag):
     # time (x input)  x (y input)  nlag (size of arrays)
     # epoch (x value to be calc) xyz[1] (output y) dxyz[1] (error)
     xyz = np.zeros((3))
-    time_in = time[istart-1: istart+nlag]
-    xyz[0] = vpolin(time_in, x[istart-1: istart+nlag], epoch)
-    xyz[1] = vpolin(time_in, y[istart-1: istart+nlag], epoch)
-    xyz[2] = vpolin(time_in, z[istart-1: istart+nlag], epoch)
+    time_in = time[istart: istart+nlag]
+    xyz[0] = vpolin(time_in, x[istart: istart+nlag], epoch)
+    xyz[1] = vpolin(time_in, y[istart: istart+nlag], epoch)
+    xyz[2] = vpolin(time_in, z[istart: istart+nlag], epoch)
 
     return xyz
 
@@ -870,10 +872,19 @@ def vpolin(xa, ya, in_x):
     # looks like it is a implementation of neville's algorithm
     # It's taking nlag=10 numbers, assuming it's pulling those from
     # the start of the array.... although this is a bit dangerous
+
     poly = interp1d(xa, ya, kind="cubic")
+
+    # Very unstable
     #poly = lagrange(xa, ya)
 
+    # Neville testing
+    #out = neville(xa, ya, in_x)
+    #return out
+
     return poly(in_x)
+
+
 
 
 def geo_delay(stvec, objvec, parallax):
@@ -940,3 +951,43 @@ def geo_delay(stvec, objvec, parallax):
     geomdelt = geomdelt * CLIGHT
 
     return geomdelt
+
+
+def neville(datax, datay, x):
+    """
+    Finds an interpolated value using Neville's algorithm.
+    Input
+      datax: input x's in a list of size n
+      datay: input y's in a list of size n
+      x: the x value used for interpolation
+    Output
+      p[0]: the polynomial of degree n
+    """
+    N = len(datax)
+    C = np.copy(datay)
+    D = np.copy(datay)
+
+    NS = int(N/2) + 1
+    Y = datay[NS-1]
+    NS = NS -1
+
+    for m in range(1, N):
+        for i in range(1, N-m+1):
+            HO = datax[i-1] - x
+            HP = datax[i+m-1] - x
+            W = C[i] - D[i-1]
+            DEN = HO - HP
+
+            DEN = W/ DEN
+            D[i-1] = HP * DEN
+            C[i-1] = HO * DEN
+
+        if 2*NS < N-m:
+            DY = C[NS]
+        else:
+            DY = D[NS-1]
+            NS = NS-1
+
+        Y = Y + DY
+
+    return Y
