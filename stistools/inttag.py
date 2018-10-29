@@ -34,17 +34,17 @@ Examples
 :func:`inttag` with default values:
 
 >>> import stistools
->>> stistools.tastis.tastis("oddv01050_tag.fits", "oddv01050_raw.fits")
+>>> stistools.inttag.inttag("oddv01050_tag.fits", "oddv01050_raw.fits")
 
 :func:`inttag` with highres output:
 
 >>> import stistools
->>> stistools.tastis.tastis("oddv01050_tag.fits", "oddv01050_raw.fits", highres=True)
+>>> stistools.inttag.inttag("oddv01050_tag.fits", "oddv01050_raw.fits", highres=True)
 
 :func:`inttag` with multiple output imsets (5 count regions of 200s each):
 
 >>> import stistools
->>> stistools.tastis.tastis("oddv01050_tag.fits", "oddv01050_raw.fits", rcount = 5, increment = 200)
+>>> stistools.inttag.inttag("oddv01050_tag.fits", "oddv01050_raw.fits", rcount = 5, increment = 200)
 
 """
 
