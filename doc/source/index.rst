@@ -26,6 +26,7 @@ Contents:
    ocrreject
    r_util
    gettable
+   inttag
 
 Indices and tables
 ==================
