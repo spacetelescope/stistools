@@ -50,7 +50,7 @@ Examples
 
 __taskname__ = "inttag"
 __version__ = "1.0"
-__vdate__ = "19-June-2018"
+__vdate__ = "13-November-2018"
 __author__ = "Python: Doug Branton, C code: R. Katsanis, N. Zarate, Phil Hodge"
 
 
