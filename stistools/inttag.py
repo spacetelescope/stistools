@@ -3,6 +3,7 @@ import numpy as np
 from astropy.io import fits
 import astropy.stats
 from astropy import units as u
+from astropy.time import Time
 from datetime import datetime as dt
 
 __doc__ = """
@@ -87,7 +88,7 @@ def inttag(tagfile, output, starttime=None, increment=None,
             Create a high resolution output image? Default is False.
 
         allevents: bool
-            If allevents is set to yes, all events in the input EVENTS table will
+            If allevents is set to True, all events in the input EVENTS table will
             be accumulated into the output image. The TIME column in the EVENTS
             table will only be used to determine the exposure time, and the GTI
             table will be ignored.
@@ -197,6 +198,11 @@ def inttag(tagfile, output, starttime=None, increment=None,
             hdu.header['EXPTIME'] = exp_time
             hdu.header['EXPSTART'] = expstart
             hdu.header['EXPEND'] = expstop
+
+            date_obs, time_obs = Time(float(expstart), format='mjd').isot.split('T')
+            hdu.header['DATE-OBS'] = date_obs
+            hdu.header['TIME-OBS'] = time_obs
+
             hdu.header['EXTVER'] = imset_hdr_ver
             hdu.header['DATE'] = (dtval, "Date FITS file was generated")
             hdu.header['ORIGIN'] = "stistools inttag.py"
