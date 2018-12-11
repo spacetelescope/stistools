@@ -139,18 +139,21 @@ def inttag(tagfile, output, starttime=None, increment=None,
     ltm = 2. / bin_n
 
     # Read in start and stop time parameters
-    if starttime is None:
+    if starttime is None or starttime < gti_start:
         starttime = gti_start  # The first START time in the GTI (or first event)
 
     if increment is None:
         increment = (gti_stop - gti_start)/rcount
+
     stoptime = starttime + increment
 
     imset_hdr_ver = 0  # output header value corresponding to imset
     texptime = 0  # total exposure time
     hdu_list = []
     for imset in range(rcount):
-
+        # Truncate stoptime at last available event time (GTI or allevents) if it exceeds that
+        if stoptime > gti_stop:
+            stoptime = gti_stop
         # Get Exposure Times
         exp_time, expstart, expstop, good_events = exp_range(starttime, stoptime, events_data, gti_data, tzero_mjd)
         if len(good_events) == 0:
