@@ -71,3 +71,12 @@ class TestInttag(BaseSTIS):
         outputs = [(output, "inttag_prihdr_gap.fits")]
         self.compare_outputs(outputs)
 
+    def test_exptime_truncation(self):
+        """Check if inttag handles input rcount sizes correctly by truncating at the last event"""
+        self.get_data("input", "od7s08010_tag.fits")
+        output = "inttag_exptime_trunc_out.fits"
+        inttag("od7s08010_tag.fits", output, increment=1675., rcount=2, starttime=0., allevents=False)
+
+        outputs = [(output, "inttag_exptime_trunc.fits")]
+        self.compare_outputs(outputs)
+
