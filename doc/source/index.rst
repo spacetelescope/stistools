@@ -27,6 +27,9 @@ Contents:
    r_util
    gettable
    inttag
+   doppinfo
+   ctestis
+   tastis
 
 Indices and tables
 ==================

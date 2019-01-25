@@ -24,8 +24,7 @@ class TestDoppinfo(BaseSTIS):
         capsys.readouterr()
 
         # Run doppinfo
-        Doppinfo("/Users/ogaz/stis_testing/doppinfo_phil/ocb6o2020_raw.fits",
-                 dt=100, spt="/Users/ogaz/stis_testing/doppinfo_phil/ocb6o2020_spt.fits")
+        Doppinfo("ocb6o2020_raw.fits", dt=100, spt="ocb6o2020_spt.fits")
 
         # Compare results
         captured = capsys.readouterr()

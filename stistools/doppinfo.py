@@ -9,6 +9,87 @@ from astropy.io import fits
 from . import observation
 from . import orbit
 
+__doc__ = """
+This class computes Doppler shift information for each imset of a dataset.
+Keywords will be read from the science file and from the support file. The
+Doppler shift information is printed to the standard output by default, but
+this can be turned off by setting quiet to True. Three task parameters will be
+updated by doppinfo; these allow the user to compute the Doppler shift in
+high-res pixels or km/s at any time close to the time of the exposure.
+
+The printed information will be in one of two formats, depending on the value
+of increment. If increment is zero, the average and extreme values of the
+Doppler shift during the exposure will be printed. If increment is
+greater than zero, the actual Doppler shift and radial velocity will be
+printed at the beginning of the exposure and at every increment seconds
+thereafter until the end of the exposure. Both the printed value of the
+Doppler shift and the doppmag parameter will be in high-res pixels.
+
+Most of the Doppler shift information is computed directly from the orbital
+elements of HST, as given in the support file primary header. Some information,
+however, is computed based on the approximation of a circular orbit. This
+approximation is used for the average Doppler shift during the exposure
+(printed if increment is zero) and for the task parameters doppzero, doppmag
+and radvel that are updated by doppinfo. These parameters are applied as
+terms in a sine function, which inherently involves a circular-orbit
+approximation.
+
+The parameters for the circular orbit are determined as follows. The HST
+orbital elements are gotten from the primary header of the support file. The
+target position is taken from the keywords RA_TARG and DEC_TARG in the science
+file primary header. The velocity of HST is computed from the orbital elements
+at 64 equally spaced times throughout an orbit, centered on the midpoint of the
+exposure, (EXPSTART + EXPEND) / 2, and the component of this velocity in the
+direction away from the target (i.e. the radial velocity) is taken. A sine
+function is fit to these radial velocities; the amplitude is radvel, and the
+amplitude and phase are used to compute doppmag and doppzero.
+
+
+Examples
+--------
+
+:class:`Doppinfo` with dt of 100:
+
+>>> import stistools
+>>> stistools.doppinfo.Doppinfo("ocb6o2020_raw.fits", dt=100, spt="ocb6o2020_spt.fits")
+# orbitper  doppzero      doppmag      doppmag_v    file
+  5728.67  56752.114170  11.68643135   7.40391177   ocb6o2020_raw.fits[sci,1]
+# time (MJD)   shift   radvel
+56752.165175  -11.59   -7.345
+56752.166333  -11.37   -7.203
+56752.167490  -11.01   -6.975
+56752.168647  -10.52   -6.663
+56752.169805   -9.90   -6.272
+56752.170962   -9.16   -5.805
+56752.172120   -8.32   -5.269
+56752.173277   -7.37   -4.669
+56752.174434   -6.34   -4.014
+56752.175592   -5.23   -3.311
+56752.176749   -4.05   -2.568
+56752.177907   -2.83   -1.794
+56752.179064   -1.58   -0.998
+56752.180222   -0.30   -0.190
+# orbitper  doppzero      doppmag      doppmag_v    file
+  5728.67  56752.180505  11.68734454   7.40449032   ocb6o2020_raw.fits[sci,2]
+# time (MJD)   shift   radvel
+56752.181784    1.42    0.902
+56752.182941    2.68    1.700
+56752.184099    3.91    2.477
+56752.185256    5.09    3.225
+56752.186413    6.21    3.935
+56752.187571    7.26    4.598
+56752.188728    8.22    5.205
+56752.189886    9.08    5.750
+56752.191043    9.83    6.227
+56752.192200   10.46    6.628
+56752.193358   10.97    6.950
+56752.194515   11.35    7.189
+56752.195673   11.59    7.342
+56752.196830   11.69    7.406
+
+
+"""
+
 __version__ = "3.0"
 __vdate__ = "2018-09-14"
 
@@ -98,7 +179,7 @@ class Doppinfo(object):
 
             # Maybe shouldn't be in loop
             if update:
-                self.updateKeywords(input, sci_ext)
+                self._updateKeywords(input, sci_ext)
 
     def _getInitInfo(self):
         """
@@ -149,7 +230,7 @@ class Doppinfo(object):
         """
 
         # Convert target ra,dec to rectangular coordinates (unit radius).
-        self.target = self.sph_rec(self.obs.ra_targ * DEG_RAD,
+        self.target = self._sph_rec(self.obs.ra_targ * DEG_RAD,
                                    self.obs.dec_targ * DEG_RAD)
 
         self.orbitper = self.orbit.getOrbitper()         # seconds
@@ -166,7 +247,7 @@ class Doppinfo(object):
         for i in range(NPTS):
             delt = i * (orbit_period / NPTS_D)
             time = t_origin + delt
-            radvel = self.get_rv(time)
+            radvel = self._get_rv(time)
             sum_sin += radvel * math.sin(TWOPI * delt / orbit_period)
             sum_cos += radvel * math.cos(TWOPI * delt / orbit_period)
 
@@ -207,9 +288,9 @@ class Doppinfo(object):
         self.doppzero = -math.atan2(bcoeff, acoeff) \
             * orbit_period / TWOPI + t_origin
         self.doppmag_v = math.sqrt(acoeff*acoeff + bcoeff*bcoeff)
-        self.doppmag = self.rvToPixels(self.doppmag_v)
+        self.doppmag = self._rvToPixels(self.doppmag_v)
 
-    def sph_rec(self, ra_targ, dec_targ):
+    def _sph_rec(self, ra_targ, dec_targ):
         """Convert from RA & Dec to rectangular coordinates.
 
         Parameters
@@ -233,7 +314,7 @@ class Doppinfo(object):
 
         return target
 
-    def get_rv(self, time):
+    def _get_rv(self, time):
         """Compute the radial velocity.
 
         Parameters
@@ -256,7 +337,7 @@ class Doppinfo(object):
         # Change the sign to get the component away from the target.
         return -dot_product
 
-    def rvToPixels(self, radvel):
+    def _rvToPixels(self, radvel):
         """Convert radial velocity to Doppler shift in pixels.
 
         Parameters
@@ -274,7 +355,7 @@ class Doppinfo(object):
             (SPEED_OF_LIGHT * self.obs.dispersion)
         return doppmag
 
-    def pixelsToRv(self, doppmag):
+    def _pixelsToRv(self, doppmag):
         """Convert Doppler shift in pixels to radial velocity.
 
         Parameters
@@ -318,8 +399,8 @@ class Doppinfo(object):
             time = expstart
             while not done:
                 if time <= expend+1.e-4:
-                    radvel = self.get_rv(time)
-                    doppmag = self.rvToPixels(radvel)
+                    radvel = self._get_rv(time)
+                    doppmag = self._(radvel)
                     print("{:12.6f} {:7.2f} {:8.3f}".
                           format(time, doppmag, radvel))
                     time += dt
@@ -328,7 +409,7 @@ class Doppinfo(object):
         else:
             # Use the radial velocity at the middle of the exposure
             # as an initial value for finding min & max radial velocity.
-            mid_radvel = self.get_rv(expmiddle)
+            mid_radvel = self._get_rv(expmiddle)
             min_radvel = mid_radvel
             max_radvel = mid_radvel
             t_min = expmiddle
@@ -338,7 +419,7 @@ class Doppinfo(object):
             time = expstart + delta
             while not done:
                 if time <= expend:
-                    radvel = self.get_rv(time)
+                    radvel = self._get_rv(time)
                     if radvel < min_radvel:
                         min_radvel = radvel
                         t_min = time
@@ -351,7 +432,7 @@ class Doppinfo(object):
             # Explicitly check the radial velocities at the endpoints.
             min_at_end = False                        # initial values
             max_at_end = False
-            radvel = self.get_rv(expstart)
+            radvel = self._get_rv(expstart)
             if radvel < min_radvel:
                 min_radvel = radvel
                 t_min = expstart
@@ -360,7 +441,7 @@ class Doppinfo(object):
                 max_radvel = radvel
                 t_max = expstart
                 max_at_end = True
-            radvel = self.get_rv(expend)
+            radvel = self._get_rv(expend)
             if radvel < min_radvel:
                 min_radvel = radvel
                 t_min = expend
@@ -372,37 +453,37 @@ class Doppinfo(object):
             # Improve the values of min and max radial velocity.
             rv = [0., 0., 0.]
             if not min_at_end:
-                rv[0] = self.get_rv(t_min-delta)
-                rv[1] = self.get_rv(t_min)
-                rv[2] = self.get_rv(t_min+delta)
-                time = self.peakQuadratic(rv, t_min, delta)
+                rv[0] = self._get_rv(t_min-delta)
+                rv[1] = self._get_rv(t_min)
+                rv[2] = self._get_rv(t_min+delta)
+                time = self._peakQuadratic(rv, t_min, delta)
                 time = max(time, expstart)
                 time = min(time, expend)
-                min_radvel = self.get_rv(time)
+                min_radvel = self._get_rv(time)
 
             if not max_at_end:
-                rv[0] = self.get_rv(t_max-delta)
-                rv[1] = self.get_rv(t_max)
-                rv[2] = self.get_rv(t_max+delta)
-                time = self.peakQuadratic(rv, t_max, delta)
+                rv[0] = self._get_rv(t_max-delta)
+                rv[1] = self._get_rv(t_max)
+                rv[2] = self._get_rv(t_max+delta)
+                time = self._peakQuadratic(rv, t_max, delta)
                 time = max(time, expstart)
                 time = min(time, expend)
-                max_radvel = self.get_rv(time)
+                max_radvel = self._get_rv(time)
 
             # Compute the average radial velocity.  Note that this
             # assumes a circular orbit.
             if expend == expstart:
-                avg_radvel = self.get_rv(expmiddle)
+                avg_radvel = self._get_rv(expmiddle)
             else:
                 avg_dopp = self.doppmag * \
                     (math.cos(TWOPI * (expstart - doppzero) / orbit_period) -
                     math.cos(TWOPI * (expend - doppzero) / orbit_period)) * \
                     orbit_period / TWOPI / (expend - expstart)
-                avg_radvel = self.pixelsToRv(avg_dopp)
-            mid_dopp = self.rvToPixels(mid_radvel)
-            avg_dopp = self.rvToPixels(avg_radvel)
-            min_dopp = self.rvToPixels(min_radvel)
-            max_dopp = self.rvToPixels(max_radvel)
+                avg_radvel = self._pixelsToRv(avg_dopp)
+            mid_dopp = self._rvToPixels(mid_radvel)
+            avg_dopp = self._rvToPixels(avg_radvel)
+            min_dopp = self._rvToPixels(min_radvel)
+            max_dopp = self._rvToPixels(max_radvel)
             print("# midpoint   midpoint Doppler  average Doppler  "
                   "minimum Doppler  maximum Doppler")
             print("#   MJD        pixels   km/s    pixels   km/s    "
@@ -415,7 +496,7 @@ class Doppinfo(object):
 
         print("")
 
-    def peakQuadratic(self, y, x_middle, spacing):
+    def _peakQuadratic(self, y, x_middle, spacing):
         """Get the location of the maximum (or minimum) of a quadratic.
 
         Parameters
@@ -445,7 +526,7 @@ class Doppinfo(object):
 
         return dx * spacing + x_middle
 
-    def updateKeywords(self, input, sci_ext):
+    def _updateKeywords(self, input, sci_ext):
         """Update keywords in the first extension header.
 
         Parameters
