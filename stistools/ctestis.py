@@ -1,3 +1,6 @@
+from astropy.io import fits
+import numpy as np
+
 __doc__ = """
 The purpose of this ctestis task is to correct signal levels of point-like
 source in photometry tables measured from STIS CCD images for charge loss
@@ -19,16 +22,43 @@ is taken from the Equation 9 of Goodfrooij et al. (2006). Note, however,
 that the equation has been multiplied by -1, so that the resulting
 correction may be ADDED to measured Y centriod of each star.
 
-:Authors:
+Examples
+--------
 
-- Python version (2018): Sara Ogaz
-- IDL version (2015) : Sean Lockwood (edits from John Biretta)
-- CL version (2006) : P. Goudfrooij (edits from V. Dixon)
+:func:`ctestis` with ycol set to 182, net set to 5,000 and sky set to 150.
+
+>>> from stistools.ctestis import ctestis
+>>> fluxc, dmagc, dyc = ctestis(182., 5000., 150., stisimage='o4qp9g010_crj.fits')
+mjd: 50893.30
+nread: 2
+ybin: 1
+gain:  1.0
+amp: D
+tt0: -2.3865942
+lcts: -0.67595399
+bck: 75.0
+lbck: 2.317577
+cti: 1.7314006e-05
+fluxc: 2536.7133
+dmagc: -0.015828427
+cti10000: 0.17314006
+dy512: 0.0043051192
+dyc: 0.007079903
+net: 5000.0
+sky: 150.0
+ycol: 182.0
+fluxc: 2536.7133
+dmagc: -0.015828427
+dyc: 0.007079903
+
 """
 
-
-from astropy.io import fits
-import numpy as np
+__taskname__ = "ctestis"
+__version__ = "1.0"
+__vdate__ = "25-January-2019"
+__author__ = "Python version (2018): Sara Ogaz, " \
+             "IDL version (2015) : Sean Lockwood (edits from John Biretta), " \
+             "CL version (2006) : P. Goudfrooij (edits from V. Dixon)"
 
 
 def ctestis(ycol, net, sky, stisimage=None, mjd=None, nread=None,

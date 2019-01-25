@@ -31,11 +31,65 @@ Examples
 
 >>> import stistools
 >>> stistools.tastis.tastis("ocmv0lw6q_raw.fits")
+===============================================================================
+oc7w11viq       HST/STIS    G430L        0.3X0.05ND             ACQ/PEAK-UP
+prop: 13465      visit: 11    line: 3   target: HD128621-2
+obs date, time: 2014-07-24    22:05:06   exposure time:  0.10
+dom GS/FGS: S7QX000330F1    sub-dom GS/FGS: S7QX000694F2
+ACQ params:     bias sub: 1510                     method: RETURN-TO-BRIGHTEST
+subarray (axis1,axis2):   size=(1022,32)          corner=(25,500)
+-------------------------------------------------------------------------------
+Scan type: LINEARAXIS2                  Step size (mas): 250
+ [210 753   0]
+                    axis1 axis2     axis1  axis2         V2   V3
+                      (pixels)        (arcsec)           (arcsec)
+Estimated slew:      0.0  -0.1     0.000 -0.005     -0.004  0.004
+Flux in post-slew confirmation image (751752) - Pedestal (748587) = 3165 DN
+-------------------------------------------------------------------------------
+The flux in the confirmation image is 320% greater than the maximum flux
+in the ACQ/PEAK scan.  An excess greater than 100% indicates
+problems in the ACQ/PEAK.
+The flux in the confirmation image is 16% of the recommended minimum
+of 20000 DN for a dispersed-light ACQ/PEAK.  The signal-to-noise in
+the AC
+===============================================================================
 
 :func:`tastis` with update=True:
 
 >>> import stistools
 >>> stistools.tastis.tastis("ocmv0lw6q_raw.fits", update=True)
+===============================================================================
+ocmv0lw6q       HST/STIS    MIRVIS      F25ND3             ACQ/POINT
+prop: 13760      visit: 0L    line: 1   target: CD-59D3300
+obs date, time: 2016-09-29    23:43:50   exposure time:  1.10
+dom GS/FGS: S4B0000993F2    sub-dom GS/FGS: S4B0000953F1
+ACQ params:     bias sub: 1510   checkbox: 3      method: FLUX CENTROID
+subarray (axis1,axis2):   size=(100,100)          corner=(487,466)
+-------------------------------------------------------------------------------
+Coarse locate phase:           Target flux in max checkbox (DN): 1560
+                       global          local
+                    axis1 axis2     axis1 axis2
+Target location:    534.2  507.0    48.2  42.0
+                    axis1 axis2     axis1  axis2         V2      V3
+                      (pixels)        (arcsec)            (arcsec)
+Estimated slew:     -1.5  -9.0    -0.079 -0.457       -0.379  0.268
+-------------------------------------------------------------------------------
+Fine locate phase:            Target flux in max checkbox (DN): 1559
+                       global            local
+                    axis1 axis2     axis1 axis2
+Target location:    534.2  516.8    48.2  51.8
+Ref ap location:    537.5  517.0    19.5  17.0
+                    axis1 axis2     axis1  axis2         V2      V3
+                      (pixels)        (arcsec)           (arcsec)
+Estimated slew:     -2.1  -0.2     -0.104 -0.010      -0.081 -0.067
+-------------------------------------------------------------------------------
+Total est. slew:    -3.6  -9.2    -0.183 -0.467        -0.460  0.201
+-------------------------------------------------------------------------------
+Your ACQ appears to have succeeded, as the fluxes in the coarse
+and fine stages agree within 25% and the fine slews were less than
+4 pixels as expected
+===============================================================================
+
 """
 
 __taskname__ = "tastis"
