@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 import sys
-##from .version import __version__
 
 __author__ = 'S. Tony Sohn'
 
@@ -63,14 +62,12 @@ def infostis(filenames):
           else:
                   imsets = 0
 
-          # Convert RA and DEC to hh:mm:ss and dd:mm:ss formats
           rr = Angle(ra_targ, u.degree)
-          rp = rr.to_string(unit=u.hour, sep=':')
+          rt = rr.hms
           dd = Angle(dec_targ, u.degree)
-          dp = dd.to_string(unit=u.degree, sep=':')
+          dt = dd.signed_dms
 
-    # Now the pretty printing part
-
+          # Now the pretty printing part
           print("")
           print("-"*80)
           print("                                   S T I S")
@@ -83,9 +80,13 @@ def infostis(filenames):
           print("%54s %s"               % ("Lamp:",sclamp))
           print("%18s %-18s %16s %-25s" % ("Target Name:",targname,"Aperture:", aperture))
                     
-          print("%19s %10s %23s %s" % ("Right Ascension: ", rp, "Filter:", filtr))
-          print("%18s %11s %23s %s" % ("Declination:", dp, "Opt Element:", opt_elem))
+          print("%19s %02.0f%s%02.0f%s%04.1f %23s %s" % ("Right Ascension: ", rt[0], ":", rt[1], ":", rt[2], "Filter:", filtr))
           
+          if dt[0] >= 0:
+                  print("%18s %s%02.0f%s%02.0f%s%04.1f %23s %s" % ("Declination:", "+", dt[1], ":", dt[2], ":", dt[3], "Opt Element:", opt_elem))
+          else:
+                  print("%18s %s%02.0f%s%02.0f%s%04.1f %23s %s" % ("Declination:", "-", dt[1], ":", dt[2], ":", dt[3], "Opt Element:", opt_elem))
+
           if obstype == 'SPECTROSCOPIC':
                   print("%18s %-18.1f %16s %-25d", "Equinox:" % (equinox,"Central Wave:", cenwave))
           elif detector == 'CCD':
@@ -126,9 +127,7 @@ def call_infostis(args):
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='Print a header information for a list of STIS FITS images.'#,
-        )
-#        epilog='{} package; Written by {}; v{}'.format(__package__, __author__, __version__))
+        description='Print a header information for a list of STIS FITS images.'),
     parser.add_argument(dest='filenames', metavar='filename', nargs='*', help='')
     args = parser.parse_args()
 
