@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-
 import sys
 
 __author__ = 'S. Tony Sohn'
@@ -25,12 +24,17 @@ def infostis(filenames):
             filenames = [filenames]
 
     for file in filenames:
+
        with fits.open(file) as hdu:
-          rootname = hdu[0].header['ROOTNAME'] # 
+          instrume = hdu[0].header['INSTRUME'] # Instrument type       
+          if instrume != 'STIS':
+                  sys.exit('ERROR: The infostis task only works on data obtained with STIS.')
+
+          rootname = hdu[0].header['ROOTNAME'] # Rootname of file
           proposid = hdu[0].header['PROPOSID'] # Proposal ID
           linenum  = hdu[0].header['LINENUM']  # Proposal logsheet line number = Exposure ID
-          targname = hdu[0].header['TARGNAME'] #
-          detector = hdu[0].header['DETECTOR'] #
+          targname = hdu[0].header['TARGNAME'] # Target name as submitted by the PI
+          detector = hdu[0].header['DETECTOR'] # Detector
           obstype  = hdu[0].header['OBSTYPE']  #
           obsmode  = hdu[0].header['OBSMODE']  #
           sclamp   = hdu[0].header['SCLAMP']   # lamp status, NONE or name of lamp which is on
@@ -127,7 +131,7 @@ def call_infostis(args):
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='Print a header information for a list of STIS FITS images.'),
+        description='Print a header information for a list of STIS FITS images.')
     parser.add_argument(dest='filenames', metavar='filename', nargs='*', help='')
     args = parser.parse_args()
 
