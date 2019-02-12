@@ -34,8 +34,17 @@ def crrej_frac(obs_id, dir='./'):
         Prints the rejection statistics to standard output.
    
    '''
+   flt_file = os.path.join(dir,obs_id+'_flt.fits')
+   if not os.path.exists(flt_file):
+      raise IOError("No _flt file found for {}".format(obs_id))
+      
+   spec_file = flt_file.replace('flt','sx1')
+   if not os.path.exists(spec_file):
+      spec_file = flt_file.replace('flt','x1d')
+      if not os.path.exists(spec_file):
+         raise IOError("No _sx1 or _x1d file found for {}".format(obs_id))
    
-   with fits.open(os.path.join(dir,obs_id+'_sx1.fits')) as spec_hdu:
+   with fits.open(spec_file) as spec_hdu:
          spec = spec_hdu[1].data[0]
          shdr =spec_hdu[0].header
 
@@ -52,7 +61,7 @@ def crrej_frac(obs_id, dir='./'):
       
    n_tot = np.count_nonzero(extr_mask) * split_num 
    
-   with fits.open(os.path.join(dir,obs_id+'_flt.fits')) as flt_hdu:
+   with fits.open(flt_file) as flt_hdu:
         if len(flt_hdu) != 1+split_num*3:
            print('Unexpected number of extensions')
            
@@ -60,7 +69,6 @@ def crrej_frac(obs_id, dir='./'):
         
         for i in range(3,len(flt_hdu)+1 ,3):
            dat = flt_hdu[i].data
-#           rej = dat[ (extr_mask == 1)  & (dat >= 8192)] #Data quality flag 8192 used for CR rejected pixels
            rej = dat[ (extr_mask == 1) & (dat & 2**13 != 0)] #Data quality flag 8192 (2^13) used for CR rejected pixels
            n_rej.append(np.count_nonzero(rej))
                  
