@@ -4,9 +4,9 @@
 wx2d
 **************************
 
-.. currentmodule:: stistools.wx2d
+.. currentmodule:: wx2d
 
-.. automodule:: stistools.wx2d
+.. automodule:: wx2d
    :members:
    :undoc-members:
 

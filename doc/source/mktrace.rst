@@ -4,9 +4,9 @@
 mktrace
 **************************
 
-.. currentmodule:: stistools.mktrace
+.. currentmodule:: mktrace
 
-.. automodule:: stistools.mktrace
+.. automodule:: mktrace
    :members:
    :undoc-members:
 

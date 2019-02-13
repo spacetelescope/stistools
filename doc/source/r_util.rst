@@ -4,9 +4,9 @@
 r_util
 **************************
 
-.. currentmodule:: stistools.r_util
+.. currentmodule:: r_util
 
-.. automodule:: stistools.r_util
+.. automodule:: r_util
    :members:
    :undoc-members:
 

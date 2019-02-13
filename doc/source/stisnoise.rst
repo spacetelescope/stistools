@@ -4,9 +4,9 @@
 stisnoise
 **************************
 
-.. currentmodule:: stistools.stisnoise
+.. currentmodule:: stisnoise
 
-.. automodule:: stistools.stisnoise
+.. automodule:: stisnoise
    :members:
    :undoc-members:
 
