@@ -29,24 +29,24 @@ BASH shell.
     # Writes changes to ~/.condarc
 
 Now we're ready to install the STScI Software Stack, we'll accomplish this by setting up a fresh Conda environment.
-Run the following command, you can change "astroconda" to be whatever name for the environment you wish.
+Run the following command, you can change "stisenv" to be whatever name for the environment you wish.
 
 .. code-block:: sh
 
-    $ conda create -n astroconda stsci
+    $ conda create -n stisenv stsci
 
 Once the installation is complete, you can access your new environment by activating it:
 
 .. code-block:: sh
 
-    $ source activate astroconda
+    $ source activate stisenv
 
 Once activated, you now have access to all of the STScI software, including stistools! If you want to deactivate an environment,
 you can do so like this:
 
 .. code-block:: sh
 
-    $ source deactivate astroconda
+    $ source deactivate stisenv
 
 Keep in mind that whenever you open a new terminal, by default your environment will not be activated (this can be changed). So be sure to activate it before
 attempting to use stistools. When in your environment, you can now interact with stistools like any other Python package.
@@ -84,3 +84,4 @@ Then the following command may be used to assign and obtain the best references 
 
     $ crds bestrefs --update-bestrefs --sync-references=1 --files *.fits
 
+Note that in this example bestrefs will run on files currently in your working directly. You can modify where it looks by updating the final input.
