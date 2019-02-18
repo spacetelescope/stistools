@@ -2,7 +2,7 @@ Installation and Setup
 =====================
 
 =====================
-Installing stistools
+Installing stistools (Astroconda)
 =====================
 
 The simplest installation method for installing stistools is to install the "Standard Software Stack" of AstroConda.
@@ -57,6 +57,40 @@ attempting to use stistools. When in your environment, you can now interact with
     The following tasks in the stistools package can be run with TEAL:
        basic2d      calstis     ocrreject     wavecal        x1d          x2d
 
+=====================
+Getting the Latest Version of stistools
+=====================
+Sometimes, it may be the case that new additions to stistools have not yet been packaged into a proper release through Astroconda.
+In these instances, the installation of stistools through astroconda will not contain the most recent additions to the package. The following
+instructions outline how to grab and install the latest version of stistools, if you require something that has been released very recently.
+
+To start, we'll assume that you've gone through the process above, installing stistools through astroconda. Even though astroconda does not
+contain our most up-to-date version of stistools in this case, it does still provide us with all of the necessary dependencies needed to run
+stistools.
+
+First, let's clone the github stistools repository down to our local machines. This essentially downloads the latest stable version
+of the package to your computer. We can clone stistools by running the following command:
+
+.. code-block:: sh
+
+    $ git clone https://github.com/spacetelescope/stistools.git
+
+Note that this will create a "stistools" folder in your local directory. Navigate into this directory once the clone
+finishes executing. We want to install this on top of our astroconda environment, so activate your desired environment like so:
+
+.. code-block:: sh
+
+    $ source activate stisenv
+
+We can now install the latest version of stistools. In the stistools directory, run:
+
+.. code-block:: sh
+
+    $ python setup.py install
+
+This builds the stistools package up based on the source code we cloned to our local machines. Note that this overwrites the existing
+version of stistools that was installed through astroconda. With this, you should now have the latest version of stistools installed
+in your "stisenv" environment.
 
 
 =====================
