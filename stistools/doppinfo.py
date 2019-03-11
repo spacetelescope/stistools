@@ -400,7 +400,7 @@ class Doppinfo(object):
             while not done:
                 if time <= expend+1.e-4:
                     radvel = self._get_rv(time)
-                    doppmag = self._(radvel)
+                    doppmag = self._rvToPixels(radvel)
                     print("{:12.6f} {:7.2f} {:8.3f}".
                           format(time, doppmag, radvel))
                     time += dt
