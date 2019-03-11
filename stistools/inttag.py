@@ -248,6 +248,7 @@ def inttag(tagfile, output, starttime=None, increment=None,
             if idx == 2:
                 hdu.header['NPIX1'] = siz_axx
                 hdu.header['NPIX2'] = siz_axy
+                hdu.header['PIXVALUE'] = 0  # Fixes issue with calstis not running on raw output files
 
         # Append imset extensions to header list
         hdu_list.append(sci_hdu)
