@@ -3,30 +3,33 @@ import numpy as np
 from astropy.io import fits
 import astropy.stats
 from astropy import units as u
+from astropy.time import Time
 from datetime import datetime as dt
 
 __doc__ = """
- The task :func:`inttag` converts an events table of TIME-TAG mode STIS data into a raw, time-integrated ACCUM image. By 
- default, :func:`inttag` only integrates over the good time intervals (GTI), though the user can choose to integrate 
- over the entire exposure time by setting allevents=True. The output image can be calibrated as any other raw image.
+ The task :func:`inttag` converts an events table of TIME-TAG mode STIS data into a raw, time-integrated ACCUM 
+ image. By default, :func:`inttag` only integrates over the good time intervals (GTI), though the user can 
+ choose to integrate over the entire exposure time by setting allevents=True. The output image can be 
+ calibrated as any other raw image.
 
-The input file for :func:`inttag` is an event stream table of TIME-TAG mode produced by generic conversion. The data will 
-be Doppler corrected (as required for medium and high resolution spectroscopic modes). This file will consist of a 
-primary header with no data, and two binary table extensions. The primary header is identical in structure to the 
-primary header of an ACCUM mode image. The first binary table (EXTNAME=EVENTS) contains a list of the events themselves 
-(i.e. science data as an event stream), and the second binary table (EXTNAME=GTI) contains a list of good time 
-intervals for the TIMETAG exposure. Columns "TIME", "AXIS1", and "AXIS2" in the EVENTS table are read. Columns "START" 
-and "STOP" in the GTI table are read.
+The input file for :func:`inttag` is an event stream table of TIME-TAG mode produced by generic conversion. 
+The data will be Doppler corrected (as required for medium and high resolution spectroscopic modes). This file 
+will consist of a primary header with no data, and two binary table extensions. The primary header is identical 
+in structure to the primary header of an ACCUM mode image. The first binary table (EXTNAME=EVENTS) contains a 
+list of the events themselves (i.e. science data as an event stream), and the second binary table (EXTNAME=GTI) 
+contains a list of good time intervals for the TIMETAG exposure. Columns "TIME", "AXIS1", and "AXIS2" in the 
+EVENTS table are read. Columns "START" and "STOP" in the GTI table are read.
 
-The output image is a time integrated (ACCUM mode) image with the same structure as any other STIS MAMA raw image 
-(i.e. primary header followed by a single or series of triplet extensions: SCI, ERR, DQ). The number of triplets is 
-determined by the value of rcount. The time interval in the Nth triplet covers from (starttime + (N-1)*increment) to 
-(starttime + N*increment). The exposure time in each interval need not be identical, because events are included in the 
-image only if they occur during "good time intervals" (as determined by the GTI extension table). The keyword OBSMODE 
-in the primary header of the output image will still be set to "TIME-TAG".
+The output image is a time integrated (ACCUM mode) image with the same structure as any other STIS MAMA raw 
+image  (i.e. primary header followed by a single or series of triplet extensions: SCI, ERR, DQ). The number of 
+triplets is determined by the value of rcount. The time interval in the Nth triplet covers from 
+(starttime + (N-1)*increment) to (starttime + N*increment). The exposure time in each interval need not be 
+identical, because events are included in the image only if they occur during "good time intervals" (as 
+determined by the GTI extension table). The keyword OBSMODE in the primary header of the output image will 
+still be set to "TIME-TAG".
 
-The output science image is ready to be calibrated (see :func:`calstis`, :func:`crreject`, :func:`basic2d`, :func:`x2d`, 
-:func:`x1d`). 
+The output science image is ready to be calibrated (see :func:`calstis`, :func:`crreject`, :func:`basic2d`, 
+:func:`x2d`, :func:`x1d`). 
 
 Examples
 --------
@@ -50,7 +53,7 @@ Examples
 
 __taskname__ = "inttag"
 __version__ = "1.0"
-__vdate__ = "19-June-2018"
+__vdate__ = "13-November-2018"
 __author__ = "Python: Doug Branton, C code: R. Katsanis, N. Zarate, Phil Hodge"
 
 
@@ -87,7 +90,7 @@ def inttag(tagfile, output, starttime=None, increment=None,
             Create a high resolution output image? Default is False.
 
         allevents: bool
-            If allevents is set to yes, all events in the input EVENTS table will
+            If allevents is set to True, all events in the input EVENTS table will
             be accumulated into the output image. The TIME column in the EVENTS
             table will only be used to determine the exposure time, and the GTI
             table will be ignored.
@@ -138,18 +141,21 @@ def inttag(tagfile, output, starttime=None, increment=None,
     ltm = 2. / bin_n
 
     # Read in start and stop time parameters
-    if starttime is None:
+    if starttime is None or starttime < gti_start:
         starttime = gti_start  # The first START time in the GTI (or first event)
 
     if increment is None:
         increment = (gti_stop - gti_start)/rcount
+
     stoptime = starttime + increment
 
     imset_hdr_ver = 0  # output header value corresponding to imset
     texptime = 0  # total exposure time
     hdu_list = []
     for imset in range(rcount):
-
+        # Truncate stoptime at last available event time (GTI or allevents) if it exceeds that
+        if stoptime > gti_stop:
+            stoptime = gti_stop
         # Get Exposure Times
         exp_time, expstart, expstop, good_events = exp_range(starttime, stoptime, events_data, gti_data, tzero_mjd)
         if len(good_events) == 0:
@@ -197,6 +203,11 @@ def inttag(tagfile, output, starttime=None, increment=None,
             hdu.header['EXPTIME'] = exp_time
             hdu.header['EXPSTART'] = expstart
             hdu.header['EXPEND'] = expstop
+
+            date_obs, time_obs = Time(float(expstart), format='mjd').isot.split('T')
+            hdu.header['DATE-OBS'] = date_obs
+            hdu.header['TIME-OBS'] = time_obs
+
             hdu.header['EXTVER'] = imset_hdr_ver
             hdu.header['DATE'] = (dtval, "Date FITS file was generated")
             hdu.header['ORIGIN'] = "stistools inttag.py"
