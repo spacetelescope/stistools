@@ -5,10 +5,9 @@ channels:
 dependencies:
   - numpy>=1.5.1
   - numpydoc
-  - astropy>=0.3.1
+  - astropy>=3.1.1
   - scipy>=0.14
-  - sphinx=1.4
-  - ipython
+  - sphinx=1.8
   - stsci.tools
   - d2to1
   - stsci.distutils

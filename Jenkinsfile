@@ -15,8 +15,8 @@ bc0.build_cmds = ["conda env update --file=doc/environment.yml -q",
                   "with_env -n stistools python setup.py install",
                   "with_env -n stistools conda install -q -y -c http://ssb.stsci.edu/astroconda hstcal",
                   "with_env -n stistools conda install -q -y -c http://ssb.stsci.edu/astroconda crds"]
-bc0.test_cmds = ["with_env -n stistools conda install -q -y pytest",
+bc0.test_cmds = ["with_env -n stistools conda install -q -y pytest=4.2.1",
                  "with_env -n stistools conda install -q -y pytest-remotedata",
-                 "with_env -n stistools pytest --basetemp=tests_output --junitxml results.xml --bigdata"]
+                 "with_env -n stistools pytest --basetemp=tests_output --junitxml=results.xml --bigdata"]
 
 utils.run([bc0])
