@@ -13,7 +13,7 @@ from . import gettable
 from . import wavelen
 from . import r_util
 
-__version__ = "1.3 (2016 Feb 24)"
+__version__ = "1.4 (2019 Mar 14)"
 
 
 def wx2d(input, output, wavelengths=None, helcorr="",
@@ -80,8 +80,7 @@ def wx2d(input, output, wavelengths=None, helcorr="",
     tracefile = trace_name(trace, phdu.header)
 
     # Update the primary header, in preparation for writing to a new file.
-    phdu.header.set("WX2DCORR", "COMPLETE", "this file is output from wx2d",
-                    before="X2DCORR")
+    phdu.header.insert("X2DCORR",("WX2DCORR", "COMPLETE", "this file is output from wx2d"))
     is_an_array = isinstance(tracefile, N.ndarray)
     if is_an_array:
         phdu.header.add_history("trace array was specified explicitly")
