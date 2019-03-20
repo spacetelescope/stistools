@@ -49,12 +49,6 @@ Pipeline Software
    x1d
    x2d
    wavecal
-   calstis
-   ocrreject
-   basic2d
-   x1d
-   x2d
-   wavecal
 
 =======================
 Analysis Tools

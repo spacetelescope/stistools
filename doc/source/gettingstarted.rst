@@ -5,8 +5,6 @@ Installation and Setup
 Installing stistools (Astroconda)
 =====================
 
-Through Astroconda (Recommended)
---------------------------------
 The simplest installation method for installing stistools is to install the "Standard Software Stack" of AstroConda.
 AstroConda is an STScI-maintained software distribution channel for Conda, a package and environment management system.
 The standard software stack of AstroConda contains all of STScI's publicly distributed software, as well as all of the
