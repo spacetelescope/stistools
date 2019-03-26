@@ -4,7 +4,7 @@
 tastis
 ******
 
-.. currentmodule:: stistools.tastis
+.. currentmodule:: tastis
 
-.. automodule:: stistools.tastis
+.. automodule:: tastis
    :members:

@@ -4,7 +4,7 @@
 doppinfo
 ********
 
-.. currentmodule:: stistools.doppinfo
+.. currentmodule:: doppinfo
 
-.. automodule:: stistools.doppinfo
+.. automodule:: doppinfo
     :members:

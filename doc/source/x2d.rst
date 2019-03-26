@@ -1,12 +1,11 @@
-.. _wx2d:
+.. _x2d:
 
 **************************
-wx2d
+x2d
 **************************
 
-.. currentmodule:: wx2d
+.. currentmodule:: x2d
 
-.. automodule:: wx2d
+.. automodule:: x2d
    :members:
    :undoc-members:
-

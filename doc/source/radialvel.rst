@@ -4,9 +4,9 @@
 radialvel
 **************************
 
-.. currentmodule:: stistools.radialvel
+.. currentmodule:: radialvel
 
-.. automodule:: stistools.radialvel
+.. automodule:: radialvel
    :members:
    :undoc-members:
 

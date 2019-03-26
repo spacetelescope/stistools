@@ -4,9 +4,9 @@
 sshift
 **************************
 
-.. currentmodule:: stistools.sshift
+.. currentmodule:: sshift
 
-.. automodule:: stistools.sshift
+.. automodule:: sshift
    :members:
    :undoc-members:
 

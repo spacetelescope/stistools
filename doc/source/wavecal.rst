@@ -1,11 +1,11 @@
-.. _inttag:
+.. _wavecal:
 
 **************************
-inttag
+wavecal
 **************************
 
-.. currentmodule:: inttag
+.. currentmodule:: wavecal
 
-.. automodule:: inttag
+.. automodule:: wavecal
    :members:
    :undoc-members:
