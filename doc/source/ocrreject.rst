@@ -4,8 +4,8 @@
 ocrreject
 **************************
 
-.. currentmodule:: ocrreject
+.. currentmodule:: stistools.ocrreject
 
-.. automodule:: ocrreject
+.. automodule:: stistools.ocrreject
    :members:
    :undoc-members:

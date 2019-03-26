@@ -4,9 +4,9 @@
 gettable
 **************************
 
-.. currentmodule:: gettable
+.. currentmodule:: stistools.gettable
 
-.. automodule:: gettable
+.. automodule:: stistools.gettable
    :members:
    :undoc-members:
 

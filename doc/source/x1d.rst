@@ -4,8 +4,8 @@
 x1d
 **************************
 
-.. currentmodule:: x1d
+.. currentmodule:: stistools.x1d
 
-.. automodule:: x1d
+.. automodule:: stistools.x1d
    :members:
    :undoc-members:

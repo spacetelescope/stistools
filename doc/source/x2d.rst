@@ -4,8 +4,8 @@
 x2d
 **************************
 
-.. currentmodule:: x2d
+.. currentmodule:: stistools.x2d
 
-.. automodule:: x2d
+.. automodule:: stistools.x2d
    :members:
    :undoc-members:

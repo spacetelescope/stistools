@@ -4,8 +4,8 @@
 basic2d
 **************************
 
-.. currentmodule:: basic2d
+.. currentmodule:: stistools.basic2d
 
-.. automodule:: basic2d
+.. automodule:: stistools.basic2d
    :members:
    :undoc-members:

@@ -4,9 +4,9 @@
 wavelen
 **************************
 
-.. currentmodule:: wavelen
+.. currentmodule:: stistools.wavelen
 
-.. automodule:: wavelen
+.. automodule:: stistools.wavelen
    :members:
    :undoc-members:
 

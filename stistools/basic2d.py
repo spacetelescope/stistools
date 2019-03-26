@@ -9,7 +9,7 @@ import subprocess
 
 from stsci.tools import parseinput, teal
 
-"""
+__doc__ = """
 Perform basic 2-D calibration of STIS data.
 
 Examples
@@ -26,11 +26,6 @@ In Python with TEAL:
 >>> from stistools import basic2d
 >>> from stsci.tools import teal
 >>> teal.teal("basic2d")
-
-In Pyraf:
-
->>> import stistools
->>> teal basic2d
 
 From command line::
 

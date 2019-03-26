@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-========================================
-Welcome to stistool's documentation!
-========================================
+======================
+STIS Python User Tools
+======================
 Stistools is a package that provides Python-based data processing tools for working with Space Telescope Imaging Spectrograph
 (STIS) data. It contains the full STIS calibration pipeline as well as its individual components should the user wish to do their
 calibrations manually. Additionally, stistools features a selection of analysis tools independent from the pipeline. These analysis
@@ -41,7 +41,7 @@ Getting Started
 Pipeline Software
 =======================
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    calstis
    ocrreject
@@ -55,7 +55,7 @@ Pipeline Software
 Analysis Tools
 =======================
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    sshift
    stisnoise

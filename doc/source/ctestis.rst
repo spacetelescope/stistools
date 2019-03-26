@@ -4,7 +4,7 @@
 ctestis
 *******
 
-.. currentmodule:: ctestis
+.. currentmodule:: stistools.ctestis
 
-.. automodule:: ctestis
+.. automodule:: stistools.ctestis
    :members:

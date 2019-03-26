@@ -4,8 +4,8 @@
 evaldisp
 **************************
 
-.. currentmodule:: evaldisp
+.. currentmodule:: stistools.evaldisp
 
-.. automodule:: evaldisp
+.. automodule:: stistools.evaldisp
    :members:
 

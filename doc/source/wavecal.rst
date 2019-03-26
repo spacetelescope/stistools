@@ -4,8 +4,8 @@
 wavecal
 **************************
 
-.. currentmodule:: wavecal
+.. currentmodule:: stistools.wavecal
 
-.. automodule:: wavecal
+.. automodule:: stistools.wavecal
    :members:
    :undoc-members:

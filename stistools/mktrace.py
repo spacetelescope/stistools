@@ -1,33 +1,4 @@
 #!/usr/bin/env python
-"""
-Refine a STIS trace table.
-
-- A trace is generated from the science file and a trace
-  center is computed.
-- The two traces bracketing the trace center are extracted
-  from the trace table and interpolated
-- The correction is computed as the difference between the
-  linear fit to the science and interpolated traces
-- The correction is applied to all traces in the trace file
-  for that particular OPT_ELEM and CENWAVE
-- A new trace table is written to the current directory and
-  the relevant keywords are updates in the header of the input file.
-
-:Usage:
-
-Simple example of running mktrace on a STIS file named 'file.fits':
-  >>>import mktrace
-  >>>mktrace.mktrace('file.fits', [tracecen=509.4], [weights=[(x1,x2),(x3,x4)])
-
-
-:Authors:
-
-- Author (IDL): Linda Dressel
-- Python version: Nadia Dencheva
-
-"""
-
-
 import numpy as np
 from astropy.io import fits
 import os.path
@@ -36,6 +7,34 @@ from scipy import ndimage as ni
 
 from stsci.tools import gfit, linefit
 from stsci.tools import fileutil as fu
+
+__doc__ = """
+Refine a STIS trace table.
+
+- A trace is generated from the science file and a trace
+  center is computed.
+- The two traces bracketing the trace center are extracted
+  from the trace table and interpolated
+- The correction is computed as the difference between the
+  linear fit to the science and interpolated traces
+- The correction is applied to all tracegs in the trace file
+  for that particular OPT_ELEM and CENWAVE
+- A new trace table is written to the current directory and
+  the relevant keywords are updates in the header of the input file.
+
+:Usage:
+
+Simple example of running mktrace on a STIS file named 'file.fits':
+  >>> import mktrace
+  >>> mktrace.mktrace('file.fits', [tracecen=509.4], [weights=[(x1,x2),(x3,x4)])
+
+
+:Authors:
+
+- Author (IDL): Linda Dressel
+- Python version: Nadia Dencheva
+
+"""
 
 __version__ = '2.0.0'
 __vdate__ = '2017-03-20'

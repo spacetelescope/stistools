@@ -4,8 +4,8 @@
 calstis
 **************************
 
-.. currentmodule:: calstis
+.. currentmodule:: stistools.calstis
 
-.. automodule:: calstis
+.. automodule:: stistools.calstis
    :members:
    :undoc-members:

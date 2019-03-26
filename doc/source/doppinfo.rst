@@ -4,7 +4,10 @@
 doppinfo
 ********
 
-.. currentmodule:: doppinfo
+.. currentmodule:: stistools.doppinfo
 
-.. automodule:: doppinfo
+.. automodule:: stistools.doppinfo
     :members:
+    :undoc-members:
+
+

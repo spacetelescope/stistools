@@ -8,7 +8,7 @@ import subprocess
 
 from stsci.tools import parseinput, teal
 
-"""
+__doc__ = """
 Calibrate STIS data.
 
 The input raw files should be in the default directory.  This is not
@@ -31,11 +31,6 @@ In Python with TEAL:
 >>> from stistools import calstis
 >>> from stsci.tools import teal
 >>> teal.teal("calstis")
-
-In Pyraf:
-
->>> import stistools
->>> teal calstis
 
 From command line::
 

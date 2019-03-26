@@ -8,7 +8,7 @@ import subprocess
 
 from stsci.tools import parseinput, teal
 
-"""
+__doc__ = """
 Extract 1-D spectrum.
 
 Examples
@@ -25,11 +25,6 @@ In Python with TEAL:
 >>> from stistools import x1d
 >>> from stsci.tools import teal
 >>> teal.teal("x1d")
-
-In Pyraf:
-
->>> import stistools
->>> teal x1d
 
 From command line::
 

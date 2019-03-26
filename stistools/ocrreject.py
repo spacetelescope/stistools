@@ -9,7 +9,7 @@ import subprocess
 
 from stsci.tools import parseinput, teal
 
-"""
+__doc__ = """
 Add STIS exposures, rejecting cosmic rays.
 
 Examples
@@ -26,11 +26,6 @@ In Python with TEAL:
 >>> from stistools import ocrreject
 >>> from stsci.tools import teal
 >>> teal.teal("ocrreject")
-
-In Pyraf:
-
->>> import stistools
->>> teal ocrreject
 
 From command line::
 
