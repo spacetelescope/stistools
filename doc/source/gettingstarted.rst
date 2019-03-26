@@ -81,7 +81,15 @@ finishes executing. We want to install this on top of our astroconda environment
 
     $ source activate stisenv
 
-We can now install the latest version of stistools. In the stistools directory, run:
+Because developer versions of stistools share the same version numbers as the last release, we'll need to remove the version
+of stistools that came with our astroconda environment, we can do this through conda:
+
+.. code-block:: sh
+
+    $ conda uninstall --force stistools
+
+The `--force` flag is necessary for instructing conda not to uninstall packages that depend on stistools. We can now install
+the latest version of stistools. In the stistools directory, run:
 
 .. code-block:: sh
 

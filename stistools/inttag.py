@@ -7,10 +7,10 @@ from astropy.time import Time
 from datetime import datetime as dt
 
 __doc__ = """
- The task :func:`inttag` converts an events table of TIME-TAG mode STIS data into a raw, time-integrated ACCUM 
- image. By default, :func:`inttag` only integrates over the good time intervals (GTI), though the user can 
- choose to integrate over the entire exposure time by setting allevents=True. The output image can be 
- calibrated as any other raw image.
+The task :func:`inttag` converts an events table of TIME-TAG mode STIS data into a raw, time-integrated ACCUM 
+image. By default, :func:`inttag` only integrates over the good time intervals (GTI), though the user can 
+choose to integrate over the entire exposure time by setting allevents=True. The output image can be 
+calibrated as any other raw image.
 
 The input file for :func:`inttag` is an event stream table of TIME-TAG mode produced by generic conversion. 
 The data will be Doppler corrected (as required for medium and high resolution spectroscopic modes). This file 
