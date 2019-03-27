@@ -8,7 +8,7 @@ import subprocess
 
 from stsci.tools import parseinput, teal
 
-"""
+__doc__ = """
 Rectify 2-D STIS spectral data.
 
 Examples
@@ -25,11 +25,6 @@ In Python with TEAL:
 >>> from stistools import x2d
 >>> from stsci.tools import teal
 >>> teal.teal("x2d")
-
-In Pyraf:
-
->>> import stistools
->>> teal x2d
 
 From command line::
 

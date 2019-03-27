@@ -8,3 +8,6 @@ doppinfo
 
 .. automodule:: stistools.doppinfo
     :members:
+    :undoc-members:
+
+

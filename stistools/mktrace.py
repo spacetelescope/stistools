@@ -1,5 +1,14 @@
 #!/usr/bin/env python
-"""
+import numpy as np
+from astropy.io import fits
+import os.path
+from scipy import signal
+from scipy import ndimage as ni
+
+from stsci.tools import gfit, linefit
+from stsci.tools import fileutil as fu
+
+__doc__ = """
 Refine a STIS trace table.
 
 - A trace is generated from the science file and a trace
@@ -13,11 +22,13 @@ Refine a STIS trace table.
 - A new trace table is written to the current directory and
   the relevant keywords are updates in the header of the input file.
 
-:Usage:
+Examples
+--------
 
 Simple example of running mktrace on a STIS file named 'file.fits':
-  >>>import mktrace
-  >>>mktrace.mktrace('file.fits', [tracecen=509.4], [weights=[(x1,x2),(x3,x4)])
+
+>>> import mktrace
+>>> mktrace.mktrace('file.fits', [tracecen=509.4], [weights=[(x1,x2),(x3,x4)])
 
 
 :Authors:
@@ -26,16 +37,6 @@ Simple example of running mktrace on a STIS file named 'file.fits':
 - Python version: Nadia Dencheva
 
 """
-
-
-import numpy as np
-from astropy.io import fits
-import os.path
-from scipy import signal
-from scipy import ndimage as ni
-
-from stsci.tools import gfit, linefit
-from stsci.tools import fileutil as fu
 
 __version__ = '2.0.0'
 __vdate__ = '2017-03-20'

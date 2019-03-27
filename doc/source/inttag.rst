@@ -4,8 +4,8 @@
 inttag
 **************************
 
-.. currentmodule:: stistools.inttag
+.. currentmodule:: inttag
 
-.. automodule:: stistools.inttag
+.. automodule:: inttag
    :members:
    :undoc-members:
