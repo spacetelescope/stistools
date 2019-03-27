@@ -6,7 +6,7 @@ mktrace
 
 .. currentmodule:: stistools.mktrace
 
-.. autoclass:: stistools.mktrace
+.. automodule:: stistools.mktrace
    :members:
 
 
