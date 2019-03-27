@@ -8,5 +8,6 @@ mktrace
 
 .. automodule:: stistools.mktrace
    :members:
-   :undoc-members:
+
+
 

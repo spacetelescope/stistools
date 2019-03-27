@@ -17,16 +17,18 @@ Refine a STIS trace table.
   from the trace table and interpolated
 - The correction is computed as the difference between the
   linear fit to the science and interpolated traces
-- The correction is applied to all tracegs in the trace file
+- The correction is applied to all traces in the trace file
   for that particular OPT_ELEM and CENWAVE
 - A new trace table is written to the current directory and
   the relevant keywords are updates in the header of the input file.
 
-:Usage:
+Examples
+--------
 
 Simple example of running mktrace on a STIS file named 'file.fits':
-  >>> import mktrace
-  >>> mktrace.mktrace('file.fits', [tracecen=509.4], [weights=[(x1,x2),(x3,x4)])
+
+>>> import mktrace
+>>> mktrace.mktrace('file.fits', [tracecen=509.4], [weights=[(x1,x2),(x3,x4)])
 
 
 :Authors:
