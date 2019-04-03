@@ -1,6 +1,8 @@
 # stistools
-Tools for HST/STIS.
 
+[![Jenkins CI Status](https://ssbjenkins.stsci.edu/job/STScI/job/stistools/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/stistools/job/master/)
+
+Tools for HST/STIS.
 
 Code Contribution Guide:
 
