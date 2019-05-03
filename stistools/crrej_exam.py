@@ -54,7 +54,7 @@ def crrej_frac(obs_id, dir='./'):
    extr_mask = np.zeros((1024,1024))
    del_pix = spec["EXTRSIZE"]/2.
    for column in range(0,1024):
-      row_mid =  spec['EXTRLOCY'][column]
+      row_mid =  spec['EXTRLOCY'][column] - 1 #EXTRLOCY is 1-indexed.
       gd_row_low = int(np.ceil( row_mid - del_pix))
       gd_row_high = int(np.floor(row_mid + del_pix))
       extr_mask[gd_row_low:gd_row_high+1,column] = 1
