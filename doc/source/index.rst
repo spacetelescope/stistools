@@ -70,6 +70,8 @@ Analysis Tools
    doppinfo
    ctestis
    tastis
+   defringe
+
 
 ==================
 Indices and tables
