@@ -40,7 +40,56 @@ def normspflat(inflat, outflat, do_cal=True, biasfile=None, darkfile=None, pixel
     """
     # These notes are based on the old STSDAS algorithm.
 
-    
+    # strip extension from rootname of inflat (assumed to be {RAW, CRJ, SX2, X2D, clff})
+
+    # identify wavecal
+
+    # handle outflat filename formatting (e.g. a directory is given)
+
+    # if do_cal:
+    #    identify biasfile, darkfile, pixelflat
+    #    confirm inflat has >= 2 SCI exts to allow CR-rejection
+    #    handle NRPTEXP keyword
+    #    PERFORM:  DQICORR, BLEVCORR, BIASCORR, DARKCORR, FLATCORR, CRCORR
+    #    Update BIASFILE, DARKFILE, PFLTFILE
+    #    if G750M:
+    #        PERFORM:  WAVECORR, HELCORR, X2DCORR
+    #    elif G750L:
+    #        OMIT:  WAVECORR, HELCORR, X2DCORR
+    #    call stistools.calstis.calstis(inflat, wavecal, ...)
+    # 
+    #    perform pixel-to-pixel flat-fielding:
+    #        if G750M:
+    #            make unity file from inflat's SX2 (trivial flat)
+    #        elif G750L:
+    #            make unity file from inflat's CRJ --> tmp
+    #            copy CRJ to clff
+
+    # elif not do_cal:
+    #    if G750M:
+    #        make unity file from inflat's RAW --> tmp
+    #    elif G750L:
+    #        make unity file from inflat's RAW --> tmp
+    #        copy inflat's RAW --> clff
+
+    # Check that G750M inflats are either sx2 or x2d.
+
+    # Do a line-by-line cubic spline fit to the fringe flat to remove the lamp function...
+
+    # If short-slit aperture (does not start with "52X"):
+    #    Find the row with max counts in the short-slit fringe flat
+    #    Uses central 60% of columns
+    #    Does some flux-filtering
+
+    # Set rows (startrow, lastrow) to be fit according to aperture name (and possibly OPT_ELEM):
+    # '0.3X0.09', '0.2X0.06', '52X...'
+
+    # Details of spline fit determined according to OPT_ELEM + CENWAVE.
+    # G750M (various CENWAVEs), G750L (i.e. CENWAVE == 7751; various binning), other (never used?)
+    # If G750L:
+    #    Iterate spline fit
+
+    # Put spline results into tmp file and rename to output file (passes along proper header contents)
 
     raise NotImplementedError()
 
