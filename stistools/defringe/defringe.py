@@ -5,6 +5,7 @@ import numpy as np
 from astropy.io import fits
 
 from ..r_util import expandFileName
+from .prepspec import prepspec
 
 
 def defringe(inspec, inflat, outspec, do_cal=False, darkfile=None, pixelflat=None,
@@ -38,6 +39,26 @@ def defringe(inspec, inflat, outspec, do_cal=False, darkfile=None, pixelflat=Non
 
     """
     # These notes are based on the old STSDAS algorithm.
+
+    # if do_calib:
+    #    perform calibration steps with or without flat-fielding
+    #    (do this now by calling prepspec?)
+
+    # if do_defringe:
+    #    divide pipeline-calibrated inspec by the inflat and prepare format for outspec
+    #    if do_calib, identify inspec file:
+    #        if G750M:
+    #            use inspec's SX2
+    #        elif G750L:
+    #            use inspec's CRJ
+    #    elif not do_calib:
+    #        assume inspec file specified
+    #        issue warning about skipping pixel-to-pixel flat-fielding
+    #        if G750M:
+    #            issue warning about skipping S-distortion correction (?)
+    #    calculate inspec file / inflat --> outspec (while handling single or multiple exts)
+
+    # save results
 
     raise NotImplementedError()
 
