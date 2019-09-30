@@ -4,6 +4,9 @@ import os
 import numpy as np
 from astropy.io import fits
 
+from ..r_util import expandFileName
+
+
 def normspflat(inflat, outflat, do_cal=True, biasfile=None, darkfile=None, pixelflat=None, 
                wavecal=None):
     """Normalize STIS CCD fringe flat.

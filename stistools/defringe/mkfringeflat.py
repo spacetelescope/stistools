@@ -4,6 +4,9 @@ import os
 import numpy as np
 from astropy.io import fits
 
+from ..r_util import expandFileName
+
+
 def mkfringeflat(inspec, inflat, outflat, do_shift=True,
                  shift_range=[-0.5, 0.5], shift_step=0.1,
                  do_scale=True, scale_range=[0.8, 1.2], scale_step=0.04,

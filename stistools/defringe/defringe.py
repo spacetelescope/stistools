@@ -4,6 +4,9 @@ import os
 import numpy as np
 from astropy.io import fits
 
+from ..r_util import expandFileName
+
+
 def defringe(inspec, inflat, outspec, do_cal=False, darkfile=None, pixelflat=None,
              do_defringe=True):
     """Correct STIS CCD G750L or G750M spectrum for fringing.

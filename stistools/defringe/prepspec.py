@@ -4,9 +4,11 @@ import os
 import numpy as np
 from astropy.io import fits
 
+from ..r_util import expandFileName
 from ..basic2d import basic2d
 from ..x2d import x2d
 from ..ocrreject import ocrreject
+
 
 def prepspec(inspec, outroot, darkfile=None, pixelflat=None, initguess='min'):
     """Correct STIS CCD G750L or G750M spectrum for fringing.
