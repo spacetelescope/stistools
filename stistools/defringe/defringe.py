@@ -43,8 +43,8 @@ def defringe(inspec, inflat, outspec, do_cal=False, darkfile=None, pixelflat=Non
 
 
 def call_defringe():
-    ''' Command line entry point for defringe().
-    '''
+    """Command line entry point for defringe().
+    """
     import argparse
 
     parser = argparse.ArgumentParser(

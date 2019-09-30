@@ -66,8 +66,8 @@ def prepspec(inspec, outroot, darkfile=None, pixelflat=None, initguess='min'):
 
 
 def call_prepspec():
-    ''' Command line entry point for prepspec().
-    '''
+    """Command line entry point for prepspec().
+    """
     import argparse
 
     parser = argparse.ArgumentParser(

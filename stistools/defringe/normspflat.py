@@ -95,8 +95,8 @@ def normspflat(inflat, outflat, do_cal=True, biasfile=None, darkfile=None, pixel
 
 
 def call_normspflat():
-    ''' Command line entry point for normspflat().
-    '''
+    """Command line entry point for normspflat().
+    """
     import argparse
 
     parser = argparse.ArgumentParser(
