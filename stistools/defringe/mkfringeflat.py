@@ -55,12 +55,64 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True,
     """
     # These notes are based on the old STSDAS algorithm.
 
+    # check input flags:  at least one of do_shift & do_scale should be set
+    # check whether inflat has data in ext=0 or ext=[SCI,1] --> op1file
+    # if not specified, determine EXTRSIZE using APERTURE of fringe flat
+    # if EXTRLOC was specified, validate it
+    # if not specified, determine EXTRLOC:
+    #    use row with max counts in the spectrum from the middle 60% of cols
+    #    refine peak with parabola fit near max row
+    # determine actual rows from EXTRSIZE & EXTRLOC
+    # interpret opti_spreg region wrt binning
+    # if not specified, calculate default rmsregion
+
+    # if do_shift:
+    #    determine discreet shifts from shift_range & shift_step
+    #    shift inflat fractional-pixel amount via linear interpolation in x
+    #    calculate inspec / shifted_inflat
+    #    if G750M:
+    #        noao.twodspec.longslit.response with cubic spline with 1 piece
+    #    elif G750L:
+    #        noao.twodspec.longslit.response with cubic spline with 15 pieces
+    #    collapse response down to 1d using extraction region
+    #    calculate stddev/mean within rmsregion
+    #    find shift that minimizes stddev/mean:
+    #        if min shift is near edge of range (within 2 steps):
+    #            issue warning
+    #            return edge shift value
+    #        else:
+    #            return weighted shift value from 5 locations nearest min
+    #    apply the best shift --> inflat_sh
+    #    mark output file with keyword SHIFTED
+
+    # if do_scale:
+    #    parse opti_spreg for range (not necessary with list input here)
+    #    modify NEXTEND keyword (?)
+    #    determine range of scale factors to try
+    #    scale inflat (shifted?)
+    #    if G750M:
+    #        noao.twodspec.longslit.response with cubic spline with 1 piece
+    #    elif G750L:
+    #        noao.twodspec.longslit.response with cubic spline with 15 pieces
+    #    collapse response down to 1d using extraction region
+    #    calculate stddev/mean within rmsregion
+    #    find scale that minimizes stddev/mean:
+    #        if min scale is near edge of range (within 2 steps):
+    #            issue warning
+    #            return edge scale value
+    #        else:
+    #            return weighted scale value from 5 locations nearest min
+    #    apply the best scale --> theoutflat
+    #    mark output file with keyword SCALED (not actually done)
+
+    # save outflat
+
     raise NotImplementedError()
 
 
 def call_mkfringeflat():
-    ''' Command line entry point for mkfringeflat().
-    '''
+    """Command line entry point for mkfringeflat().
+    """
     import argparse
 
     parser = argparse.ArgumentParser(
