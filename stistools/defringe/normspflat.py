@@ -4,6 +4,8 @@ import os
 import numpy as np
 import warnings
 from astropy.io import fits
+from scipy.interpolate import interp1d
+from astropy.nddata import utils
 
 from ..r_util import expandFileName
 from ..calstis import calstis
@@ -15,6 +17,7 @@ PERFORM = {
     'G750M': ['WAVECORR', 'HELCORR', 'X2DCORR'],
     'G750L': [],}
 OMIT_G750L = PERFORM['G750M'][:]
+
 
 def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
                pixelflat=None, wavecal=None):
@@ -59,8 +62,8 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
     if opt_elem not in ['G750L', 'G750M']:
         raise ValueError('Unsupported opt_elem="{}"!'.format(opt_elem))
 
-    # *** TO DO:  Confirm inflat has >= 2 SCI exts to allow CR-rejection ***
-    # *** TO DO:  Handle NRPTEXP keyword ***
+    # *** TO DO:  Confirm inflat has >= 2 SCI exts to allow CR-rejection *** line 185 in cl
+    # *** TO DO:  Handle NRPTEXP keyword *** line 194 in cl
 
     # Identify wavecal:
     if opt_elem == 'G750M':
@@ -84,8 +87,8 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
     if do_cal:
         # Resolve reference files from supplied variables or header values:
         ref_types = {
-            'BIASFILE': os.path.abspath(biasfile  or expandFileName(hdr0['BIASFILE'])),
-            'DARKFILE': os.path.abspath(darkfile  or expandFileName(hdr0['DARKFILE'])),
+            'BIASFILE': os.path.abspath(biasfile or expandFileName(hdr0['BIASFILE'])),
+            'DARKFILE': os.path.abspath(darkfile or expandFileName(hdr0['DARKFILE'])),
             'PFLTFILE': os.path.abspath(pixelflat or expandFileName(hdr0['PFLTFILE'])),}
 
         # Populate/repopulate the inflat header accordingly:
@@ -155,7 +158,40 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
     # Read in the calibrated flat data:
     data = fits.getdata(outname, ext=1)
 
+    # Get shape information, CL gets this from the header, but simpler to get it from the data?
+    numrows, numcols = np.shape(data)
+
+    # Generate clff file
+    if do_cal:
+        if opt_elem == "G750M":
+            with fits.open(rootname+"_sx2.fits") as hdulist:
+                # generate a _tmp.fits file off the _sx2 file divided by itself
+                #msarith/imarith handled zeroes in division, we'll need to do this explicitly
+
+                set_zeroes = 0.0  # replacement value for zeroes in division
+
+                sci_zeroes = hdulist[0].data == 0.
+                hdulist[0][~sci_zeroes] /= hdulist[0][~sci_zeroes]
+                hdulist[0][sci_zeroes] = set_zeroes
+
+                hdulist.writeto(str(outflat.split("_")[0]) + "_tmp.fits")
+        else:
+            pass
+
+
+    # if do_cal
+    # # if G750M generate an out _tmp.fits file off the _sx2 file divided by itself (?)
+    # # else if theres a clff file delete it and make a new clff file thats the crj divided by the pfltfile
+    # else (if not do_cal)
+    # # if G750M make a _tmp file of the inflat divided by itself, this might just be a 1s array with all the hdr info
+    # # else (if not G750M) assume that pixel flat fielding has been done and make a tmp file that is the inflat divided
+    # # by itself and make a clff file
+
+
+
     # Do a line-by-line cubic spline fit to the fringe flat to remove the lamp function...
+
+    #blkavg can be done using astropy.nddata.utils.block_reduce
 
     # If short-slit aperture (does not start with "52X"):
     #    Find the row with max counts in the short-slit fringe flat
