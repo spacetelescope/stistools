@@ -161,22 +161,27 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
     # Get shape information, CL gets this from the header, but simpler to get it from the data?
     numrows, numcols = np.shape(data)
 
-    # Generate clff file
+    # Generate clff file, this may be unneccesary in python
     if do_cal:
-        if opt_elem == "G750M":
-            with fits.open(rootname+"_sx2.fits") as hdulist:
-                # generate a _tmp.fits file off the _sx2 file divided by itself
-                #msarith/imarith handled zeroes in division, we'll need to do this explicitly
+        flat_used = rootname
+    else:
+        flat_used = inflat
+        if opt_elem != "G750M":
+            print("It is assumed that pixel-to-pixel flat fielding has already been performed.")
 
-                set_zeroes = 0.0  # replacement value for zeroes in division
+    if opt_elem == "G750M":
+        with fits.open(flat_used+"_sx2.fits") as hdulist:
+            # generate a _tmp.fits file off the _sx2 file divided by itself, this is just a ones array
 
-                sci_zeroes = hdulist[0].data == 0.
-                hdulist[0][~sci_zeroes] /= hdulist[0][~sci_zeroes]
-                hdulist[0][sci_zeroes] = set_zeroes
-
-                hdulist.writeto(str(outflat.split("_")[0]) + "_tmp.fits")
-        else:
-            pass
+            hdulist[1].data = np.ones(np.shape(hdulist[1].data))
+            hdulist.writeto(str(outflat.split("_")[0]) + "_tmp.fits") # Do we really need to generate intermediate products in python?
+    else:
+        with fits.open(flat_used + "_crj.fits") as hdulist:
+            # generate a clff file, which is just a copy of the crj file?
+            hdulist.writeto(rootname + "_clff.fits")
+            # generate a _tmp.fits file off the crj file divided by itself, this is just a ones array
+            hdulist[1].data = np.ones(np.shape(hdulist[1].data))
+            hdulist.writeto(str(outflat.split("_")[0]) + "_tmp.fits")  # Do we really need to generate intermediate products in python?
 
 
     # if do_cal
