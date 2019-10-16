@@ -2,21 +2,13 @@
 
 import os
 import re
-import numpy as np
-import argparse
-import textwrap
 from astropy.io import fits
-import stistools
 
-stistools.r_util.NOT_APPLICABLE = 'n/a'  # Fix a bug in expandFileName()
-
-from stistools.r_util import expandFileName
-# from ..basic2d import basic2d
-# from ..x2d import x2d
-# from ..ocrreject import ocrreject
+from ..r_util import expandFileName
+from ..calstis import calstis
 
 
-def prepspec(inspec, outroot, darkfile=None, pixelflat=None, initguess='min'):
+def prepspec(inspec, outroot='./', darkfile=None, pixelflat=None, initguess='min'):
     """Correct STIS CCD G750L or G750M spectrum for fringing.
 
     Based on PyRAF `stsdas.hst_calib.stis.prepspec task 
@@ -27,7 +19,7 @@ def prepspec(inspec, outroot, darkfile=None, pixelflat=None, initguess='min'):
     inspec: str
         Name of input 'raw' science spectrum
     outroot: str
-        Root for output file name
+        Root for output file name.   (Default='./')
     darkfile: str or None
         Name of superdark image.  If None, use DARKFILE in main header of input spectrum.
     pixelflat: str or None
@@ -67,6 +59,7 @@ def prepspec(inspec, outroot, darkfile=None, pixelflat=None, initguess='min'):
     # If G750M:
     #    perform only {WAVECORR, HELCORR, X2DCORR} via stistools.x2d.x2d()
     #    return SX2 file
+
     science_data = os.path.abspath(expandFileName(inspec))
     sci_root = re.split('\.fits.*', os.path.basename(science_data), flags=re.IGNORECASE)[0].rsplit('_', 1)[0]
     opt_elem = fits.getval(science_data, 'OPT_ELEM').strip().upper()
@@ -74,43 +67,44 @@ def prepspec(inspec, outroot, darkfile=None, pixelflat=None, initguess='min'):
             (fits.getval(science_data, ext=0, keyword='INSTRUME').strip() != 'STIS'):
         raise Exception('prepspec:  Intended for use on STIS/CCD data!')
 
-
     # Make sure the necessary header keywords are set to PERFORM
-    fits.setval(science_data, 'BLEVCORR', value='PERFORM')  # overscan correction
-    fits.setval(science_data, 'CRCORR', value='PERFORM')  # cosmic ray rejection
-    fits.setval(science_data, 'BIASCORR', value='PERFORM')  # bias subtraction
-    fits.setval(science_data, 'DARKCORR', value='PERFORM')  # dark subtraction
-    fits.setval(science_data, 'FLATCORR', value='PERFORM')  # I believe this is the correct flat field correction keyword
+    with fits.open(science_data, 'update') as f:
+        for keyword in ['BLEVCORR', 'CRCORR', 'BIASCORR', 'DARKCORR', 'FLATCORR']:
+            if not f[0].header[keyword].upper().startswith('COMPLETE'):
+                f[0].header[keyword] = 'PERFORM'
 
-    # A few extra calibration steps if G750M data:
-    if opt_elem == 'G750M':
-        fits.setval(science_data, 'WAVECORR', value='PERFORM')  # wavelength calibration
-        fits.setcal(science_data, 'GEOCORR', value='PERFORM')  # geometric correction
-        fits.setval(science_data, 'X2DCORR', value='PERFORM')  # 2D rectification
+        # A few extra calibration steps if G750M data:
+        if opt_elem == 'G750M':
+            for keyword in ['WAVECORR', 'GEOCORR', 'X2DCORR']:
+                if not f[0].header[keyword].upper().startswith('COMPLETE'):
+                    f[0].header[keyword] = 'PERFORM'
 
-    if darkfile is not None:
-        # Use the input-specified dark file:
-        fits.setval(science_data, ext=0, keyword='DARKFILE', value=dark)
-    else:
-        darkfile = fits.getval(science_data, ext=0, keyword='DARKFILE')
-        print('Using DARKFILE from the header:\n    {}'.format(darkfile))
-    # dark = os.path.abspath(expandFileName(dark))  # Expand IRAF and UNIX $VARS
+        ref_types = {
+            'DARKFILE': os.path.abspath(darkfile  or expandFileName(f[0].header['DARKFILE'])),
+            'PFLTFILE': os.path.abspath(pixelflat or expandFileName(f[0].header['PFLTFILE'])),}
 
-    if pixelflat is not None:
-        # Use the input-specified pixel flat:
-        fits.setval(science_data, ext=0, keyword='PFLTFILE', value=pixelflat)
-    else:
-        pixelflat = fits.getval(science_data, ext=0, keyword='PFLTFILE')
-        print('Using PFLTFILE from the header:\n    {}'.format(pixelflat))
-    # pixflat = os.path.abspath(expandFileName(pixflat))  # Expand IRAF and UNIX $VARS
+        # Populate/repopulate the inflat header accordingly:
+        for i, (ref_type, ref) in enumerate(ref_types.items()):
+            if not os.access(ref, os.F_OK):
+                raise FileNotFoundError('Cannot access reference file:  {}'.format(ref))
 
-    # Calibrate!
+            # Handle reference file paths via environment variables:
+            ref_var = 'reff{:.0f}'.format(i+1)
+            os.environ[ref_var] = os.path.abspath(os.path.dirname(ref)) + os.sep
+            # Keep $oref where it's the same:
+            if os.path.normpath(os.environ[ref_var]) == os.path.normpath(os.environ['oref']):
+                ref_var = 'oref'
+                f[0].header[ref_type] = '{}${}'.format(ref_var, os.path.basename(ref))
+            else:
+                f[0].header[ref_type] = '${}/{}'.format(ref_var, os.path.basename(ref))
+
+    # Calibrate with calstis:
     trl_file = '{}_trl.txt'.format(sci_root)  # Output log goes here
     cwd = os.getcwd()
     try:
         # Run calstis from within the directory with the data to find EPC files properly:
         os.chdir(os.path.dirname(science_data))
-        res = stistools.calstis.calstis(os.path.basename(science_data), trailer=trl_file)
+        res = calstis(os.path.basename(science_data), trailer=trl_file)
     finally:
         os.chdir(cwd)
 
@@ -124,8 +118,6 @@ def prepspec(inspec, outroot, darkfile=None, pixelflat=None, initguess='min'):
     if res != 0:
         raise Exception('CalSTIS exited with code {}'.format(res))
 
-    # raise NotImplementedError()
-
 
 def call_prepspec():
     """Command line entry point for prepspec().
@@ -135,7 +127,8 @@ def call_prepspec():
     parser = argparse.ArgumentParser(
         description='Correct STIS CCD G750L or G750M spectrum for fringing')
     parser.add_argument('inspec', type=str, help='Name of input "raw" science spectrum')
-    parser.add_argument('outroot', type=str, help='Root for output file name')
+    parser.add_argument('outroot', type=str, default='./',
+        help='Root for output file name. (Default="./")')
     parser.add_argument('--darkfile', '-d', type=str, default=None,
         help='Name of superdark image. If omitted, use DARKFILE in main header of input '
              'spectrum.')
