@@ -155,12 +155,7 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
             warnings.warn('These calibration steps should be COMPLETE:\n{}'.format(
                 ', '.join(keyword_warnings)))
 
-    # Read in the calibrated flat data:
-    data = fits.getdata(outname, ext=1)
-
-    # Get shape information, CL gets this from the header, but simpler to get it from the data?
-    numrows, numcols = np.shape(data)
-
+    """
     # Generate clff file, this may be unneccesary in python
     if do_cal:
         flat_used = rootname
@@ -182,26 +177,32 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
             # generate a _tmp.fits file off the crj file divided by itself, this is just a ones array
             hdulist[1].data = np.ones(np.shape(hdulist[1].data))
             hdulist.writeto(str(outflat.split("_")[0]) + "_tmp.fits")  # Do we really need to generate intermediate products in python?
-
-
-    # if do_cal
-    # # if G750M generate an out _tmp.fits file off the _sx2 file divided by itself (?)
-    # # else if theres a clff file delete it and make a new clff file thats the crj divided by the pfltfile
-    # else (if not do_cal)
-    # # if G750M make a _tmp file of the inflat divided by itself, this might just be a 1s array with all the hdr info
-    # # else (if not G750M) assume that pixel flat fielding has been done and make a tmp file that is the inflat divided
-    # # by itself and make a clff file
-
-
+    """
+    # Read in the calibrated flat data:
+    data = fits.getdata(outname, ext=1)
+    numrows, numcols = np.shape(data)
 
     # Do a line-by-line cubic spline fit to the fringe flat to remove the lamp function...
 
-    #blkavg can be done using astropy.nddata.utils.block_reduce
+    with fits.open(outname) as hdulist:
+        #blkavg can be done using astropy.nddata.utils.block_reduce
 
-    # If short-slit aperture (does not start with "52X"):
-    #    Find the row with max counts in the short-slit fringe flat
-    #    Uses central 60% of columns
-    #    Does some flux-filtering
+        # If short-slit aperture (does not start with "52X"):
+        if hdulist[0].header['APERTURE'][0:3] != "52X":
+            flatdata = hdulist[1].data
+            #    Find the row with max counts in the short-slit fringe flat
+            #    Search between the middle 10% of rows and the middle 60% of columns
+            t_row = int(0.45 * numrows)
+            b_row = int(0.55 * numrows)
+            #     Uses central 60% of column
+            l_col = int(0.2 * numcols)
+            r_col = int(0.8 * numcols)
+
+            row_avgs = np.array([np.average(row) for row in flatdata[t_row:b_row, l_col:r_col]])
+            max_row_idx = np.where(row_avgs == np.max(abs(row_avgs)))[0][0]  # CL does an absolute value here
+            max_row = flatdata[max_row_idx]
+            #    Does some flux-filtering -- I think this is for determining the max rows
+
 
     # Set rows (startrow, lastrow) to be fit according to aperture name (and possibly OPT_ELEM):
     # '0.3X0.09', '0.2X0.06', '52X...'
