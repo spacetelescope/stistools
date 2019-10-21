@@ -4,7 +4,7 @@ import os
 import numpy as np
 import warnings
 from astropy.io import fits
-from scipy.interpolate import interp1d
+from scipy.interpolate import LSQUnivariateSpline
 from astropy.nddata import utils
 
 from ..r_util import expandFileName
@@ -185,10 +185,14 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
     # Do a line-by-line cubic spline fit to the fringe flat to remove the lamp function...
 
     with fits.open(outname) as hdulist:
-        #blkavg can be done using astropy.nddata.utils.block_reduce
+
+        aperture = hdulist[0].header['APERTURE']
+        bincols = hdulist[0].header['BINAXIS1']
+        binrows = hdulist[0].header['BINAXIS2']
+        cenwave = hdulist[0].header['CENWAVE']
 
         # If short-slit aperture (does not start with "52X"):
-        if hdulist[0].header['APERTURE'][0:3] != "52X":
+        if aperture[0:3] != "52X":
             flatdata = hdulist[1].data
             #    Find the row with max counts in the short-slit fringe flat
             #    Search between the middle 10% of rows and the middle 60% of columns
@@ -204,15 +208,54 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
             #    Does some flux-filtering -- I think this is for determining the max rows
 
 
-    # Set rows (startrow, lastrow) to be fit according to aperture name (and possibly OPT_ELEM):
-    # '0.3X0.09', '0.2X0.06', '52X...'
+        # Set rows (startrow, lastrow) to be fit according to aperture name (and possibly OPT_ELEM):
+        # '0.3X0.09', '0.2X0.06', '52X...'
 
-    # Details of spline fit determined according to OPT_ELEM + CENWAVE.
-    # G750M (various CENWAVEs), G750L (i.e. CENWAVE == 7751; various binning), other (never used?)
-    # If G750L:
-    #    Iterate spline fit
+        if aperture == "0.3x0.09":
+            startrow = max_row_idx - int(4./binrows+0.25)
+            lastrow = max_row_idx + int(3./binrows+0.25)
+        elif aperture == "0.2x0.06":
+            startrow = max_row_idx - int(3. / binrows + 0.25)
+            lastrow = max_row_idx + int(2. / binrows + 0.25)
+        elif aperture[0:3] != "52X":
+            print("ERROR: not able to understand APERTURE keyword")
+            return
+        elif aperture == "G750M":
+            startrow = int(92./binrows) + 1
+            lastrow = startrow + int(1024./binrows) - 1
+        else:
+            startrow = 1
+            lastrow = numrows
 
-    # Put spline results into tmp file and rename to output file (passes along proper header contents)
+        # Details of spline fit determined according to OPT_ELEM + CENWAVE.
+        # G750M (various CENWAVEs), G750L (i.e. CENWAVE == 7751; various binning), other (never used?)
+        if opt_elem == "G750M":
+            if cenwave < 9800:
+                pass
+            elif cenwave == 9851:
+                pass
+            else:
+                pass
+
+        # If G750L:
+        #    Iterate spline fit
+        if bincols == 1:
+            startcol = 591
+            endcol = 640
+            highorder = 60
+            loworder = 12
+        elif bincols == 2:
+            startcol = 295
+            endcol = 320
+            highorder = 50
+            loworder = 12
+        elif bincols == 4:
+            startcol = 145
+            endcol = 160
+            highorder = 50
+            loworder = 12
+
+        # Put spline results into tmp file and rename to output file (passes along proper header contents)
 
     raise NotImplementedError()
 
