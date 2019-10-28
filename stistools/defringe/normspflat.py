@@ -230,34 +230,71 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
         # Details of spline fit determined according to OPT_ELEM + CENWAVE.
         # G750M (various CENWAVEs), G750L (i.e. CENWAVE == 7751; various binning), other (never used?)
         if opt_elem == "G750M":
-            if cenwave < 9800:
+            fitted = []  # This probably needs to be padded with ones to match the input shape
+            if cenwave < 9800:  # 1 piece, 2 knot
+                for row in data:
+                    row_data = row[86:1109]
+                    xrange = np.arange(0, len(row_data), 1.)
+                    knots = np.linspace(0, len(row_data), 4)[1:-1]
+                    spl = LSQUnivariateSpline(xrange, row_data, knots, k=3)
+                    row_fit = spl(xrange)
+                    fitted.append(row_fit)
                 pass
-            elif cenwave == 9851:
-                pass
-            else:
-                pass
+            elif cenwave == 9851:  # 2 piece, 3 knot
+                for row in data:
+                    row_data = row[86:1109]
+                    xrange = np.arange(0, len(row_data), 1.)
+                    knots = np.linspace(0, len(row_data), 5)[1:-1]
+                    spl = LSQUnivariateSpline(xrange, row_data, knots, k=1)
+                    row_fit = spl(xrange)
+                    fitted.append(row_fit)
+            else:  # 2 piece, 3 knot
+                for row in data:
+                    row_data = row[86:1109]
+                    xrange = np.arange(0, len(row_data), 1.)
+                    knots = np.linspace(0, len(row_data), 5)[1:-1]
+                    spl = LSQUnivariateSpline(xrange, row_data, knots, k=3)
+                    row_fit = spl(xrange)
+                    fitted.append(row_fit)
 
-        # If G750L:
-        #    Iterate spline fit
-        if bincols == 1:
-            startcol = 591
-            endcol = 640
-            highorder = 60
-            loworder = 12
-        elif bincols == 2:
-            startcol = 295
-            endcol = 320
-            highorder = 50
-            loworder = 12
-        elif bincols == 4:
-            startcol = 145
-            endcol = 160
-            highorder = 50
-            loworder = 12
+            # Write to the output file
+            hdulist[1].data = np.array(fitted)
+            hdulist.writeto(str(outflat.split(".")[0]) + ".fits")
+            return
 
-        # Put spline results into tmp file and rename to output file (passes along proper header contents)
+        elif cenwave == 7751:
 
-    raise NotImplementedError()
+            if bincols == 1:
+                startcol = 591
+                endcol = 640
+                highorder = 60
+                loworder = 12
+            elif bincols == 2:
+                startcol = 295
+                endcol = 320
+                highorder = 50
+                loworder = 12
+            elif bincols == 4:
+                startcol = 145
+                endcol = 160
+                highorder = 50
+                loworder = 12
+            # Put spline results into tmp file and rename to output file (passes along proper header contents)
+            return
+
+        else:
+            fitted = []
+            for row in data:
+                xrange = np.arange(0, len(row), 1.)
+                knots = np.linspace(0, len(row), 22)[1:-1]  # 20 spline pieces
+                spl = LSQUnivariateSpline(xrange, row, knots, k=3)
+                row_fit = spl(xrange)
+                fitted.append(row_fit)
+            # Write to the output file
+            hdulist[1].data = np.array(fitted)
+            hdulist.writeto(str(outflat.split(".")[0]) + ".fits")
+            return
+
 
 
 def call_normspflat():
