@@ -233,36 +233,48 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
             fitted = []  # This probably needs to be padded with ones to match the input shape
             if cenwave < 9800:  # 1 piece, 2 knot
                 for row in data:
-                    row_data = row[86:1109]
-                    xrange = np.arange(0, len(row_data), 1.)
-                    knots = np.linspace(0, len(row_data), 4)[1:-1]
-                    spl = LSQUnivariateSpline(xrange, row_data, knots, k=3)
+                    l_row_data = row[0:86]
+                    r_row_data = row[1109:]
+                    fit_data = row[86:1109]
+                    xrange = np.arange(0, len(fit_data), 1.)
+                    knots = np.linspace(0, len(fit_data), 4)[1:-1]
+                    spl = LSQUnivariateSpline(xrange, fit_data, knots, k=3)
                     row_fit = spl(xrange)
-                    fitted.append(row_fit)
+                    fitted_row = np.array(
+                        list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
+                    fitted.append(fitted_row)
                 pass
             elif cenwave == 9851:  # 2 piece, 3 knot
                 for row in data:
-                    row_data = row[86:1109]
-                    xrange = np.arange(0, len(row_data), 1.)
-                    knots = np.linspace(0, len(row_data), 5)[1:-1]
-                    spl = LSQUnivariateSpline(xrange, row_data, knots, k=1)
+                    l_row_data = row[0:86]
+                    r_row_data = row[1109:]
+                    fit_data = row[86:1109]
+                    xrange = np.arange(0, len(fit_data), 1.)
+                    knots = np.linspace(0, len(fit_data), 5)[1:-1]
+                    spl = LSQUnivariateSpline(xrange, fit_data, knots, k=1)
                     row_fit = spl(xrange)
-                    fitted.append(row_fit)
+                    fitted_row = np.array(
+                        list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
+                    fitted.append(fitted_row)
             else:  # 2 piece, 3 knot
                 for row in data:
-                    row_data = row[86:1109]
-                    xrange = np.arange(0, len(row_data), 1.)
-                    knots = np.linspace(0, len(row_data), 5)[1:-1]
-                    spl = LSQUnivariateSpline(xrange, row_data, knots, k=3)
+                    l_row_data = row[0:86]
+                    r_row_data = row[1109:]
+                    fit_data = row[86:1109]
+                    xrange = np.arange(0, len(fit_data), 1.)
+                    knots = np.linspace(0, len(fit_data), 5)[1:-1]
+                    spl = LSQUnivariateSpline(xrange, fit_data, knots, k=3)
                     row_fit = spl(xrange)
-                    fitted.append(row_fit)
+                    fitted_row = np.array(
+                        list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
+                    fitted.append(fitted_row)
 
             # Write to the output file
             hdulist[1].data = np.array(fitted)
             hdulist.writeto(str(outflat.split(".")[0]) + ".fits")
             return
 
-        elif cenwave == 7751:
+        elif cenwave == 7751:  # G750L
 
             if bincols == 1:
                 startcol = 591
@@ -279,8 +291,28 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
                 endcol = 160
                 highorder = 50
                 loworder = 12
+
+            # Fit once with 2 iterations
+            # Divide this fit off the science data and store it in resp_inflat_a.fits
+            # Fit again with 2 iterations
+            # Divide this fit off the science data and store it in resp_inflat_b.fits
+
+            # make an absolute difference image of the two (a and b) flats: diff_resp_a_b.fits
+            # divide resp_b off resp_a and store this result in resp_inflat_abyb.fits (?)
+
+            # Iterate through the rows from startrow to lastrow
+            # Find the min pixel location between startcol and endcol
+            # this step is a bit difficult, it looks like they get the value of the min pixel in the abyb file and use it as a scale factor
+            # then it replaces anything left of the min pixel with the a flat and anything right of the min pixel with the b flat times the scale factor
+            # the scale factor is presumably so the two fits meet at the same point
+            # it replaces it with the b flat times the scale factor, otherwise it just uses im1
+            # this is then written out to the output file
+
+
+
             # Put spline results into tmp file and rename to output file (passes along proper header contents)
-            return
+            raise NotImplementedError
+
 
         else:
             fitted = []
