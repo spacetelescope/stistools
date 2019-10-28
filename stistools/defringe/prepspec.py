@@ -1,14 +1,18 @@
 #! /usr/bin/env python
 
 import os
+import shutil
+import stat
 import re
 from astropy.io import fits
+from tempfile import mkdtemp
+import warnings
 
 from ..r_util import expandFileName
 from ..calstis import calstis
 
 
-def prepspec(inspec, outroot='./', darkfile=None, pixelflat=None, initguess='min'):
+def prepspec(inspec, outroot='./', darkfile=None, pixelflat=None, initguess=None):
     """Correct STIS CCD G750L or G750M spectrum for fringing.
 
     Based on PyRAF `stsdas.hst_calib.stis.prepspec task 
@@ -19,14 +23,15 @@ def prepspec(inspec, outroot='./', darkfile=None, pixelflat=None, initguess='min
     inspec: str
         Name of input 'raw' science spectrum
     outroot: str
-        Root for output file name.   (Default='./')
+        Root for output file name.  (Default='./')
     darkfile: str or None
         Name of superdark image.  If None, use DARKFILE in main header of input spectrum.
     pixelflat: str or None
         Name of pixel-to-pixel flat.  If None, use PIXELFLAT in main header of input
         spectrum.
-    initguess: str {'min', 'med'}
-        Method for initial value estimate for ocrreject.  (Default='min')
+    initguess: str or None
+        Method for initial value estimate for ocrreject: {None, 'minimum', 'median'}.
+        (Default=None; Use the value in the CRREJTAB.)
 
     Returns
     -------
@@ -61,27 +66,61 @@ def prepspec(inspec, outroot='./', darkfile=None, pixelflat=None, initguess='min
     #    return SX2 file
 
     science_data = os.path.abspath(expandFileName(inspec))
-    sci_root = re.split('\.fits.*', os.path.basename(science_data), flags=re.IGNORECASE)[0].rsplit('_', 1)[0]
+    sci_root = re.split('\.fits.*', os.path.basename(science_data),
+        flags=re.IGNORECASE)[0].rsplit('_', 1)[0]
     opt_elem = fits.getval(science_data, 'OPT_ELEM').strip().upper()
     if (fits.getval(science_data, ext=0, keyword='DETECTOR').strip().upper() != 'CCD') or \
-            (fits.getval(science_data, ext=0, keyword='INSTRUME').strip() != 'STIS'):
-        raise Exception('prepspec:  Intended for use on STIS/CCD data!')
+            (fits.getval(science_data, ext=0, keyword='INSTRUME').strip() != 'STIS') or \
+            (opt_elem not in ['G750L', 'G750M']):
+        raise ValueError('prepspec:  Intended for use on STIS/CCD G750L & G750M data!')
+    if (initguess is not None) and (initguess.lower() not in ['minimum', 'median']):
+        raise ValueError('initguess must be in {None, "minimum", "median"}!')
+    if os.path.isdir(outroot):
+        outroot = os.path.normpath(outroot) + os.sep
+    if not os.access(os.path.dirname(outroot), os.W_OK):
+        raise IOError('Cannot write to:  {}'.format(os.path.dirname(outroot)))
+    #if (not os.path.isdir(outroot)) and os.access(outroot, os.F_OK):
+    #    raise FileExistsError('Previous outroot already exists:  {}'.format(outroot))
 
-    # Make sure the necessary header keywords are set to PERFORM
+    # Make sure the necessary header keywords are set to PERFORM:
     with fits.open(science_data, 'update') as f:
-        for keyword in ['BLEVCORR', 'CRCORR', 'BIASCORR', 'DARKCORR', 'FLATCORR']:
+        f[0].header['STATFLAG'] = True
+        for keyword in ['DQICORR', 'BLEVCORR', 'BIASCORR', 'DARKCORR', 'FLATCORR', 'CRCORR']:
             if not f[0].header[keyword].upper().startswith('COMPLETE'):
                 f[0].header[keyword] = 'PERFORM'
 
         # A few extra calibration steps if G750M data:
         if opt_elem == 'G750M':
-            for keyword in ['WAVECORR', 'GEOCORR', 'X2DCORR']:
+            for keyword in ['WAVECORR', 'HELCORR', 'X2DCORR']:
                 if not f[0].header[keyword].upper().startswith('COMPLETE'):
                     f[0].header[keyword] = 'PERFORM'
 
         ref_types = {
             'DARKFILE': os.path.abspath(darkfile  or expandFileName(f[0].header['DARKFILE'])),
             'PFLTFILE': os.path.abspath(pixelflat or expandFileName(f[0].header['PFLTFILE'])),}
+
+        # Handle non-default CR-rejection initial guesses:
+        if initguess:
+            # Copy the old CRREJTAB to a temporary location:
+            crrejtab_tmp_dir = mkdtemp(prefix='crrejtab_')
+            orig_crrejtab_name = expandFileName(f[0].header['CRREJTAB'])
+            try:
+                shutil.copy(orig_crrejtab_name, crrejtab_tmp_dir)
+            except FileNotFoundError:
+                warnings.warn('\nUsing CRREJTAB in $oref instead of ext=0 CRREJTAB="{}"'.format(f[0].header['CRREJTAB']))
+                orig_crrejtab_name = os.path.join(os.environ['oref'], os.path.basename(orig_crrejtab_name))
+                shutil.copy(orig_crrejtab_name, crrejtab_tmp_dir)
+            new_crrejtab_name = os.path.join(crrejtab_tmp_dir, os.path.basename(orig_crrejtab_name))
+            os.chmod(new_crrejtab_name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
+            # Update header of science_data file:
+            ref_types['CRREJTAB'] = os.path.abspath(new_crrejtab_name)
+
+            # Modify the temporary CRREJTAB:
+            with fits.open(new_crrejtab_name, 'update') as crrejtab:
+                crrejtab[1].data['INITGUES'] = initguess.lower()
+        else:
+            crrejtab_tmp_dir = None
 
         # Populate/repopulate the inflat header accordingly:
         for i, (ref_type, ref) in enumerate(ref_types.items()):
@@ -104,9 +143,11 @@ def prepspec(inspec, outroot='./', darkfile=None, pixelflat=None, initguess='min
     try:
         # Run calstis from within the directory with the data to find EPC files properly:
         os.chdir(os.path.dirname(science_data))
-        res = calstis(os.path.basename(science_data), trailer=trl_file)
+        res = calstis(os.path.basename(science_data), outroot=outroot, trailer=trl_file)
     finally:
         os.chdir(cwd)
+        if crrejtab_tmp_dir:
+            shutil.rmtree(crrejtab_tmp_dir)  # Temporary CRREJTAB
 
     # Print out calstis log:
     trl_file = os.path.join(os.path.dirname(science_data), trl_file)
@@ -135,10 +176,13 @@ def call_prepspec():
     parser.add_argument('--pixelflat', '-f', type=str, default=None,
         help='Name of pixel-to-pixel flat.  If omitted, use PIXELFLAT in main header of '
              'input spectrum.')
-    parser.add_argument('--initguess', '-i', type=str, default='min', choices=['min', 'med'],
-        help='Method for initial value estimate for ocrreject (Default="min")')
+    parser.add_argument('--initguess', '-i', type=str, default=None,
+        choices=['None', 'minimum', 'median'],
+        help='Method for initial value estimate for ocrreject (Default=None; use value from CRREJTAB)')
 
     args = vars(parser.parse_args())
+    if isinstance(args['initguess'], str) and args['initguess'].lower() == 'none':
+        args['initguess'] = None
     prepspec(**args)
 
 
