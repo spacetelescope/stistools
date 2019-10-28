@@ -3,6 +3,7 @@ import os.path
 import copy
 
 
+NOT_APPLICABLE = 'n/a'
 
 def expandFileName(filename):
     """Expand environment variable in a file name.

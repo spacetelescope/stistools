@@ -4,8 +4,8 @@
 defringe
 **************************
 
-.. currentmodule:: defringe
+.. currentmodule:: stistools.defringe
 
-.. automodule:: defringe
-   :members:
+.. automodule:: stistools.defringe
+   :members: prepspec, normspflat, mkfringeflat, defringe
    :undoc-members:
