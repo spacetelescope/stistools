@@ -9,4 +9,3 @@ defringe
 .. automodule:: stistools.defringe
    :members: prepspec, normspflat, mkfringeflat, defringe
    :undoc-members:
-
