@@ -292,27 +292,57 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
                 highorder = 50
                 loworder = 12
 
-            # Fit once with 2 iterations
-            # Divide this fit off the science data and store it in resp_inflat_a.fits
-            # Fit again with 2 iterations
-            # Divide this fit off the science data and store it in resp_inflat_b.fits
+            # Fit both the high order and low order splines
+            fitted_highorder = []
+            fitted_loworder = []
+            for row in data:
+                fit_data = row[:]
+                xrange = np.arange(0, len(fit_data), 1.)
 
-            # make an absolute difference image of the two (a and b) flats: diff_resp_a_b.fits
-            # divide resp_b off resp_a and store this result in resp_inflat_abyb.fits (?)
+                # High Order Fit
+                knots = np.linspace(0, len(fit_data), highorder)[1:-1]
+                spl = LSQUnivariateSpline(xrange, fit_data, knots, k=1)
+                fitted_row = spl(xrange)
+                fitted_highorder.append(fitted_row)
+
+                # Low Order Fit
+                knots = np.linspace(0, len(fit_data), loworder)[1:-1]
+                spl = LSQUnivariateSpline(xrange, fit_data, knots, k=1)
+                fitted_row = spl(xrange)
+                fitted_loworder.append(fitted_row)
+
+            fitted_highorder = np.array(fitted_highorder)
+            fitted_loworder = np.array(fitted_loworder)
+            # Divide both spline fits off the science data
+            resp_highorder = data/fitted_highorder
+            resp_loworder = data/fitted_loworder
+
+            # Get absolute difference and ratio of the two response arrays
+            resp_absdiff = abs(resp_highorder - resp_loworder)
+            resp_ratio = resp_highorder/resp_loworder
 
             # Iterate through the rows from startrow to lastrow
-            # Find the min pixel location between startcol and endcol
-            # this step is a bit difficult, it looks like they get the value of the min pixel in the abyb file and use it as a scale factor
-            # then it replaces anything left of the min pixel with the a flat and anything right of the min pixel with the b flat times the scale factor
-            # the scale factor is presumably so the two fits meet at the same point
-            # it replaces it with the b flat times the scale factor, otherwise it just uses im1
-            # this is then written out to the output file
+            fitted = []
+            for row_idx in np.arange(startrow, lastrow, 1):
+                # Find the min pixel location between startcol and endcol
+                min_idx = np.argmin(resp_absdiff[row_idx][startcol:endcol]) + startcol  # the idx in the full array
 
+                # Use the ratio between the two fits at the minimum point as the scale factor between the two fits
+                scale_factor = resp_ratio[row_idx][min_idx]
 
+                # Generate the flat using the high order flat for any column left of the min pixel and the low order
+                # flat times the scale factor for anything right of the min pixel
+                highorder_segment = fitted_highorder[row_idx][:min_idx+1]
+                loworder_segment = fitted_loworder[row_idx][min_idx+1:] * scale_factor
 
-            # Put spline results into tmp file and rename to output file (passes along proper header contents)
-            raise NotImplementedError
+                stitched_row = np.array(list(highorder_segment) + list(loworder_segment))
+                fitted.append(stitched_row)
+            fitted = np.array(fitted)
 
+            # Write to the output file
+            hdulist[1].data = np.array(fitted)
+            hdulist.writeto(str(outflat.split(".")[0]) + ".fits")
+            return
 
         else:
             fitted = []
@@ -322,6 +352,7 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
                 spl = LSQUnivariateSpline(xrange, row, knots, k=3)
                 row_fit = spl(xrange)
                 fitted.append(row_fit)
+
             # Write to the output file
             hdulist[1].data = np.array(fitted)
             hdulist.writeto(str(outflat.split(".")[0]) + ".fits")
