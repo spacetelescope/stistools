@@ -85,18 +85,25 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
     # Since we're going to divide by fringe_data, make sure there aren't any
     # pixels where it's zero.  There shouldn't be any negative values, either.
     fringe_mask = (fringe_data <= 0.)
+    n_not_positive = fringe_mask.sum()
+    if n_not_positive > 0 and verbose:
+        print('{} pixels in the fringe flat were less than or equal to 0'
+              .format(n_not_positive))
     if fringe_dq is not None:
         temp = np.bitwise_and(fringe_dq, sdqflags)
         fringe_dq_mask = (temp > 0)
         del temp
-        fringe_mask = np.logical_or(fringe_mask, fringe_dq_mask)
+        n_fringe_dq = fringe_dq_mask.sum()
+        if n_fringe_dq > 0:
+            fringe_mask = np.logical_or(fringe_mask, fringe_dq_mask)
+            if verbose:
+                print('{} pixels were flagged as bad in the fringe flat DQ array'
+                      .format(n_fringe_dq))
     # For pixels that are bad in the fringe flat, we will not make any change
     # to the science data.
+    # Note:  Save fringe_mask and n_fringe_mask for later.
     n_fringe_mask = fringe_mask.sum()
     if n_fringe_mask > 0:
-        if verbose:
-            print('{} pixels in the fringe flat were less than or equal to 0'
-                  .format(n_fringe_mask))
         fringe_data[fringe_mask] = 1.
 
     # Correct the data in the science file:
@@ -140,7 +147,8 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
             if science_dq is None:
                 science_dq = np.zeros(science_data.shape, dtype=np.int16)
             if n_fringe_mask > 0:
-                # Flag pixels that had fringe flat data <= 0.
+                # Flag pixels that had fringe flat data <= 0 or were flagged
+                # as bad in the fringe flat DQ array.
                 science_dq[fringe_mask] |= 512          # bad pixel in ref file
             if fringe_dq is not None:
                 # Combine fringe flat DQ with science DQ.
@@ -163,7 +171,7 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
             print('Removing and recreating {}'.format(drj_filename))
             os.remove(drj_filename)
         science_hdu.writeto(drj_filename)
-        print('Defringed science saved to {}'.format(drj_filename))
+        print('Defringed science data saved to {}'.format(drj_filename))
 
     return drj_filename
 
