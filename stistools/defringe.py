@@ -9,7 +9,6 @@ import re
 
 import numpy as np
 
-stistools.r_util.NOT_APPLICABLE = 'n/a'  # Fix a bug in expandFileName()
 from stistools.r_util import expandFileName
 
 #   4  bad detector pixel or beyond aperture
@@ -18,35 +17,41 @@ from stistools.r_util import expandFileName
 sdqflags = 4 + 8 + 512
 
 
-def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
+def defringe(science_file, fringe_flat, output=None,
+             overwrite=True, verbose=True):
     # dark_file=None, pixel_flat=None
     """Defringe by dividing the science spectrum by the fringe flat
 
     Parameters
     ----------
     science_file : str
-        The name of the input science file.
+        The name (including directory) of the input science file.
 
     fringe_flat : str
-        The name of the input fringe flat file.  This is the output from
-        `mkfringeflat`.
+        The name (including directory) of the input fringe flat file.  This
+        is the output from `mkfringeflat`.
+
+    output : str or None
+        If `output` is None, the name of the output file will be constructed
+        by appending "_defringe" to the root of the input file name.
+        If `output` is not None, this is the name (not including directory)
+        of the output file.  The output will be written to the same directory
+        as the input science file.
 
     overwrite : bool
-        The name of the output file will be constructed from the name of the
-        input science file (`science_file`) by replacing the suffix with
-        'drj'.  If the input name has suffix 'drj', a RuntimeError will be
-        raised, rather than modifying the input in-place.
         If there is an existing file with the same name as the output name,
         the existing file will be overwritten if `overwrite` is True (the
         default is True).
+        If the input and output names are the same, a RuntimeError will be
+        raised, rather than modifying the input in-place.
 
     verbose : bool
         If True (the default), print more info.
 
     Returns
     -------
-    drj_filename : str
-        The name of the output file.
+    output_filename : str
+        The name of the output file, including directory.
     """
 
     if science_file.endswith("_raw.fits"):
@@ -56,9 +61,13 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
     # Define new filename:
     science_file = os.path.normpath(expandFileName(science_file))  # Expand IRAF and UNIX $VARS
     sci_dir, sci_filename = os.path.split(science_file)
-    sci_root = re.split('\.fits.*', sci_filename, flags=re.IGNORECASE)[0].rsplit('_',1)[0]
-    drj_filename = os.path.join(sci_dir, sci_root + '_drj.fits')
-    if science_file == drj_filename:
+    if output is None:
+        sci_root = re.split(r'\.fits.*', sci_filename,
+                            flags=re.IGNORECASE)[0].rsplit('_',1)[0]
+        output_filename = os.path.join(sci_dir, sci_root + '_defringe.fits')
+    else:
+        output_filename = os.path.join(sci_dir, output)
+    if science_file == output_filename:
         raise RuntimeError('The input and output file names cannot be the same.')
 
     # Get the data from the fringe flat file:
@@ -85,18 +94,25 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
     # Since we're going to divide by fringe_data, make sure there aren't any
     # pixels where it's zero.  There shouldn't be any negative values, either.
     fringe_mask = (fringe_data <= 0.)
+    n_not_positive = fringe_mask.sum()
+    if n_not_positive > 0 and verbose:
+        print('{} pixels in the fringe flat were less than or equal to 0'
+              .format(n_not_positive))
     if fringe_dq is not None:
         temp = np.bitwise_and(fringe_dq, sdqflags)
         fringe_dq_mask = (temp > 0)
         del temp
-        fringe_mask = np.logical_or(fringe_mask, fringe_dq_mask)
+        n_fringe_dq = fringe_dq_mask.sum()
+        if n_fringe_dq > 0:
+            fringe_mask = np.logical_or(fringe_mask, fringe_dq_mask)
+            if verbose:
+                print('{} pixels were flagged as bad in the fringe flat DQ array'
+                      .format(n_fringe_dq))
     # For pixels that are bad in the fringe flat, we will not make any change
     # to the science data.
+    # Note:  Save fringe_mask and n_fringe_mask for later.
     n_fringe_mask = fringe_mask.sum()
     if n_fringe_mask > 0:
-        if verbose:
-            print('{} pixels in the fringe flat were less than or equal to 0'
-                  .format(n_fringe_mask))
         fringe_data[fringe_mask] = 1.
 
     # Correct the data in the science file:
@@ -140,7 +156,8 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
             if science_dq is None:
                 science_dq = np.zeros(science_data.shape, dtype=np.int16)
             if n_fringe_mask > 0:
-                # Flag pixels that had fringe flat data <= 0.
+                # Flag pixels that had fringe flat data <= 0 or were flagged
+                # as bad in the fringe flat DQ array.
                 science_dq[fringe_mask] |= 512          # bad pixel in ref file
             if fringe_dq is not None:
                 # Combine fringe flat DQ with science DQ.
@@ -159,13 +176,13 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
 
         # Write to a new FITS file
         # Remove old version, if it exists:
-        if os.path.exists(drj_filename) and overwrite:
-            print('Removing and recreating {}'.format(drj_filename))
-            os.remove(drj_filename)
-        science_hdu.writeto(drj_filename)
-        print('Defringed science saved to {}'.format(drj_filename))
+        if os.path.exists(output_filename) and overwrite:
+            print('Removing and recreating {}'.format(output_filename))
+            os.remove(output_filename)
+        science_hdu.writeto(output_filename)
+        print('Defringed science data saved to {}'.format(output_filename))
 
-    return drj_filename
+    return output_filename
 
 
 def parse_args():
@@ -183,7 +200,7 @@ def parse_args():
         Output
         ----------------------------------------------------------------
         Outputs a file that has the same rootname as the input science file,
-        but with '_drj.fits' at the end. This is the final defringed data.
+        but with '_defringe.fits' at the end. This is the final defringed data.
         '''), description='Script to calibrate science data in preparation for defringing')
 
     parser.add_argument('science',
