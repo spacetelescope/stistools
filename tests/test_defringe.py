@@ -210,10 +210,10 @@ def test_defringe():
         print("FAILED:  out_sci[('dq', 4)].data is not what was expected")
     results.append(len(diff.nonzero()[0]) == 0)
 
-    assert np.alltrue(results)
-
     in_sci.close()
     in_flat.close()
     in_sci.close()
 
     clean_up()                          # remove temporary files and directory
+
+    assert np.alltrue(results)
