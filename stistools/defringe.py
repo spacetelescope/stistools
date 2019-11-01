@@ -9,7 +9,6 @@ import re
 
 import numpy as np
 
-stistools.r_util.NOT_APPLICABLE = 'n/a'  # Fix a bug in expandFileName()
 from stistools.r_util import expandFileName
 
 #   4  bad detector pixel or beyond aperture
