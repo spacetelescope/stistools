@@ -62,7 +62,7 @@ def defringe(science_file, fringe_flat, output=None,
     science_file = os.path.normpath(expandFileName(science_file))  # Expand IRAF and UNIX $VARS
     sci_dir, sci_filename = os.path.split(science_file)
     if output is None:
-        sci_root = re.split('\.fits.*', sci_filename,
+        sci_root = re.split(r'\.fits.*', sci_filename,
                             flags=re.IGNORECASE)[0].rsplit('_',1)[0]
         output_filename = os.path.join(sci_dir, sci_root + '_defringe.fits')
     else:
