@@ -231,6 +231,7 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
         # G750M (various CENWAVEs), G750L (i.e. CENWAVE == 7751; various binning), other (never used?)
         if opt_elem == "G750M":
             fitted = []  # This probably needs to be padded with ones to match the input shape
+
             if cenwave < 9800:
                 for row in data:
                     l_row_data = row[0:86]
@@ -244,6 +245,7 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
                         list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
                     fitted.append(fitted_row)
                 pass
+
             elif cenwave == 9851:
                 for row in data:
                     l_row_data = row[0:86]
