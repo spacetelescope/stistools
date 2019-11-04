@@ -155,29 +155,6 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
             warnings.warn('These calibration steps should be COMPLETE:\n{}'.format(
                 ', '.join(keyword_warnings)))
 
-    """
-    # Generate clff file, this may be unneccesary in python
-    if do_cal:
-        flat_used = rootname
-    else:
-        flat_used = inflat
-        if opt_elem != "G750M":
-            print("It is assumed that pixel-to-pixel flat fielding has already been performed.")
-
-    if opt_elem == "G750M":
-        with fits.open(flat_used+"_sx2.fits") as hdulist:
-            # generate a _tmp.fits file off the _sx2 file divided by itself, this is just a ones array
-
-            hdulist[1].data = np.ones(np.shape(hdulist[1].data))
-            hdulist.writeto(str(outflat.split("_")[0]) + "_tmp.fits") # Do we really need to generate intermediate products in python?
-    else:
-        with fits.open(flat_used + "_crj.fits") as hdulist:
-            # generate a clff file, which is just a copy of the crj file?
-            hdulist.writeto(rootname + "_clff.fits")
-            # generate a _tmp.fits file off the crj file divided by itself, this is just a ones array
-            hdulist[1].data = np.ones(np.shape(hdulist[1].data))
-            hdulist.writeto(str(outflat.split("_")[0]) + "_tmp.fits")  # Do we really need to generate intermediate products in python?
-    """
     # Read in the calibrated flat data:
     data = fits.getdata(outname, ext=1)
     numrows, numcols = np.shape(data)
@@ -203,7 +180,7 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
             r_col = int(0.8 * numcols)
 
             row_avgs = np.array([np.average(row) for row in flatdata[t_row:b_row, l_col:r_col]])
-            max_row_idx = np.where(row_avgs == np.max(abs(row_avgs)))[0][0]  # CL does an absolute value here
+            max_row_idx = np.where(row_avgs == np.max(abs(row_avgs)))[0][0] + t_row  # CL does an absolute value here
             max_row = flatdata[max_row_idx]
             #    Does some flux-filtering -- I think this is for determining the max rows
 
@@ -211,12 +188,12 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
         # Set rows (startrow, lastrow) to be fit according to aperture name (and possibly OPT_ELEM):
         # '0.3X0.09', '0.2X0.06', '52X...'
 
-        if aperture == "0.3x0.09":
+        if aperture == "0.3X0.09":
             startrow = max_row_idx - int(4./binrows+0.25)
-            lastrow = max_row_idx + int(3./binrows+0.25)
-        elif aperture == "0.2x0.06":
+            lastrow = max_row_idx + int(4./binrows+0.25)
+        elif aperture == "0.2X0.06":
             startrow = max_row_idx - int(3. / binrows + 0.25)
-            lastrow = max_row_idx + int(2. / binrows + 0.25)
+            lastrow = max_row_idx + int(3. / binrows + 0.25)
         elif aperture[0:3] != "52X":
             print("ERROR: not able to understand APERTURE keyword")
             return
@@ -226,6 +203,7 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
         else:
             startrow = 1
             lastrow = numrows
+        print(startrow, lastrow, max_row_idx)
 
         # Details of spline fit determined according to OPT_ELEM + CENWAVE.
         # G750M (various CENWAVEs), G750L (i.e. CENWAVE == 7751; various binning), other (never used?)
@@ -309,14 +287,16 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
 
                 # Low Order Fit
                 spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
-                            order=highorder, low_reject=5.0, high_reject=5.0, niterate=2)
+                            order=loworder, low_reject=5.0, high_reject=5.0, niterate=2)
                 fitted_row = spl(xrange)
                 fitted_loworder.append(fitted_row)
 
             fitted_highorder = np.array(fitted_highorder)
+            print(fitted_highorder[512])
             fitted_loworder = np.array(fitted_loworder)
             # Divide both spline fits off the science data
             resp_highorder = data/fitted_highorder
+            print(resp_highorder[512])
             resp_loworder = data/fitted_loworder
 
             # Get absolute difference and ratio of the two response arrays
@@ -325,20 +305,27 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
 
             # Iterate through the rows from startrow to lastrow
             fitted = []
+            for row_idx in np.arange(0, startrow, 1):
+                fitted.append(list(np.ones(numcols)))
+
             for row_idx in np.arange(startrow, lastrow, 1):
                 # Find the min pixel location between startcol and endcol
                 min_idx = np.argmin(resp_absdiff[row_idx][startcol:endcol]) + startcol  # the idx in the full array
 
                 # Use the ratio between the two fits at the minimum point as the scale factor between the two fits
                 scale_factor = resp_ratio[row_idx][min_idx]
-
+                print(scale_factor)
                 # Generate the flat using the high order flat for any column left of the min pixel and the low order
                 # flat times the scale factor for anything right of the min pixel
-                highorder_segment = fitted_highorder[row_idx][:min_idx+1]
-                loworder_segment = fitted_loworder[row_idx][min_idx+1:] * scale_factor
+                highorder_segment = resp_highorder[row_idx][:min_idx+1]
+                loworder_segment = resp_loworder[row_idx][min_idx+1:] * scale_factor
 
                 stitched_row = np.array(list(highorder_segment) + list(loworder_segment))
                 fitted.append(stitched_row)
+
+            for row_idx in np.arange(lastrow, numcols, 1):
+                fitted.append(list(np.ones(numrows)))
+
             fitted = np.array(fitted)
 
             # Write to the output file
