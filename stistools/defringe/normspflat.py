@@ -4,11 +4,11 @@ import os
 import numpy as np
 import warnings
 from astropy.io import fits
-from scipy.interpolate import LSQUnivariateSpline
 from astropy.nddata import utils
 
 from ..r_util import expandFileName
 from ..calstis import calstis
+from ..fit1d import fit1d
 
 
 # Keyword choices for calstis reduction:
@@ -231,39 +231,39 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
         # G750M (various CENWAVEs), G750L (i.e. CENWAVE == 7751; various binning), other (never used?)
         if opt_elem == "G750M":
             fitted = []  # This probably needs to be padded with ones to match the input shape
-            if cenwave < 9800:  # 1 piece, 2 knot
+            if cenwave < 9800:
                 for row in data:
                     l_row_data = row[0:86]
                     r_row_data = row[1109:]
                     fit_data = row[86:1109]
                     xrange = np.arange(0, len(fit_data), 1.)
-                    knots = np.linspace(0, len(fit_data), 4)[1:-1]
-                    spl = LSQUnivariateSpline(xrange, fit_data, knots, k=3)
+                    spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
+                                order=1, low_reject=5.0, high_reject=5.0, niterate=2)
                     row_fit = spl(xrange)
                     fitted_row = np.array(
                         list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
                     fitted.append(fitted_row)
                 pass
-            elif cenwave == 9851:  # 2 piece, 3 knot
+            elif cenwave == 9851:
                 for row in data:
                     l_row_data = row[0:86]
                     r_row_data = row[1109:]
                     fit_data = row[86:1109]
                     xrange = np.arange(0, len(fit_data), 1.)
-                    knots = np.linspace(0, len(fit_data), 5)[1:-1]
-                    spl = LSQUnivariateSpline(xrange, fit_data, knots, k=1)
+                    spl = fit1d(xrange, fit_data, naverage=2, function="spline1",
+                                order=2, low_reject=5.0, high_reject=5.0, niterate=2)
                     row_fit = spl(xrange)
                     fitted_row = np.array(
                         list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
                     fitted.append(fitted_row)
-            else:  # 2 piece, 3 knot
+            else:
                 for row in data:
                     l_row_data = row[0:86]
                     r_row_data = row[1109:]
                     fit_data = row[86:1109]
                     xrange = np.arange(0, len(fit_data), 1.)
-                    knots = np.linspace(0, len(fit_data), 5)[1:-1]
-                    spl = LSQUnivariateSpline(xrange, fit_data, knots, k=3)
+                    spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
+                                order=2, low_reject=5.0, high_reject=5.0, niterate=2)
                     row_fit = spl(xrange)
                     fitted_row = np.array(
                         list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
@@ -300,14 +300,14 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
                 xrange = np.arange(0, len(fit_data), 1.)
 
                 # High Order Fit
-                knots = np.linspace(0, len(fit_data), highorder)[1:-1]
-                spl = LSQUnivariateSpline(xrange, fit_data, knots, k=1)
+                spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
+                            order=highorder, low_reject=5.0, high_reject=5.0, niterate=2)
                 fitted_row = spl(xrange)
                 fitted_highorder.append(fitted_row)
 
                 # Low Order Fit
-                knots = np.linspace(0, len(fit_data), loworder)[1:-1]
-                spl = LSQUnivariateSpline(xrange, fit_data, knots, k=1)
+                spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
+                            order=highorder, low_reject=5.0, high_reject=5.0, niterate=2)
                 fitted_row = spl(xrange)
                 fitted_loworder.append(fitted_row)
 
@@ -348,8 +348,8 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
             fitted = []
             for row in data:
                 xrange = np.arange(0, len(row), 1.)
-                knots = np.linspace(0, len(row), 22)[1:-1]  # 20 spline pieces
-                spl = LSQUnivariateSpline(xrange, row, knots, k=3)
+                spl = fit1d(xrange, row, naverage=2, function="spline3",
+                            order=20, low_reject=3.0, high_reject=3.0, niterate=2)
                 row_fit = spl(xrange)
                 fitted.append(row_fit)
 
