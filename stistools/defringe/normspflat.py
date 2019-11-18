@@ -187,7 +187,6 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
 
         # Set rows (startrow, lastrow) to be fit according to aperture name (and possibly OPT_ELEM):
         # '0.3X0.09', '0.2X0.06', '52X...'
-
         if aperture == "0.3X0.09":
             startrow = max_row_idx - int(4./binrows+0.25)
             lastrow = max_row_idx + int(4./binrows+0.25)
@@ -197,13 +196,12 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
         elif aperture[0:3] != "52X":
             print("ERROR: not able to understand APERTURE keyword")
             return
-        elif aperture == "G750M":
+        elif opt_elem == "G750M":
             startrow = int(92./binrows) + 1
             lastrow = startrow + int(1024./binrows) - 1
         else:
             startrow = 1
             lastrow = numrows
-        print(startrow, lastrow, max_row_idx)
 
         # Details of spline fit determined according to OPT_ELEM + CENWAVE.
         # G750M (various CENWAVEs), G750L (i.e. CENWAVE == 7751; various binning), other (never used?)
@@ -211,43 +209,56 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
             fitted = []  # This probably needs to be padded with ones to match the input shape
 
             if cenwave < 9800:
-                for row in data:
-                    l_row_data = row[0:86]
-                    r_row_data = row[1109:]
-                    fit_data = row[86:1109]
-                    xrange = np.arange(0, len(fit_data), 1.)
-                    spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
-                                order=1, low_reject=5.0, high_reject=5.0, niterate=2)
-                    row_fit = spl(xrange)
-                    fitted_row = np.array(
-                        list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
-                    fitted.append(fitted_row)
+                for idx, row in enumerate(data):
+                    if (idx >= startrow) and (idx <= lastrow):
+                        l_row_data = row[0:86]
+                        r_row_data = row[1109:]
+                        fit_data = row[86:1109]
+                        xrange = np.arange(0, len(fit_data), 1.)
+                        spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
+                                    order=1, low_reject=5.0, high_reject=5.0, niterate=2)
+                        row_fit = fit_data/spl(xrange)
+                        row_fit[np.where(row_fit == 0.0)] = 1.0  # avoid zeros in output flat
+                        fitted_row = np.array(
+                            list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
+                        fitted.append(fitted_row)
+                    else:
+                        fitted.append(np.ones(len(row)))
+
                 pass
 
             elif cenwave == 9851:
-                for row in data:
-                    l_row_data = row[0:86]
-                    r_row_data = row[1109:]
-                    fit_data = row[86:1109]
-                    xrange = np.arange(0, len(fit_data), 1.)
-                    spl = fit1d(xrange, fit_data, naverage=2, function="spline1",
-                                order=2, low_reject=5.0, high_reject=5.0, niterate=2)
-                    row_fit = spl(xrange)
-                    fitted_row = np.array(
-                        list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
-                    fitted.append(fitted_row)
-            else:
-                for row in data:
-                    l_row_data = row[0:86]
-                    r_row_data = row[1109:]
-                    fit_data = row[86:1109]
-                    xrange = np.arange(0, len(fit_data), 1.)
-                    spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
-                                order=2, low_reject=5.0, high_reject=5.0, niterate=2)
-                    row_fit = spl(xrange)
-                    fitted_row = np.array(
-                        list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
-                    fitted.append(fitted_row)
+                for idx, row in enumerate(data):
+                    if (idx >= startrow) and (idx <= lastrow):
+                        l_row_data = row[0:86]
+                        r_row_data = row[1109:]
+                        fit_data = row[86:1109]
+                        xrange = np.arange(0, len(fit_data), 1.)
+                        spl = fit1d(xrange, fit_data, naverage=2, function="spline1",
+                                    order=2, low_reject=5.0, high_reject=5.0, niterate=2)
+                        row_fit = fit_data/spl(xrange)
+                        row_fit[np.where(row_fit == 0.0)] = 1.0  # avoid zeros in output flat
+                        fitted_row = np.array(
+                            list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
+                        fitted.append(fitted_row)
+                    else:
+                        fitted.append(np.ones(len(row)))
+            else:  # This applies to cenwave 9806 and 10363
+                for idx, row in enumerate(data):
+                    if (idx >= startrow) and (idx <= lastrow):
+                        l_row_data = row[0:86]
+                        r_row_data = row[1109:]
+                        fit_data = row[86:1109]
+                        xrange = np.arange(0, len(fit_data), 1.)
+                        spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
+                                    order=2, low_reject=5.0, high_reject=5.0, niterate=2)
+                        row_fit = fit_data/spl(xrange)
+                        row_fit[np.where(row_fit == 0.0)] = 1.0  # avoid zeros in output flat
+                        fitted_row = np.array(
+                            list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
+                        fitted.append(fitted_row)
+                    else:
+                        fitted.append(np.ones(len(row)))
 
             # Write to the output file
             hdulist[1].data = np.array(fitted)
@@ -292,11 +303,9 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
                 fitted_loworder.append(fitted_row)
 
             fitted_highorder = np.array(fitted_highorder)
-            print(fitted_highorder[512])
             fitted_loworder = np.array(fitted_loworder)
             # Divide both spline fits off the science data
             resp_highorder = data/fitted_highorder
-            print(resp_highorder[512])
             resp_loworder = data/fitted_loworder
 
             # Get absolute difference and ratio of the two response arrays
@@ -314,7 +323,6 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
 
                 # Use the ratio between the two fits at the minimum point as the scale factor between the two fits
                 scale_factor = resp_ratio[row_idx][min_idx]
-                print(scale_factor)
                 # Generate the flat using the high order flat for any column left of the min pixel and the low order
                 # flat times the scale factor for anything right of the min pixel
                 highorder_segment = resp_highorder[row_idx][:min_idx+1]
@@ -333,13 +341,13 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
             hdulist.writeto(str(outflat.split(".")[0]) + ".fits")
             return
 
-        else:
+        else:  # There isn't a current mode/cenwave that uses this path
             fitted = []
             for row in data:
                 xrange = np.arange(0, len(row), 1.)
                 spl = fit1d(xrange, row, naverage=2, function="spline3",
                             order=20, low_reject=3.0, high_reject=3.0, niterate=2)
-                row_fit = spl(xrange)
+                row_fit = data/spl(xrange)
                 fitted.append(row_fit)
 
             # Write to the output file
