@@ -15,6 +15,7 @@ from . import inttag
 from . import doppinfo
 from . import tastis
 from . import ctestis
+from . import defringe
 
 # These lines allow TEAL to print out the names of TEAL-enabled tasks
 # upon importing this package.
