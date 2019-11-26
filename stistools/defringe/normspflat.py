@@ -284,19 +284,19 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
             resp_highorder = data/fitted_highorder
             resp_loworder = data/fitted_loworder
 
-            # Get absolute difference and ratio of the two response arrays
-            resp_absdiff = abs(resp_highorder - resp_loworder)
-            resp_ratio = resp_highorder/resp_loworder
+            # Get absolute difference and ratio of the two fits to the data
+            fit_absdiff = abs(fitted_highorder - fitted_loworder)
+            fit_ratio = fitted_highorder / fitted_loworder
 
             # Iterate through the rows from startrow to lastrow
             fitted = np.ones(data.shape, dtype=data.dtype)
 
             for row_idx in np.arange(startrow, lastrow, 1):
                 # Find the min pixel location between startcol and endcol
-                min_idx = np.argmin(resp_absdiff[row_idx, startcol:endcol]) + startcol  # the idx in the full array
+                min_idx = np.argmin(fit_absdiff[row_idx, startcol:endcol]) + startcol  # the idx in the full array
 
                 # Use the ratio between the two fits at the minimum point as the scale factor between the two fits
-                scale_factor = resp_ratio[row_idx, min_idx]
+                scale_factor = fit_ratio[row_idx, min_idx]
                 # Generate the flat using the high order flat for any column left of the min pixel and the low order
                 # flat times the scale factor for anything right of the min pixel
                 fitted[row_idx, :min_idx+1] = resp_highorder[row_idx, :min_idx+1]
