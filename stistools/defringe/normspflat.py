@@ -249,17 +249,17 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
 
             if bincols == 1:
                 startcol = 590                  # iraf:  591
-                endcol = 641
+                endcol = 640
                 highorder = 60
                 loworder = 12
             elif bincols == 2:
                 startcol = 294                  # iraf:  295
-                endcol = 321
+                endcol = 320
                 highorder = 50
                 loworder = 12
             elif bincols == 4:
                 startcol = 144                  # iraf:  145
-                endcol = 161
+                endcol = 160
                 highorder = 50
                 loworder = 12
 
