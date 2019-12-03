@@ -158,7 +158,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
             print("shift = {}, rms = {}".format(current_shift[i], rmsvalues[i]))
 
         #
-        # Determine shift that delivers the best RMS by an inverse-weighted average
+        # Determine shift that delivers the best RMS by an inverse rms weighted average
         weight = 1.0/(rmsvalues*rmsvalues)
         rownum = range(nshifts)
         weighted_rownum = weight*rownum

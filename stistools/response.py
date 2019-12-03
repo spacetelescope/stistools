@@ -54,11 +54,11 @@ def response(calibration_array, normalization_array,
 
     if sample != "*":
         print ('Only sample="*" currently supported for this version of response')
-    response = make_response(calibration_array, normalization_array, threshold,
+    response = make_response(calibration_array, normalization_array, threshold, naverage,
                              function, order, low_reject, high_reject, niterate, grow)
     return response
 
-def make_response(calibration_array, normalization_array, threshold,
+def make_response(calibration_array, normalization_array, threshold, naverage,
                   function, order, low_reject, high_reject, niterate, grow):
     """Like re_make in response.x
 
@@ -71,7 +71,9 @@ def make_response(calibration_array, normalization_array, threshold,
     average_spectrum = normalization_array.sum(axis=0) / float(nrows)
     x = np.arange(ncols) + 1
     fitted = fit1d.fit1d(x, average_spectrum, weights=None, function=function, order=order,
-                         low_reject=low_reject, high_reject=high_reject, niterate=niterate, grow=grow)
+                         naverage=naverage, low_reject=low_reject, high_reject=high_reject,
+                         niterate=niterate, grow=grow)
+
     fitted_spectrum = fitted(x)
     
     response = normalise_response(calibration_array, dispaxis, threshold, fitted_spectrum)
