@@ -4,7 +4,6 @@ import os
 import numpy as np
 import warnings
 from astropy.io import fits
-from astropy.nddata import utils
 
 from ..r_util import expandFileName
 from ..calstis import calstis
@@ -16,14 +15,14 @@ PERFORM = {
     'ALL':   ['DQICORR', 'BLEVCORR', 'BIASCORR', 'DARKCORR', 'FLATCORR', 'CRCORR'],
     'G750M': ['WAVECORR', 'HELCORR', 'X2DCORR'],
     'G750L': [],}
-OMIT_G750L = PERFORM['G750M'][:]
+OMIT_G750L = PERFORM['G750M']
 
 
 def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
                pixelflat=None, wavecal=None):
     """Normalize STIS CCD fringe flat.
 
-    Based on PyRAF `stsdas.hst_calib.stis.normspflat task 
+    Based on PyRAF `stsdas.hst_calib.stis.normspflat task
     <https://github.com/spacetelescope/stsdas/blob/master/stsdas/pkg/hst_calib/stis/normspflat.cl>`_.
 
     Parameters
@@ -41,7 +40,7 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
     pixelflat: str or None
         Name of pixel-to-pixel flat.  If None, use PFLTFILE in main header of the inflat.
     wavecal: str or None
-        Name of wavecal file [ONLY FOR G750M SPECTRA].  If None, use WAVECAL in main 
+        Name of wavecal file [ONLY FOR G750M SPECTRA].  If None, use WAVECAL in main
         header of the inflat.
 
     Returns
@@ -138,9 +137,9 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
             res = calstis(os.path.basename(inflat), wavecal=wavecal, outroot=outroot,
                           trailer=trailer)
             if res != 0:
-                raise Exception('CalSTIS returned non-zero code:  {}\n' \
+                raise Exception('CalSTIS returned non-zero code:  {}\n'
                                 'See log for more details:  {}'.format(res, trailer))
-            print ('File written:  {}'.format(outname))
+            print('File written:  {}'.format(outname))
         finally:
             os.chdir(old_cwd)
     else:  # not do_cal
@@ -173,188 +172,155 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
             flatdata = hdulist[1].data
             #    Find the row with max counts in the short-slit fringe flat
             #    Search between the middle 10% of rows and the middle 60% of columns
-            t_row = int(0.45 * numrows)
-            b_row = int(0.55 * numrows)
+            t_row = round(0.45 * numrows)       # iraf:  nint(0.45*numlines)+1
+            b_row = round(0.55 * numrows)
             #     Uses central 60% of column
-            l_col = int(0.2 * numcols)
-            r_col = int(0.8 * numcols)
+            l_col = round(0.2 * numcols) - 1    # iraf:  nint(0.2*numcols)
+            r_col = round(0.8 * numcols)
 
             row_avgs = np.array([np.average(row) for row in flatdata[t_row:b_row, l_col:r_col]])
             max_row_idx = np.where(row_avgs == np.max(abs(row_avgs)))[0][0] + t_row  # CL does an absolute value here
-            max_row = flatdata[max_row_idx]
+            max_row = flatdata[max_row_idx]     # xxx should this be used?
             #    Does some flux-filtering -- I think this is for determining the max rows
-
 
         # Set rows (startrow, lastrow) to be fit according to aperture name (and possibly OPT_ELEM):
         # '0.3X0.09', '0.2X0.06', '52X...'
         if aperture == "0.3X0.09":
-            startrow = max_row_idx - int(4./binrows+0.25)
-            lastrow = max_row_idx + int(4./binrows+0.25)
+            startrow = max_row_idx - round(4./binrows+0.25) - 1
+            lastrow = max_row_idx + round(3./binrows+0.25)
         elif aperture == "0.2X0.06":
-            startrow = max_row_idx - int(3. / binrows + 0.25)
-            lastrow = max_row_idx + int(3. / binrows + 0.25)
+            startrow = max_row_idx - round(3. / binrows + 0.25) - 1
+            lastrow = max_row_idx + round(2. / binrows + 0.25)
         elif aperture[0:3] != "52X":
             print("ERROR: not able to understand APERTURE keyword")
             return
         elif opt_elem == "G750M":
-            startrow = int(92./binrows) + 1
-            lastrow = startrow + int(1024./binrows) - 1
+            startrow = round(92./binrows)
+            lastrow = startrow + round(1024./binrows) - 1
         else:
-            startrow = 1
+            startrow = 0
             lastrow = numrows
 
         # Details of spline fit determined according to OPT_ELEM + CENWAVE.
         # G750M (various CENWAVEs), G750L (i.e. CENWAVE == 7751; various binning), other (never used?)
         if opt_elem == "G750M":
-            fitted = []  # This probably needs to be padded with ones to match the input shape
+            fitted = np.ones(data.shape, dtype=data.dtype)
 
             if cenwave < 9800:
                 for idx, row in enumerate(data):
-                    if (idx >= startrow) and (idx <= lastrow):
-                        l_row_data = row[0:86]
-                        r_row_data = row[1109:]
-                        fit_data = row[86:1109]
+                    if (idx >= startrow) and (idx < lastrow):
+                        fit_data = row[85:1109]
                         xrange = np.arange(0, len(fit_data), 1.)
                         spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
                                     order=1, low_reject=5.0, high_reject=5.0, niterate=2)
                         row_fit = fit_data/spl(xrange)
                         row_fit[np.where(row_fit == 0.0)] = 1.0  # avoid zeros in output flat
-                        fitted_row = np.array(
-                            list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
-                        fitted.append(fitted_row)
-                    else:
-                        fitted.append(np.ones(len(row)))
-
-                pass
+                        fitted[idx, 85:1109] = row_fit.copy()
 
             elif cenwave == 9851:
                 for idx, row in enumerate(data):
-                    if (idx >= startrow) and (idx <= lastrow):
-                        l_row_data = row[0:86]
-                        r_row_data = row[1109:]
-                        fit_data = row[86:1109]
+                    if (idx >= startrow) and (idx < lastrow):
+                        fit_data = row[85:1109]
                         xrange = np.arange(0, len(fit_data), 1.)
                         spl = fit1d(xrange, fit_data, naverage=2, function="spline1",
                                     order=2, low_reject=5.0, high_reject=5.0, niterate=2)
                         row_fit = fit_data/spl(xrange)
                         row_fit[np.where(row_fit == 0.0)] = 1.0  # avoid zeros in output flat
-                        fitted_row = np.array(
-                            list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
-                        fitted.append(fitted_row)
-                    else:
-                        fitted.append(np.ones(len(row)))
+                        fitted[idx, 85:1109] = row_fit.copy()
             else:  # This applies to cenwave 9806 and 10363
                 for idx, row in enumerate(data):
-                    if (idx >= startrow) and (idx <= lastrow):
-                        l_row_data = row[0:86]
-                        r_row_data = row[1109:]
-                        fit_data = row[86:1109]
+                    if (idx >= startrow) and (idx < lastrow):
+                        fit_data = row[85:1109]
                         xrange = np.arange(0, len(fit_data), 1.)
                         spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
                                     order=2, low_reject=5.0, high_reject=5.0, niterate=2)
                         row_fit = fit_data/spl(xrange)
                         row_fit[np.where(row_fit == 0.0)] = 1.0  # avoid zeros in output flat
-                        fitted_row = np.array(
-                            list(np.ones(len(l_row_data))) + list(row_fit) + list(np.ones(len(r_row_data))))
-                        fitted.append(fitted_row)
+                        fitted[idx, 85:1109] = row_fit.copy()
                     else:
-                        fitted.append(np.ones(len(row)))
+                        fitted[idx, :] = 1.
 
             # Write to the output file
-            hdulist[1].data = np.array(fitted)
-            hdulist.writeto(str(outflat.split(".")[0]) + ".fits")
+            hdulist[1].data = fitted.copy()
+            hdulist.writeto(str(outflat.split(".")[0]) + ".fits", overwrite=True)
             return
 
         elif cenwave == 7751:  # G750L
 
             if bincols == 1:
-                startcol = 591
+                startcol = 590                  # iraf:  591
                 endcol = 640
                 highorder = 60
                 loworder = 12
             elif bincols == 2:
-                startcol = 295
+                startcol = 294                  # iraf:  295
                 endcol = 320
                 highorder = 50
                 loworder = 12
             elif bincols == 4:
-                startcol = 145
+                startcol = 144                  # iraf:  145
                 endcol = 160
                 highorder = 50
                 loworder = 12
 
             # Fit both the high order and low order splines
-            fitted_highorder = []
-            fitted_loworder = []
-            for row in data:
-                fit_data = row[:]
+            fitted_highorder = np.ones(data.shape, dtype=data.dtype)
+            fitted_loworder = np.ones(data.shape, dtype=data.dtype)
+            for row_idx in range(numrows):
+                fit_data = data[row_idx, :]
                 xrange = np.arange(0, len(fit_data), 1.)
 
                 # High Order Fit
                 spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
                             order=highorder, low_reject=5.0, high_reject=5.0, niterate=2)
-                fitted_row = spl(xrange)
-                fitted_highorder.append(fitted_row)
+                fitted_highorder[row_idx, :] = spl(xrange).copy()
 
                 # Low Order Fit
                 spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
                             order=loworder, low_reject=5.0, high_reject=5.0, niterate=2)
-                fitted_row = spl(xrange)
-                fitted_loworder.append(fitted_row)
+                fitted_loworder[row_idx, :] = spl(xrange).copy()
 
-            fitted_highorder = np.array(fitted_highorder)
-            fitted_loworder = np.array(fitted_loworder)
             # Divide both spline fits off the science data
             resp_highorder = data/fitted_highorder
             resp_loworder = data/fitted_loworder
 
-            # Get absolute difference and ratio of the two response arrays
-            resp_absdiff = abs(resp_highorder - resp_loworder)
-            resp_ratio = resp_highorder/resp_loworder
+            # Get absolute difference and ratio of the two fits to the data
+            fit_absdiff = abs(fitted_highorder - fitted_loworder)
+            fit_ratio = fitted_highorder / fitted_loworder
 
             # Iterate through the rows from startrow to lastrow
-            fitted = []
-            for row_idx in np.arange(0, startrow, 1):
-                fitted.append(list(np.ones(numcols)))
+            fitted = np.ones(data.shape, dtype=data.dtype)
 
             for row_idx in np.arange(startrow, lastrow, 1):
                 # Find the min pixel location between startcol and endcol
-                min_idx = np.argmin(resp_absdiff[row_idx][startcol:endcol]) + startcol  # the idx in the full array
+                min_idx = np.argmin(fit_absdiff[row_idx, startcol:endcol]) + startcol  # the idx in the full array
 
                 # Use the ratio between the two fits at the minimum point as the scale factor between the two fits
-                scale_factor = resp_ratio[row_idx][min_idx]
+                scale_factor = fit_ratio[row_idx, min_idx]
                 # Generate the flat using the high order flat for any column left of the min pixel and the low order
                 # flat times the scale factor for anything right of the min pixel
-                highorder_segment = resp_highorder[row_idx][:min_idx+1]
-                loworder_segment = resp_loworder[row_idx][min_idx+1:] * scale_factor
-
-                stitched_row = np.array(list(highorder_segment) + list(loworder_segment))
-                fitted.append(stitched_row)
-
-            for row_idx in np.arange(lastrow, numcols, 1):
-                fitted.append(list(np.ones(numrows)))
-
-            fitted = np.array(fitted)
+                fitted[row_idx, :min_idx+1] = resp_highorder[row_idx, :min_idx+1]
+                fitted[row_idx, min_idx+1:] = resp_loworder[row_idx, min_idx+1:] * scale_factor
 
             # Write to the output file
-            hdulist[1].data = np.array(fitted)
-            hdulist.writeto(str(outflat.split(".")[0]) + ".fits")
+            hdulist[1].data = fitted.copy()
+            hdulist.writeto(str(outflat.split(".")[0]) + ".fits", overwrite=True)
             return
 
         else:  # There isn't a current mode/cenwave that uses this path
-            fitted = []
-            for row in data:
+            fitted = np.ones(data.shape, dtype=data.dtype)
+            for row_idx in range(numrows):
+                row = data[row_idx, :]
                 xrange = np.arange(0, len(row), 1.)
                 spl = fit1d(xrange, row, naverage=2, function="spline3",
                             order=20, low_reject=3.0, high_reject=3.0, niterate=2)
                 row_fit = data/spl(xrange)
-                fitted.append(row_fit)
+                fitted[row_idx, :] = row_fit
 
             # Write to the output file
-            hdulist[1].data = np.array(fitted)
-            hdulist.writeto(str(outflat.split(".")[0]) + ".fits")
+            hdulist[1].data = fitted.copy()
+            hdulist.writeto(str(outflat.split(".")[0]) + ".fits", overwrite=True)
             return
-
 
 
 def call_normspflat():
@@ -367,18 +333,18 @@ def call_normspflat():
     parser.add_argument('inflat', type=str, help='Name of input fringe flat')
     parser.add_argument('--outflat', '-o', type=str, default='.',
         help='Name of normalized fringe flat output or directory location (default=".")')
-    parser.add_argument('--skip_cal', '-s', dest='do_cal', action='store_false', 
+    parser.add_argument('--skip_cal', '-s', dest='do_cal', action='store_false',
         help='Skip bias and dark subtraction and CR rejection?')
     parser.add_argument('--biasfile', '-b', type=str,
         help='Name of superbias image. If omitted, use BIASFILE in main header of the '
              'inflat.')
-    parser.add_argument('--darkfile', '-d', type=str, 
+    parser.add_argument('--darkfile', '-d', type=str,
         help='Name of superdark image. If omitted, use DARKFILE in main header of the '
              'inflat.')
-    parser.add_argument('--pixelflat', '-p', type=str, 
+    parser.add_argument('--pixelflat', '-p', type=str,
         help='Name of pixel-to-pixel flat.  If omitted, use PFLTFILE in main header of '
              'the inflat.')
-    parser.add_argument('--wavecal', '-w', type=str, 
+    parser.add_argument('--wavecal', '-w', type=str,
         help='Name of wavecal file [ONLY FOR G750M SPECTRA]. If omitted, use WAVECAL in '
              'main header of the inflat.')
 
