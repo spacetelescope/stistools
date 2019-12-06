@@ -1,17 +1,86 @@
+#! /usr/bin/env python
+
+from ..r_util import expandFileName
 from astropy.io import fits
 from astropy.nddata.utils import block_reduce
 import numpy as np
 import math
 import os
 from scipy.ndimage import shift
-import findloc
-from response import response
+from . import findloc
+from .response import response
 
 __version__ = 0.1
 
 def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shift=0.5,
                  shift_step=0.1, do_scale=True, beg_scale=0.8, end_scale=1.2, scale_step=0.04,
-                 extrloc=None, extrsize=None, opti_sreg=None, rms_region=None):
+                 extrloc=None, extrsize=None, opti_spreg=None, rms_region=None):
+
+    """Replacement for the IRAF cl script stsdas/pkg/hst_calib/stis/mkfringeflat.cl.  Takes
+    an input science spectrum and a fringe flat that has been normalised using the task
+    normspflat.  The fringe flat is shifted and scaled to produce the minimum RMS when divided
+    into the science data
+    
+
+    Parameters:
+    -----------
+
+    inspec : str
+        Name of input science spectrum datafile
+
+    inflat : str
+        Name of input fringe flat file (usually the output from normspflat)
+
+    outflat : str
+        Name of output fringe flat to be used in the defringe task
+
+    do_shift : bool
+        Controls whether the shift between fringe flat and science data is
+        to be calculated
+
+    beg_shift : float
+        Initial shift to apply to fringe flat
+
+    end_shift : float
+        Final shift to apply to fringe flat
+
+    shift_step : float
+        Step between shifts to be applied to fringe flat
+
+    do_scale : bool
+        Controls whether the scaling between fringe flat and science
+        data is to be calculated
+
+    beg_scale : float
+        Initial scaling to apply to fringe flat
+
+    end_scale : float
+        Final scaling to appply to fringe flat
+
+    scale_step : float
+        Step between scaling values to be applied to fringe flat
+
+    extrloc : float or None
+        Extraction location.  If set to None, this will be calculated by
+        parabolic interpolation of the peak of the cross-dispersion
+        spectral sum
+
+    extrsize : float or None
+        Extraction size in pixels.  If set to None, this will be set to a
+        reasonable value by this routine
+
+    opti_sreg : str or None
+        A string representing the section to be used in normalizing the spectrum
+        of the science target before it is divided by the shifted/scaled fringe flat.
+        If set to None, a reasonable range is chosen by this routine.  Should be
+        specified like a Python slice, zero indezed.
+
+    rms_region : str or None
+        A string representing the section to be used in the rms calculation.  If set
+        to None, a reasonable range is chosen by this routine.  Should be specified
+        like a Python slice, zero indexed.
+
+    """
 
     print("mkfringeflat.py version {}".format(__version__))
     print(" - matching fringes in a flatfield to those in science data")
@@ -101,7 +170,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
     fline = maxrow - int(round((numextrows - 0.49999)/2.0))
     lline = maxrow + int(round((numextrows - 0.49999)/2.0)) + 1
 
-    if opti_sreg is None:
+    if opti_spreg is None:
         if "G750M" in opt_elem:
             colstart = int(83/bincols)
             colstop = int(1106/bincols)
@@ -129,7 +198,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         step = int(round(shift_step/(10**(expo))))
         flt_blk = block_reduce(fltdata, (binlines/fltbinlines, bincols/fltbincols),
                                 func=np.mean)
-        nshifts = (lshift - fshift)/step + 1
+        nshifts = (lshift - fshift)//step + 1
         
         rmsvalues = np.zeros(nshifts)
         current_shift = np.zeros(nshifts)
@@ -329,3 +398,46 @@ def get_flat_data(inflat, shifted_flat):
             return f1[0].data
         else:
             return f1[1].data
+
+
+def call_mkfringeflat():
+    """Command line entry point for mkfringeflat().
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description='Match fringes in STIS fringe flat to those in science data')
+    parser.add_argument('inspec', type=str, help='Name of input science spectrum')
+    parser.add_argument('inflat', type=str,
+        help='Name of input normalized fringe flat from normspflat')
+    parser.add_argument('outflat', type=str, help='Name of output [final] fringe flat')
+    parser.add_argument('--skip_shift', dest='do_shift', action='store_false',
+        help='Skip shifting the flat to match fringes in spectrum?')
+    parser.add_argument('--shift_range', type=float, default=[-0.5, 0.5], nargs=2,
+        metavar='FLOAT', help='Range for shift determination (default=[-0.5, 0.5])')
+    parser.add_argument('--shift_step', type=float, default=0.1, metavar='FLOAT',
+        help='Step size used when calculating shifts (default=0.1)')
+    parser.add_argument('--skip_scale', dest='do_scale', action='store_false',
+        help='Skip scaling the fringe amplitude to match science spectrum?')
+    parser.add_argument('--scale_range', type=float, default=[0.8, 1.2], nargs=2,
+        metavar='FLOAT', help='Range for scale determination (default=[0.8, 1.2])')
+    parser.add_argument('--scale_step', type=float, default=0.04, metavar='FLOAT',
+        help='Step size used when calculating scale factors (default=0.04)')
+    parser.add_argument('--extrloc', '-l', type=float, default=None, metavar='FLOAT',
+        help='Central line (row) to be extracted from 2-D spectrum (zero-indexed). '
+             'If omitted, ...')
+    parser.add_argument('--extrsize', '-s', type=float, default=None, metavar='INT',
+        help='Number of lines to be extracted from 2-D spectrum. If omitted, ...')
+    parser.add_argument('--opti_spreg', type=int, nargs=2, default=None, metavar='INT',
+        help='Spectral range used in normalizing the spectrum, as specified via '
+             'zero-indexed pixel numbers. If omitted, ...')
+    parser.add_argument('--rmsregion', type=int, nargs=2, default=None, metavar='INT',
+        help='Spectral range used in measuring RMSs, as specified via zero-indexed pixel '
+             'numbers. If omitted, ...')
+
+    args = vars(parser.parse_args())
+    mkfringeflat(**args)
+
+
+if __name__ == '__main__':
+    call_mkfringeflat()
