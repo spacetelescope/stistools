@@ -2,7 +2,7 @@ import math
 import numpy as np
 from astropy.io import fits
 
-import fit1d
+from . import fit1d
 
 def response(calibration_array, normalization_array,
              threshold=None,
