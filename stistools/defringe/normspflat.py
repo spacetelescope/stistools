@@ -7,7 +7,7 @@ from astropy.io import fits
 
 from ..r_util import expandFileName
 from ..calstis import calstis
-from .fit1d import fit1d
+from ._fit1d import fit1d
 
 
 # Keyword choices for calstis reduction:

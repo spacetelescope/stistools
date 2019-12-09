@@ -6,10 +6,8 @@ import datetime
 import os
 import textwrap
 import re
-
 import numpy as np
-
-from stistools.r_util import expandFileName
+from ..r_util import expandFileName
 
 #   4  bad detector pixel or beyond aperture
 #   8  data masked by occulting bar
