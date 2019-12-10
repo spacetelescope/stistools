@@ -21,8 +21,8 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
     into the science data
     
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
 
     inspec : str
         Name of input science spectrum datafile
