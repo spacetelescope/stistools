@@ -120,28 +120,36 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
 
     ltv1 = sci_hdr['ltv1']
 
-    sax0 = round(-ltv1) + 1
-    sax1 = sax0 + ncols - 1
-
     if opt_elem == "G750M":
 
         centera2 = sci_prihdr['centera2']
         sizaxis2 = sci_prihdr['sizaxis2']
 
-        ltv2 = 1 - centera2 - sizaxis2/2
-    
-        flt_centera2 = flt_prihdr['centera2']
-        flt_sizaxis2 = flt_flt_prihdr['sizaxis2']
+        ltv2 = 1 - centera2 + sizaxis2/2.0
 
-        flt_ltv2 = 1 - flt_centera2 - flt_sizaxis2/2
+        flt_centera2 = flt_prihdr['centera2']
+        flt_sizaxis2 = flt_prihdr['sizaxis2']
+
+        flt_ltv2 = 1 - flt_centera2 + flt_sizaxis2/2.0
 
     else:
 
         ltv2 = sci_hdr['ltv2']
         flt_ltv2 = flt_prihdr['sizaxis2']
 
-    say0 = int(round(flt_ltv2 - ltv2))
+    sax0 = round(-ltv1) + 1
+    sax1 = sax0 + ncols - 1
+
+    say0 = int(round(flt_ltv2 - ltv2)) + 1
     say1 = say0 + nrows - 1
+
+    #
+    # convert IRAF section limits to Python slice indices
+
+    shiftrowstart = say0 - 1
+    shiftrowstop = say1
+    shiftcolstart = sax0 - 1
+    shiftcolstop = sax1
 
     aperture = sci_prihdr['aperture']
 
@@ -206,7 +214,8 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         for i in range(nshifts):
             current_shift[i] = beg_shift + i*shift_step
 
-            shifted_flat = shift(flt_blk, current_shift[i], order=1, mode='nearest')
+            shifted_flat = shift(flt_blk[shiftrowstart:shiftrowstop, shiftcolstart:shiftcolstop],
+                                 current_shift[i], order=1, mode='nearest')
 
             star_cont_shift = scidata / shifted_flat
 
@@ -272,7 +281,8 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         # Apply the best shift and create output array
         flt_blk = block_reduce(fltdata, (binlines/fltbinlines, bincols/fltbincols),
                                 func=np.mean)
-        shifted_flat = shift(flt_blk, theshift, order=1, mode='nearest')
+        shifted_flat = shift(flt_blk[shiftrowstart:shiftrowstop, shiftcolstart:shiftcolstop],
+                             theshift, order=1, mode='nearest')
 
         # Write out file
         fitspos = inflat.find('.fits')
