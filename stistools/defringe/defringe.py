@@ -33,8 +33,8 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
     overwrite : bool
         The name of the output file will be constructed from the name of the
         input science file (`science_file`) by replacing the suffix with
-        'drj'.  If the input name has suffix 'drj', a RuntimeError will be
-        raised, rather than modifying the input in-place.
+        'drj' or 's2d'.  If the input name are the same a RuntimeError will
+        be raised, rather than modifying the input in-place.
         If there is an existing file with the same name as the output name,
         the existing file will be overwritten if `overwrite` is True (the
         default is True).
@@ -45,7 +45,9 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
     Returns
     -------
     drj_filename : str
-        The name of the output file.
+        The name of the output file.  This will have suffix '_drj' if the
+        input is G750L data, and the output name will have suffix '_s2d'
+        if the input is G750M.
     """
 
     if science_file.endswith("_raw.fits"):
@@ -54,9 +56,18 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
 
     # Define new filename:
     science_file = os.path.normpath(expandFileName(science_file))  # Expand IRAF and UNIX $VARS
+
+    # Set the suffix to '_s2d' for G750M data, or to '_drj' for G750L data.
+    with fits.open(science_file) as fd:
+        opt_elem = fd[0].header['OPT_ELEM'].upper()
+    if opt_elem.endswith('M'):
+        suffix = "_s2d"
+    else:
+        suffix = "_drj"
+
     sci_dir, sci_filename = os.path.split(science_file)
     sci_root = re.split('\.fits.*', sci_filename, flags=re.IGNORECASE)[0].rsplit('_',1)[0]
-    drj_filename = os.path.join(sci_dir, sci_root + '_drj.fits')
+    drj_filename = os.path.join(sci_dir, sci_root + suffix + '.fits')
     if science_file == drj_filename:
         raise RuntimeError('The input and output file names cannot be the same.')
 
@@ -182,7 +193,8 @@ def parse_args():
         Output
         ----------------------------------------------------------------
         Outputs a file that has the same rootname as the input science file,
-        but with '_drj.fits' at the end. This is the final defringed data.
+        but with '_drj.fits' or '_s2d.fits' at the end. This is the final
+        defringed data.
         '''), description='Script to calibrate science data in preparation for defringing')
 
     parser.add_argument('science',
