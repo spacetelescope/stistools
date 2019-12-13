@@ -62,7 +62,7 @@ def prepspec(inspec, outroot='./', darkfile=None, pixelflat=None, initguess=None
     # If G750L:
     #    return CRJ file
     # If G750M:
-    #    perform only {WAVECORR, HELCORR, X2DCORR} via stistools.x2d.x2d()
+    #    perform only {HELCORR, X2DCORR} via stistools.x2d.x2d()
     #    return SX2 file
 
     science_data = os.path.abspath(expandFileName(inspec))
@@ -91,7 +91,7 @@ def prepspec(inspec, outroot='./', darkfile=None, pixelflat=None, initguess=None
 
         # A few extra calibration steps if G750M data:
         if opt_elem == 'G750M':
-            for keyword in ['WAVECORR', 'HELCORR', 'X2DCORR']:
+            for keyword in ['HELCORR', 'X2DCORR']:
                 if not f[0].header[keyword].upper().startswith('COMPLETE'):
                     f[0].header[keyword] = 'PERFORM'
 
