@@ -94,6 +94,9 @@ def prepspec(inspec, outroot='./', darkfile=None, pixelflat=None, initguess=None
             for keyword in ['HELCORR', 'X2DCORR']:
                 if not f[0].header[keyword].upper().startswith('COMPLETE'):
                     f[0].header[keyword] = 'PERFORM'
+            # For comparison with PyRAF/IRAF products:
+            if f[0].header['WAVECORR'].upper().startswith('PERFORM'):
+                f[0].header['WAVECORR'] = 'OMIT'
 
         ref_types = {
             'DARKFILE': os.path.abspath(darkfile  or expandFileName(f[0].header['DARKFILE'])),
