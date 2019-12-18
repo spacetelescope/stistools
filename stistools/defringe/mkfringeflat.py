@@ -94,10 +94,10 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
 
     if len(flt_hdulist) == 1:
         fltdata = flt_hdulist[0].data
-        flthdr = flt_hdulist[0].header
+        flt_hdr = flt_hdulist[0].header
     else:
         fltdata = flt_hdulist[1].data
-        flthdr = flt_hdulist[1].header
+        flt_hdr = flt_hdulist[1].header
 
     flt_prihdr = flt_hdulist[0].header
 
@@ -135,7 +135,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
     else:
 
         ltv2 = sci_hdr['ltv2']
-        flt_ltv2 = flt_prihdr['sizaxis2']
+        flt_ltv2 = flt_hdr['ltv2']
 
     sax0 = round(-ltv1) + 1
     sax1 = sax0 + ncols - 1
