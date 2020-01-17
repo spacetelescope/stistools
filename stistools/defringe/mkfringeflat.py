@@ -100,13 +100,9 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
 
     flt_prihdr = flt_hdulist[0].header
 
-    try:
-        shifted = flt_prihdr['shifted']
-    except KeyError:
-        shifted = ""
+    shifted = flt_prihdr.get('shifted', '').upper()
     if "YE" in shifted:
-        print(" ")
-        print(" NOTE: Input flat was already shifted")
+        raise ValueError("Input flat was already shifted")
 
     opt_elem = sci_prihdr['opt_elem']
 

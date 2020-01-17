@@ -159,6 +159,7 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
                 print('Imset {} done'.format(extver))
 
         # Update primary header:
+        science_hdu[0].header.insert(key='FLATCORR', card=('FRNGCORR', 'COMPLETE', 'correct CCD fringing'))
         science_hdu[0].header.add_history(' ')
         science_hdu[0].header.add_history('DEFRINGING complete ...')
         science_hdu[0].header.add_history('  reference fringe flat {}'.format(os.path.basename(fringe_flat)))
