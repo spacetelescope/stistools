@@ -1,14 +1,13 @@
 #! /usr/bin/env python
 
-from ..r_util import expandFileName
 from astropy.io import fits
 from astropy.nddata.utils import block_reduce
 import numpy as np
 import math
 import os
 from scipy.ndimage import shift
-from . import findloc
-from .response import response
+from ._findloc import find_loc
+from ._response import response
 
 __version__ = 0.1
 
@@ -22,8 +21,8 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
     into the science data
     
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
 
     inspec : str
         Name of input science spectrum datafile
@@ -169,7 +168,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         apername = ""
 
     if extrloc is None:
-        maxrow = int(round(findloc.find_loc(scidata)))
+        maxrow = int(round(find_loc(scidata)))
     else:
         maxrow = extrloc
 

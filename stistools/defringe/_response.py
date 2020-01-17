@@ -2,7 +2,7 @@ import math
 import numpy as np
 from astropy.io import fits
 
-from . import fit1d
+from ._fit1d import fit1d
 
 def response(calibration_array, normalization_array,
              threshold=None,
@@ -70,9 +70,9 @@ def make_response(calibration_array, normalization_array, threshold, naverage,
     nrows, ncols = normalization_array.shape
     average_spectrum = normalization_array.sum(axis=0) / float(nrows)
     x = np.arange(ncols) + 1
-    fitted = fit1d.fit1d(x, average_spectrum, weights=None, function=function, order=order,
-                         naverage=naverage, low_reject=low_reject, high_reject=high_reject,
-                         niterate=niterate, grow=grow)
+    fitted = fit1d(x, average_spectrum, weights=None, function=function, order=order,
+                   naverage=naverage, low_reject=low_reject, high_reject=high_reject,
+                   niterate=niterate, grow=grow)
 
     fitted_spectrum = fitted(x)
     
