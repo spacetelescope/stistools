@@ -379,7 +379,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
             w_shift_av = weighted_rownum[first_row:last_row].sum()
             weight_av = weight[first_row:last_row].sum()
             thescale = w_shift_av/weight_av
-            thescale = thescale*scale_step + beg_scale
+            thescale = (thescale - 1.) * scale_step + beg_scale
 
         print(" ")
         print(" Best scale : {}".format(thescale))
