@@ -214,7 +214,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
             current_shift[i] = beg_shift + i*shift_step
 
             shifted_flat = shift(flt_blk[shiftrowstart:shiftrowstop, shiftcolstart:shiftcolstop],
-                                 current_shift[i], order=1, mode='nearest')
+                                 (0, current_shift[i]), order=1, mode='nearest')
 
             star_cont_shift = scidata / shifted_flat
 
@@ -281,7 +281,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         flt_blk = block_reduce(fltdata, (binlines/fltbinlines, bincols/fltbincols),
                                 func=np.mean)
         shifted_flat = shift(flt_blk[shiftrowstart:shiftrowstop, shiftcolstart:shiftcolstop],
-                             theshift, order=1, mode='nearest')
+                             (0, theshift), order=1, mode='nearest')
 
         # Write out file
         fitspos = inflat.find('.fits')
