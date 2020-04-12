@@ -19,7 +19,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
     an input science spectrum and a fringe flat that has been normalised using the task
     normspflat.  The fringe flat is shifted and scaled to produce the minimum RMS when divided
     into the science data
-    
+
 
     Parameters
     ----------
@@ -206,7 +206,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         flt_blk = block_reduce(fltdata, (binlines/fltbinlines, bincols/fltbincols),
                                 func=np.mean)
         nshifts = (lshift - fshift)//step + 1
-        
+
         rmsvalues = np.zeros(nshifts)
         current_shift = np.zeros(nshifts)
 
@@ -379,7 +379,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
             w_shift_av = weighted_rownum[first_row:last_row].sum()
             weight_av = weight[first_row:last_row].sum()
             thescale = w_shift_av/weight_av
-            thescale = (thescale - 1.) * scale_step + beg_scale
+            thescale = thescale * scale_step + beg_scale
 
         print(" ")
         print(" Best scale : {}".format(thescale))
