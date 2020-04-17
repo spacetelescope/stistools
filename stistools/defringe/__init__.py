@@ -9,10 +9,10 @@ HST/STIS CCD Defringing Tools
 Routines
 --------
 
-- `prepspec`     -- Correct STIS CCD G750L or G750M spectrum for fringing  
+- `prepspec`     -- Calibrate STIS CCD G750L or G750M spectrum before defringing  
 - `normspflat`   -- Normalize STIS CCD fringe flat  
 - `mkfringeflat` -- Match fringes in STIS fringe flat to those in science data  
-- `defringe`     -- Correct STIS CCD G750L or G750M spectrum for fringing  
+- `defringe`     -- Defringe by dividing the science spectrum by the fringe flat  
 
 .. note::
     See section 3.5.5 of the `STIS Data Handbook (DHB) <http://www.stsci.edu/files/live/sites/www/files/home/hst/instrumentation/stis/documentation/_documents/stis_dhb.pdf>`_
