@@ -16,7 +16,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
                  extrloc=None, extrsize=None, opti_spreg=None, rms_region=None):
 
     """Replacement for the IRAF cl script stsdas/pkg/hst_calib/stis/mkfringeflat.cl.  Takes
-    an input science spectrum and a fringe flat that has been normalised using the task
+    an input science spectrum and a fringe flat that has been normalized using the task
     normspflat.  The fringe flat is shifted and scaled to produce the minimum RMS when divided
     into the science data
 
@@ -44,7 +44,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         Final shift to apply to fringe flat
 
     shift_step : float
-        Step between shifts to be applied to fringe flat
+        Step-size between shifts to be applied to fringe flat
 
     do_scale : bool
         Controls whether the scaling between fringe flat and science
@@ -57,7 +57,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         Final scaling to appply to fringe flat
 
     scale_step : float
-        Step between scaling values to be applied to fringe flat
+        Step-size between scaling values to be applied to fringe flat
 
     extrloc : float or None
         Extraction location.  If set to None, this will be calculated by
