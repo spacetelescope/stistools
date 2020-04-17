@@ -37,11 +37,6 @@ Example
     # Normalize the contemporaneous fringe flat:
     defringe.normspflat('o8u201070_raw.fits', 'o8u201070_nsp.fits, do_cal=True)
     
-    # Remove fringes due to order-sorter filter, as these are already included in the
-    # sensitivity function:
-    with fits.open('o8u201070_nsp.fits', 'update') as f:
-        f[1].data[:,:250] = 1.
-    
     # Fit the normalized fringe flat to the science data in shift and amplitude:
     defringe.mkfringeflat('o8u201060_crj.fits', 'o8u201070_nsp.fits', 'o8u201070_frr.fits')
     
