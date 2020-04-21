@@ -13,10 +13,9 @@ from ..calstis import calstis
 
 
 def prepspec(inspec, outroot='./', darkfile=None, pixelflat=None, initguess=None):
-    """Correct STIS CCD G750L or G750M spectrum for fringing.
+    """Calibrate STIS CCD G750L or G750M spectrum before defringing.
 
-    Based on PyRAF `stsdas.hst_calib.stis.prepspec task 
-    <https://github.com/spacetelescope/stsdas/blob/master/stsdas/pkg/hst_calib/stis/prepspec.cl>`_.
+    Based on the PyRAF `stsdas.hst_calib.stis.prepspec` task.
 
     Parameters
     ----------

@@ -7,22 +7,22 @@ def find_loc(input, low_frac=0.2, high_frac=0.8, low_line_frac=0.4):
 
     Parameters
     ----------
-    input : ndarray
+    input: ndarray
         The input science data array for the current image set.
 
-    low_frac : float
+    low_frac: float
         Fraction of image width for the start of a slice.
 
-    high_frac : float
+    high_frac: float
         Fraction of image width for the end of a slice.
 
-    low_line_frac : float
+    low_line_frac: float
         Fraction of image height for the start of a slice for limiting the
         region over which to search for the maximum of the slit profile.
 
     Returns
     -------
-    target_locn : float or None
+    target_locn: float or None
         The location (zero based pixel coordinate) of the target in the
         cross-dispersion direction.
         None will be returned if the quadratic fit to the cross-dispersion
