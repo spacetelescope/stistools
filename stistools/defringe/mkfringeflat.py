@@ -15,66 +15,66 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
                  shift_step=0.1, do_scale=True, beg_scale=0.8, end_scale=1.2, scale_step=0.04,
                  extrloc=None, extrsize=None, opti_spreg=None, rms_region=None):
 
-    """Replacement for the IRAF cl script stsdas/pkg/hst_calib/stis/mkfringeflat.cl.  Takes
-    an input science spectrum and a fringe flat that has been normalized using the task
-    normspflat.  The fringe flat is shifted and scaled to produce the minimum RMS when divided
-    into the science data
+    """Takes an input science spectrum and a fringe flat that has been normalized using
+    the task `normspflat`.  The fringe flat is shifted and scaled to produce the minimum
+    RMS when divided into the science data.
 
+    Based on the PyRAF `stsdas.hst_calib.stis.mkfringeflat` task.
 
     Parameters
     ----------
 
-    inspec : str
+    inspec: str
         Name of input science spectrum datafile
 
-    inflat : str
+    inflat: str
         Name of input fringe flat file (usually the output from normspflat)
 
-    outflat : str
+    outflat: str
         Name of output fringe flat to be used in the defringe task
 
-    do_shift : bool
+    do_shift: bool
         Controls whether the shift between fringe flat and science data is
         to be calculated
 
-    beg_shift : float
+    beg_shift: float
         Initial shift to apply to fringe flat
 
-    end_shift : float
+    end_shift: float
         Final shift to apply to fringe flat
 
-    shift_step : float
+    shift_step: float
         Step-size between shifts to be applied to fringe flat
 
-    do_scale : bool
+    do_scale: bool
         Controls whether the scaling between fringe flat and science
         data is to be calculated
 
-    beg_scale : float
+    beg_scale: float
         Initial scaling to apply to fringe flat
 
-    end_scale : float
+    end_scale: float
         Final scaling to appply to fringe flat
 
-    scale_step : float
+    scale_step: float
         Step-size between scaling values to be applied to fringe flat
 
-    extrloc : float or None
+    extrloc: float or None
         Extraction location.  If set to None, this will be calculated by
         parabolic interpolation of the peak of the cross-dispersion
         spectral sum
 
-    extrsize : float or None
+    extrsize: float or None
         Extraction size in pixels.  If set to None, this will be set to a
         reasonable value by this routine
 
-    opti_sreg : str or None
+    opti_sreg: str or None
         A string representing the section to be used in normalizing the spectrum
         of the science target before it is divided by the shifted/scaled fringe flat.
         If set to None, a reasonable range is chosen by this routine.  Should be
         specified like a Python slice, zero indezed.
 
-    rms_region : str or None
+    rms_region: str or None
         A string representing the section to be used in the rms calculation.  If set
         to None, a reasonable range is chosen by this routine.  Should be specified
         like a Python slice, zero indexed.

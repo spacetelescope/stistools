@@ -22,8 +22,7 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
                pixelflat=None, wavecal=None):
     """Normalize STIS CCD fringe flat.
 
-    Based on PyRAF `stsdas.hst_calib.stis.normspflat task
-    <https://github.com/spacetelescope/stsdas/blob/master/stsdas/pkg/hst_calib/stis/normspflat.cl>`_.
+    Based on the PyRAF `stsdas.hst_calib.stis.normspflat` task.
 
     Parameters
     ----------

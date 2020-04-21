@@ -14,13 +14,15 @@ Routines
 - `mkfringeflat` -- Match fringes in STIS fringe flat to those in science data  
 - `defringe`     -- Defringe by dividing the science spectrum by the fringe flat  
 
+.. See the stistools documentation on readthedocs for the latest information and user guides:
+   https://stistools.readthedocs.io/
+
 .. note::
-    See the stistools documentation on readthedocs for the latest information and user guides:
-    <https://stistools.readthedocs.io/en/latest/>
-    See section 3.5.5 of the STIS Data Handbook (DHB) for more details on the defringing process:
-    <http://www.stsci.edu/files/live/sites/www/files/home/hst/instrumentation/stis/documentation/_documents/stis_dhb.pdf>
+    See Section 3.5.5 of the `STIS Data Handbook (DHB)
+    <http://www.stsci.edu/files/live/sites/www/files/home/hst/instrumentation/stis/documentation/_documents/stis_dhb.pdf>`_
+    for more details on the defringing process.
 
 .. warning::
-    These routines are based on PyRAF stsdas.hst_calib.stis defringing tasks, though 
+    These routines are based on PyRAF `stsdas.hst_calib.stis` defringing tasks, though 
     users should expect numerical discrepancies between these two implementations.
 """

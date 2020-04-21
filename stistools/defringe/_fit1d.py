@@ -20,46 +20,46 @@ def fit1d(x, y, weights=None,
     Parameters
     ----------
 
-    x : 1-d ndarray
+    x: 1-d ndarray
         The array of independent values
 
-    y : 1-d ndarray
+    y: 1-d ndarray
         The array of dependent values.  Must have same length as x, or function returns None
 
-    weights : 1-d ndarray or None
+    weights: 1-d ndarray or None
         The array of weights.  If set to None, the points are given equal weight of 1.0.  If not
         set to None, must have the same length as x and y, or the function returns None
 
-    naverage : int
+    naverage: int
         The number of adjacent elements of x, y, and weight that are averaged before
         fitting is done.  If naverage=1, no averaging is done.
 
-    function : str
+    function: str
         Fitting function.  Currently only "spline1" and "spline3" are supported
 
-    order : int
+    order: int
         Order of fitting fuction.  The number of knots in the spline fit is (order-1)
 
-    low_reject : float
+    low_reject: float
         Points with y values less than fit - low_reject*(rms deviation of data from fit) are rejected
         when the fit is iterated.  Ignored if niterate = 0.
 
-    high_reject : float
+    high_reject: float
         Points with y values greater than fit + low_reject*(rms deviation of data from fit) are rejected
         when the fit is iterated.  Ignored if niterate = 0.
 
-    niterate : int
+    niterate: int
         Number of times sigma-clipping iterations are performed.  niterate=0 corresponds to no
         sigma clipping
 
-    grow : float
+    grow: float
         Used to calculate how many elements adjacent to reject pixels are also rejected.
         Not currently implemented, but included to duplicate the IRAF fitting parameter.
 
     Returns
     -------
 
-    fit : scipy.interpolate.fitpack2.LSQUnivariateSpline object
+    fit: scipy.interpolate.fitpack2.LSQUnivariateSpline object
         The result of the fit.  It can be used to calculate the fitted
         values for the input x values:
 
@@ -92,16 +92,16 @@ def get_knots(x, number_of_knots):
     Parameters
     ----------
 
-    x : 1-d ndarray
+    x: 1-d ndarray
         The input array for which knots are to be calculated
 
-    number_of_knots : int
+    number_of_knots: int
         The number of knots to calculate
 
     Returns
     -------
 
-    knots : 1-d ndarray
+    knots: 1-d ndarray
         The array of equally-spaced knots
 
     """
@@ -122,19 +122,19 @@ def fit_once(x, y, weights, function, order):
     Parameters
     ----------
 
-    x : 1-d ndarray
+    x: 1-d ndarray
         Input array of x-values
 
-    y : 1-d array
+    y: 1-d array
         Input array of y-values
 
-    weights : 1-d array
+    weights: 1-d array
         Input array of weights
 
-    function : str
+    function: str
         Function to be fitted.  Currently only "spline1" and "spline3" are supported
 
-    order : int
+    order: int
         Order of function to be fitted.  Since only splines are currently supported,
         the order is the same as the number of equal reqions the data domain is split into,
         and 1 more than the number of equally-spaced knots.
@@ -142,7 +142,7 @@ def fit_once(x, y, weights, function, order):
     Returns
     -------
 
-    fit : scipy.interpolate.fitpack2.LSQUnivariateSpline object
+    fit: scipy.interpolate.fitpack2.LSQUnivariateSpline object
         This can be used to calculate the fitted values for the input x values:
 
         fitted_values = fit(x)
@@ -173,42 +173,42 @@ def fit_with_rejection(x, y, weights, function, order, low_reject, high_reject, 
     Parameters
     ----------
 
-    x : 1-d ndarray
+    x: 1-d ndarray
         The array of independent values
 
-    y : 1-d ndarray
+    y: 1-d ndarray
         The array of dependent values.  Must have same length as x, or function returns None
 
-    weights : 1-d ndarray or None
+    weights: 1-d ndarray or None
         The array of weights.  If set to None, the points are given equal weight of 1.0.  If not
         set to None, must have the same length as x and y, or the function returns None
 
-    function : str
+    function: str
         Fitting function.  Currently only "spline1" and "spline3" are supported
 
-    order : int
+    order: int
         Order of fitting fuction.  The number of knots in the spline fit is (order-1)
 
-    low_reject : float
+    low_reject: float
         Points with y values less than fit - low_reject*(rms deviation of data from fit) are rejected
         when the fit is iterated.  Ignored if niterate = 0.
 
-    high_reject : float
+    high_reject: float
         Points with y values greater than fit + low_reject*(rms deviation of data from fit) are rejected
         when the fit is iterated.  Ignored if niterate = 0.
 
-    niterate : int
+    niterate: int
         Number of times sigma-clipping iterations are performed.  niterate=0 corresponds to no
         sigma clipping
 
-    grow : float
+    grow: float
         Used to calculate how many elements adjacent to reject pixels are also rejected.
         Not currently implemented, but included to duplicate the IRAF fitting parameter.
 
     Returns
     -------
 
-    fit : scipy.interpolate.fitpack2.LSQUnivariateSpline object
+    fit: scipy.interpolate.fitpack2.LSQUnivariateSpline object
         The result of the fit.  It can be used to calculate the fitted
         values for the input x values:
 
@@ -241,22 +241,22 @@ def calc_rms_deviation(x, y, weights, fitted):
     Parameters
     ----------
 
-    x : 1-d ndarray
+    x: 1-d ndarray
         Input array of x-values
 
-    y : 1-d array
+    y: 1-d array
         Input array of y-values
 
-    weights : 1-d array
+    weights: 1-d array
         Input array of weights
 
-    fitted : scipy.interpolate.fitpack2.LSQUnivariateSpline object
+    fitted: scipy.interpolate.fitpack2.LSQUnivariateSpline object
         The result from running the fitting routine
 
     Returns
     -------
 
-    rms_deviation : float
+    rms_deviation: float
         The rms deviation
 
     """
@@ -276,26 +276,26 @@ def wtrebin(x, y, weights=None, nbin=1):
     Parameters
     ----------
 
-    x : 1-d ndarray
+    x: 1-d ndarray
         The array of independent values
 
-    y : 1-d ndarray
+    y: 1-d ndarray
         The array of dependent values.  Must have same length as x, or function
         returns (None, None, None)
 
-    weights : 1-d ndarray or None
+    weights: 1-d ndarray or None
         The array of weights.  If set to None, the points are given equal weight of 1.0.  If not
         set to None, must have the same length as x and y, or the function
         returns (None, None, None)
 
-    nbin : int
+    nbin: int
         The number of adjacent elements of x, y, and weight that are averaged before
         fitting is done.  If nbin=1, no averaging is done and the input arrays are returned
 
     Returns
     -------
 
-    (xout, yout, wout) : 3-tuple of ndarray objects
+    (xout, yout, wout): 3-tuple of ndarray objects
         The binned/averaged x, y, and weight arrays
 
     """

@@ -17,18 +17,20 @@ sdqflags = 4 + 8 + 512                  # "serious" data quality flags
 
 def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
     # dark_file=None, pixel_flat=None
-    """Defringe by dividing the science spectrum by the fringe flat
+    """Defringe by dividing the science spectrum by the fringe flat.
+
+    Based on the PyRAF `stsdas.hst_calib.stis.defringe` task.
 
     Parameters
     ----------
-    science_file : str
+    science_file: str
         The name of the input science file.
 
-    fringe_flat : str
+    fringe_flat: str
         The name of the input fringe flat file.  This is the output from
         `mkfringeflat`.
 
-    overwrite : bool
+    overwrite: bool
         The name of the output file will be constructed from the name of the
         input science file (`science_file`) by replacing the suffix with
         'drj' or 's2d'.  If the input name are the same a RuntimeError will
@@ -37,12 +39,12 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
         the existing file will be overwritten if `overwrite` is True (the
         default is True).
 
-    verbose : bool
+    verbose: bool
         If True (the default), print more info.
 
     Returns
     -------
-    drj_filename : str
+    drj_filename: str
         The name of the output file.  This will have suffix '_drj' if the
         input is G750L data, and the output name will have suffix '_s2d'
         if the input is G750M.
