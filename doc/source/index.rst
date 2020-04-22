@@ -65,7 +65,6 @@ Analysis Tools
    radialvel
    r_util
    gettable
-   defringe
    inttag
    wavelen
    doppinfo
