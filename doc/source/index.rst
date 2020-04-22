@@ -65,11 +65,14 @@ Analysis Tools
    radialvel
    r_util
    gettable
+   defringe
    inttag
    wavelen
    doppinfo
    ctestis
    tastis
+   defringe
+
 
 ==================
 Indices and tables
