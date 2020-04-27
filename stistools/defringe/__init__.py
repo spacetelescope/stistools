@@ -4,7 +4,7 @@ from .mkfringeflat import mkfringeflat
 from .defringe import defringe
 
 __doc__ = """
-HST/STIS CCD Defringing Tools
+.. HST/STIS CCD Defringing Tools
 
 Routines
 --------
