@@ -67,6 +67,7 @@ for getting started.
    Defringe User Guide <defringe_guide.rst>
    Defringe Examples <defringe_examples.rst>
 
+
 ==================
 Indices and tables
 ==================
