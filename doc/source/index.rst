@@ -35,8 +35,6 @@ Getting Started
    :maxdepth: 2
 
    Installation and Setup <gettingstarted.rst>
-   Defringe User Guide <defringe_guide.rst>
-   Defringe Examples <defringe_examples.rst>
 
 
 =======================
@@ -57,7 +55,7 @@ Pipeline Software
 Analysis Tools
 =======================
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    sshift
    stisnoise
