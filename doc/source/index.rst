@@ -28,50 +28,44 @@ it’s recommended that STIS users familiarize themselves with this package. Und
 will be those who may be newer to Python as a result of this transition, this documentation seeks to provide a step-by-step guide
 for getting started.
 
-========================
-Getting Started
-========================
 .. toctree::
+   :caption: Getting Started
    :maxdepth: 2
 
    Installation and Setup <gettingstarted.rst>
 
 
-=======================
-Pipeline Software
-=======================
 .. toctree::
+   :caption: Routines
    :maxdepth: 1
 
-   calstis
-   ocrreject
    basic2d
-   x1d
-   x2d
-   wavecal
-
-
-=======================
-Analysis Tools
-=======================
-.. toctree::
-   :maxdepth: 1
-
-   sshift
-   stisnoise
-   mktrace
+   calstis
+   ctestis
+   defringe
+   doppinfo
    evaldisp
-   wx2d
+   gettable
+   inttag
+   mktrace
+   ocrreject
    radialvel
    r_util
-   gettable
-   defringe
-   inttag
-   wavelen
-   doppinfo
-   ctestis
+   sshift
+   stisnoise
    tastis
-   defringe
+   wavecal
+   wavelen
+   wx2d
+   x1d
+   x2d
+
+.. toctree::
+   :caption: Guides & Tutorials
+   :maxdepth: 2
+
+   Defringe User Guide <defringe_guide.rst>
+   Defringe Examples <defringe_examples.rst>
 
 
 ==================
