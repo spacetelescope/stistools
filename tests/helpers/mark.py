@@ -6,7 +6,6 @@ import re
 __all__ = ['runslow', 'slow', 'require_bigdata',
            'not_under_travis', 'require_crds_context']
 
-
 # Decorator to indicate slow tests
 runslow = pytest.mark.skipif(
     not pytest.config.getoption("--runslow"),

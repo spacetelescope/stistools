@@ -1,9 +1,10 @@
 from stistools.stisnoise import stisnoise
 from .resources import BaseSTIS
-from .helpers.mark import require_bigdata
+import pytest
 
 
-@require_bigdata
+@pytest.mark.bigdata
+@pytest.mark.slow
 class TestStisnoise(BaseSTIS):
 
     input_loc = 'stisnoise'

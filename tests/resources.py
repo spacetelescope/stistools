@@ -19,7 +19,6 @@ from astropy.table import Table
 from astropy.utils.data import conf
 
 
-from .helpers.mark import require_bigdata
 from .helpers.io import get_bigdata, upload_results
 
 __all__ = ['download_crds',
@@ -110,7 +109,7 @@ def raw_from_asn(asn_file, suffix='_raw.fits'):
 
 # Base classes for actual tests.
 # NOTE: Named in a way so pytest will not pick them up here.
-# @pytest.mark.require_bigdata
+#@pytest.mark.bigdata
 class BaseCal(object):
     prevdir = os.getcwd()
     use_ftp_crds = True

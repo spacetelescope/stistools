@@ -1,12 +1,11 @@
 import pytest
 from stistools.tastis import tastis
 from .resources import BaseSTIS
-from .helpers.mark import require_bigdata
-
-# Still Need to test keyword ACQSTAT update?
+import pytest
 
 
-@require_bigdata
+@pytest.mark.bigdata
+@pytest.mark.slow
 class TestDoppinfo(BaseSTIS):
 
     input_loc = 'tastis'
