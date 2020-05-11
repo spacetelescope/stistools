@@ -68,11 +68,11 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         Extraction size in pixels.  If set to None, this will be set to a
         reasonable value by this routine
 
-    opti_sreg: str or None
+    opti_spreg: str or None
         A string representing the section to be used in normalizing the spectrum
         of the science target before it is divided by the shifted/scaled fringe flat.
         If set to None, a reasonable range is chosen by this routine.  Should be
-        specified like a Python slice, zero indezed.
+        specified like a Python slice, zero indexed.
 
     rms_region: str or None
         A string representing the section to be used in the rms calculation.  If set
