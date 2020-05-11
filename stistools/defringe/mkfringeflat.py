@@ -68,14 +68,14 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         Extraction size in pixels.  If set to None, this will be set to a
         reasonable value by this routine
 
-    opti_sreg: str or None
-        A string representing the section to be used in normalizing the spectrum
+    opti_spreg: list or array-like or None
+        A list or array representing the section to be used in normalizing the spectrum
         of the science target before it is divided by the shifted/scaled fringe flat.
         If set to None, a reasonable range is chosen by this routine.  Should be
         specified like a Python slice, zero indezed.
 
-    rms_region: str or None
-        A string representing the section to be used in the rms calculation.  If set
+    rms_region: list or array-like or None
+        A list or array representing the section to be used in the rms calculation.  If set
         to None, a reasonable range is chosen by this routine.  Should be specified
         like a Python slice, zero indexed.
 
@@ -184,10 +184,16 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         else:
             colstart = int(5/bincols) - 1
             colstop = int(1020/bincols)
+    else:
+        colstart, colstop = opti_spreg
+        colstart, colstop = int(colstart), int(colstop)
 
     if rms_region is None:
         rms_start = int(725/bincols) - 1
         rms_stop = int(900/bincols)
+    else:
+        rms_start, rms_stop = rms_region
+        rms_start, rms_stop = int(rms_start), int(rms_stop)
 
     print("Range to be normalized: [{}:{},{}:{}]".format(fline, lline, colstart, colstop))
 
@@ -246,7 +252,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
             mean = np.mean(summed_line[rms_start:rms_stop], dtype=np.float64)
             sigma = np.std(summed_line[rms_start:rms_stop], dtype=np.float64)
             rmsvalues[i] = sigma/mean
-            print("shift = {}, rms = {}".format(current_shift[i], rmsvalues[i]))
+            print("shift = {:10.3f}, rms = {:8.4f}".format(current_shift[i], rmsvalues[i]))
 
         #
         # Determine shift that delivers the best RMS by an inverse rms weighted average
@@ -275,7 +281,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
             theshift = theshift*shift_step + beg_shift
 
         print(" ")
-        print(" Best shift : {} pixels".format(theshift))
+        print(" Best shift : {:10.3f} pixels".format(theshift))
 
         # Apply the best shift and create output array
         flt_blk = block_reduce(fltdata, (binlines/fltbinlines, bincols/fltbincols),
@@ -351,7 +357,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
             mean = np.mean(summed_line[rms_start:rms_stop], dtype=np.float64)
             sigma = np.std(summed_line[rms_start:rms_stop], dtype=np.float64)
             rmsvalues[i] = sigma/mean
-            print("Fringes scaled  {}: RMS = {}".format(current_scale[i], rmsvalues[i]))
+            print("Fringes scaled  {:10.3f}: RMS = {:8.4f}".format(current_scale[i], rmsvalues[i]))
 
         #
         # Determine scale factor that delivers the best RMS by an inverse-weighted average
@@ -382,7 +388,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
             thescale = thescale * scale_step + beg_scale
 
         print(" ")
-        print(" Best scale : {}".format(thescale))
+        print(" Best scale : {:10.3f}".format(thescale))
 
         # Apply the best scale and create output array
         flat_scaled = fltdata.copy()
