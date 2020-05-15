@@ -1,9 +1,10 @@
 from stistools.ocrreject import ocrreject
 from .resources import BaseSTIS
-from .helpers.mark import require_bigdata
+import pytest
 
 
-@require_bigdata
+@pytest.mark.bigdata
+@pytest.mark.slow
 class TestOcrreject(BaseSTIS):
 
     input_loc = 'ocrreject'

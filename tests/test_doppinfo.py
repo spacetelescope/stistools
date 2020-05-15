@@ -1,8 +1,10 @@
 from stistools.doppinfo import Doppinfo
 from .resources import BaseSTIS
-from .helpers.mark import require_bigdata
+import pytest
 
-@require_bigdata
+
+@pytest.mark.bigdata
+@pytest.mark.slow
 class TestDoppinfo(BaseSTIS):
 
     input_loc = 'doppinfo'
