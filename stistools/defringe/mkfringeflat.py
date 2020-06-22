@@ -20,6 +20,28 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
     RMS when divided into the science data.
 
     Based on the PyRAF `stsdas.hst_calib.stis.mkfringeflat` task.
+    
+    In mkfringeflat, the user can specify a range of shifts and scales for the routine to 
+    test creating an optimal fringe flat. mkfringeflat will go through the shift and scale
+    dimensions separately and calculate the RMS using the following steps:
+    1. for each shift, apply the shift to the input flat field
+    2. divide the science data by the shifted flat
+    3. divide out the large-scale SED from the science image in order to isolate the 
+       fringing pattern (this is called the response image)
+    4. sum the response image across the rows of the RMS region
+    5. take the mean and standard deviation of the summed rows of the response image
+    6. The RMS value for that shift is given by the standard deviation divided by the mean 
+       found in step 5
+    7. find the minimum RMS value
+    8. To determine the shift that gives the best RMS, use the inverse RMS weighted 
+       average
+    9. Apply the best shift determined in step 8 to the data and repeat steps 1-8 with the 
+       scale values to find the best scaling.
+
+    The RMS values are printed out for each scale and shift but the final best shift and 
+    best scale values do not necessarily correspond to the printed values. This is 
+    because the routine is calculating the RMS values based on a spline fit of the data 
+    at each scale and shift, rather than being calculated at each discrete step. 
 
     Parameters
     ----------
