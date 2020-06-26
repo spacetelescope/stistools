@@ -43,7 +43,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
     7. Fit the RMS values with a quadratic polynomial weighted by the inverse RMS to find
        the optimal RMS value
 
-    9. Apply the best shift determined in step 7 to the data and repeat steps 1-7 with the
+    8. Apply the best shift determined in step 7 to the data and repeat steps 1-7 with the
        scale values to find the best scaling
 
 
