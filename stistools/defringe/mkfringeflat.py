@@ -21,7 +21,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
 
     Based on the PyRAF `stsdas.hst_calib.stis.mkfringeflat` task.
 
-    In `mkfringeflat``, the user can specify a range of shifts and scales for the routine
+    In `mkfringeflat`, the user can specify a range of shifts and scales for the routine
     to test creating an optimal fringe flat. `mkfringeflat` will go through the shift and
     scale dimensions separately and calculate the RMS using the following steps:
 
