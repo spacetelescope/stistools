@@ -17,21 +17,22 @@ Table of File Inputs/Outputs for the Defringe Tools
 +--------------+--------------------------------------+--------------------------------+
 |    Tool      |            Input(s)                  |       Output(s)                |
 +==============+======================================+================================+
-| normspflat   | | **If do_cal is True:**             | [flat_file]_nsp.fits           |
+| normspflat   | | **If do_cal is True:**             | | [flat_file]_nsp.fits         |
 |              | | [flat_file]_raw.fits,              |                                |
 |              | | [sci_file]_wav.fits                |                                |
+|              | |                                    |                                |
 |              | | **If do_cal is False:**            |                                |
 |              | | [flat_file]_crj.fits (G750L)       |                                |
 |              | | or [flat_file]_sx2.fits (G750M)    |                                |
 |              | | [sci_file]_wav.fits                |                                |
 +--------------+--------------------------------------+--------------------------------+
-|  prepspec    | [sci_file]_raw.fits                  | | **Standard Calstis Outputs:**|
+|  prepspec    | | [sci_file]_raw.fits                | | **Standard Calstis Outputs:**|
 |              |                                      | | [sci_file]_flt.fits          |
 |              |                                      | | [sci_file]_crj.fits          |
 |              |                                      | | [sci_file]_sx1.fits          |
 |              |                                      | | [sci_file]_sx2.fits          |
 +--------------+--------------------------------------+--------------------------------+
-| mkfringeflat | | [flat_file]_nsp.fits               | [flat_file]_frr.fits           |
+| mkfringeflat | | [flat_file]_nsp.fits               | | [flat_file]_frr.fits         |
 |              | | [sci_file]_crj.fits (G750L) or     |                                |
 |              | | [sci_file]_sx2.fits (G750M)        |                                |
 +--------------+--------------------------------------+--------------------------------+
