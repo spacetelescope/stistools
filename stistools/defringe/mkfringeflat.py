@@ -29,8 +29,8 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
 
     2. Divide the science data by the shifted flat
 
-    3. Divide out the large-scale SED from the science image in order to isolate the
-       fringing pattern (this is called the response image)
+    3. Divide out the large-scale SED from the science image using a spline fit in order
+       to isolate the fringing pattern (this is called the response image)
 
     4. Sum the response image along the columns within the RMS region
 
