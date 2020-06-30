@@ -6,7 +6,8 @@ bc1 = new BuildConfig()
 bc1.nodetype = "linux"
 bc1.name = "release"
 // Would be nice if Jenkins can access /grp/hst/cdbs/xxxx directly.
-bc1.env_vars = ['TEST_BIGDATA=https://bytesalad.stsci.edu/artifactory']
+bc1.env_vars = ['TEST_BIGDATA=https://bytesalad.stsci.edu/artifactory',
+                'oref=/grp/hst/cdbs/oref/']
 bc1.conda_channels = ['http://ssb.stsci.edu/astroconda']
 bc1.conda_packages = ['python=3.6', 'pytest', 'crds', 'hstcal', 'scikit-image']
 bc1.build_cmds = ["pip install -e .[test,all]"]
