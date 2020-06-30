@@ -5,14 +5,12 @@ from .defringe import defringe
 
 __doc__ = """
 .. HST/STIS CCD Defringing Tools
+   -----------------------------
 
-Routines
---------
-
-- `prepspec`     -- Calibrate STIS CCD G750L or G750M spectrum before defringing  
-- `normspflat`   -- Normalize STIS CCD fringe flat  
-- `mkfringeflat` -- Match fringes in STIS fringe flat to those in science data  
-- `defringe`     -- Defringe by dividing the science spectrum by the fringe flat  
+- `prepspec`     — Calibrate STIS CCD G750L or G750M spectrum before defringing  
+- `normspflat`   — Normalize STIS CCD fringe flat  
+- `mkfringeflat` — Match fringes in STIS fringe flat to those in science data  
+- `defringe`     — Defringe by dividing the science spectrum by the fringe flat  
 
 .. See the stistools documentation on readthedocs for the latest information and user guides:
    https://stistools.readthedocs.io/

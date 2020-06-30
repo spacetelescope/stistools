@@ -11,7 +11,7 @@ G750M and G750L modes) are impacted by “fringing”, a phenomenon caused
 by interference of multiple reflections between the two surfaces of the
 CCD in cases where the wavelength of the incident light is a small
 integer multiple of the distance between the two surfaces of the CCD
-(Goudfrooij et al. 1998). Stistools contains four tools used for
+(Goudfrooij et al. 1998). ``stistools`` contains four tools used for
 correcting the fringing effect, ``normspflat``, ``prepspec``,
 ``mkfringeflat``, and ``defringe``, which are located in the
 ``stistools.defringe`` package. These tools are python ports of the
@@ -65,8 +65,11 @@ field image. The ``do_cal`` parameter tells ``normspflat`` whether to
 calibrate the flat file using ``calstis`` or not. If using a raw input
 image, ``do_cal`` should be set to true, if using a calibrated image
 (``crj`` or ``sx2``) ``do_cal`` can be set to false. The output file,
-which has the nsp identifier in our example, is the normalized flat
-field for use in the next steps.
+which has the ``nsp`` identifier in our example, is the normalized flat
+field for use in the next steps. It’s worth noting that in the
+``do_cal=True`` case, ``normspflat`` will print out a message
+identifying the most calibrated output file produced by calstis, which
+in this case is a ``crj`` file.
 
 .. code:: ipython3
 
@@ -80,6 +83,22 @@ field for use in the next steps.
     File written:  /Users/stisuser/data/path/odvkl3080_crj.fits
 
 
+**G750M/G750L Point of Difference:** Fringe flat images taken with G750L
+include not only the IR fringing at wavelengths greater than 7500
+Angstroms, but also some fringes at wavelengths less than 6000 Angstroms
+due to an order-sorter filter. Since these order-sorter fringes are
+already included in the sensitivity function, they should not be
+included in the fringe flat, and so these columns should be set to unity
+in the normalized fringe flat. The following code accomplishes this:
+
+.. code:: ipython3
+
+    # Flatten the blue end of the flat-field image [ONLY FOR G750L]
+    
+    with fits.open(f"{flat_file}_nsp.fits") as hdulist:
+        hdulist[1].data[:250,:] = 1
+        hdulist.writeto(f"{flat_file}_nsp.fits",overwrite=True)
+
 2. Prepare the Science File for the Defringing Correction (Optional)
 --------------------------------------------------------------------
 
@@ -91,9 +110,14 @@ sure to remove any higher level science products (``flt``, ``crj``,
 
 **Note:** Running ``prepspec`` is an optional step, if you already have
 calibrated science data (``crj``/``sx2``) then running ``prepspec`` is
-not essential. However, you may wish to delete these data products and
-rebuild from the raw science file with ``prepspec`` to ensure that the
-correct calibration was done on the files.
+not essential. The main purpose of ``prepspec`` is to run calstis with a
+specific set of calibration flags turned on (e.g. the keywords in the
+header that control which calibration steps are performed and omitted by
+calstis during calibration). In the typical case, the default calstis
+flags will be sufficient for defringing. However, you may wish to delete
+these data products and rebuild from the raw science file with
+``prepspec`` to ensure that the correct calibration was done on the
+files if you are uncertain.
 
 .. code:: ipython3
 
@@ -107,13 +131,18 @@ correct calibration was done on the files.
 
 The ``mkfringeflat`` tool is used to calculate the appropriate shifts
 and scale factors needed to match the fringes in the fringe flat and the
-science spectra. The best shift and scale factors are obtained by
-finding the values that minimize the RMS within a user-specified search
-range. The parameters that control the range and step size for the shift
-and scale have default values (shown explicitly below) that should serve
-most use cases well. ``mkfringeflat`` will warn the user if the best
-shift and scale values were found at the edge of the range, suggesting
-the range may need to be expanded further to find the best values.
+science spectra. The output is a shifted and scaled fringe flat which
+can be named however you wish, but we refer to as an ``frr`` file
+product in our documentation. The best shift and scale factors are
+obtained by finding the values that minimize the RMS within a
+user-specified search range. The parameters that control the range and
+step size for the shift and scale have default values (shown explicitly
+below) that should serve most use cases well. ``mkfringeflat`` will warn
+the user if the best shift and scale values were found at the edge of
+the range, suggesting the range may need to be expanded further to find
+the best values. The ``beg_shift`` and ``end_shift`` arguments can be
+used to adjust the shift range, while the ``beg_scale`` and
+``end_scale`` arguments can be used to adjust the scale range.
 
 **G750M/G750L Point of Difference:** The appropriate file type to use as
 the input science file depends on the observation mode. For G750L,
@@ -131,8 +160,8 @@ used.
         prod_type = "sx2"
     
     stistools.defringe.mkfringeflat(f"{sci_file}_{prod_type}.fits", f"{flat_file}_nsp.fits", 
-                                    f"{flat_file}_frr.fits", beg_shift=-0.5, end_shift=0.5, shift_step=0.1, 
-                                    beg_scale=0.8, end_scale=1.2, scale_step=0.04)
+                                    f"{flat_file}_frr.fits", beg_shift=-0.5, end_shift=2, shift_step=0.1,
+                                    beg_scale=0.8, end_scale=1.7, scale_step=0.04)
 
 
 .. parsed-literal::
@@ -145,37 +174,64 @@ used.
     
     Determining best shift for fringe flat
     
-    shift = -0.5, rms = 8.86830499443427
-    shift = -0.4, rms = 9.537416205896829
-    shift = -0.3, rms = 10.313446231610731
-    shift = -0.19999999999999996, rms = 10.859321697580842
-    shift = -0.09999999999999998, rms = 12.815115948375244
-    shift = 0.0, rms = 2.865668927113401
-    shift = 0.10000000000000009, rms = 2.930035418866309
-    shift = 0.20000000000000007, rms = 2.9325634070997313
-    shift = 0.30000000000000004, rms = 3.0000779821345067
-    shift = 0.4, rms = 3.048857113598449
-    shift = 0.5, rms = 3.099803105862569
+    shift =     -0.500, rms =   8.8683
+    shift =     -0.400, rms =   9.5374
+    shift =     -0.300, rms =  10.3134
+    shift =     -0.200, rms =  10.8593
+    shift =     -0.100, rms =  12.8151
+    shift =      0.000, rms =   2.8657
+    shift =      0.100, rms =   2.9300
+    shift =      0.200, rms =   2.9326
+    shift =      0.300, rms =   3.0001
+    shift =      0.400, rms =   3.0489
+    shift =      0.500, rms =   3.0998
+    shift =      0.600, rms =   3.1530
+    shift =      0.700, rms =   3.2087
+    shift =      0.800, rms =   3.2670
+    shift =      0.900, rms =   3.3279
+    shift =      1.000, rms =   3.3917
+    shift =      1.100, rms =   3.9375
+    shift =      1.200, rms =   8.4936
+    shift =      1.300, rms =   2.5887
+    shift =      1.400, rms =   2.7323
+    shift =      1.500, rms =   2.9274
+    shift =      1.600, rms =   3.2250
+    shift =      1.700, rms =   3.7717
+    shift =      1.800, rms =   5.1464
+    shift =      1.900, rms =  12.0936
+    shift =      2.000, rms =   3.4937
      
-     Best shift : 0.08832022657826488 pixels
+     Best shift :      1.347 pixels
      Shifted flat : odvkl3080_nsp_sh.fits
                     (Can be used as input flat for next iteration)
     
     Determining best scaling of amplitude of fringes in flat
     
-    Fringes scaled  0.8: RMS = 3.465684888742133
-    Fringes scaled  0.8400000000000001: RMS = 3.293885574776519
-    Fringes scaled  0.88: RMS = 3.173002670273641
-    Fringes scaled  0.92: RMS = 3.127387585002071
-    Fringes scaled  0.9600000000000001: RMS = 2.970040264399544
-    Fringes scaled  1.0: RMS = 2.924781030708238
-    Fringes scaled  1.04: RMS = 12.653574547469535
-    Fringes scaled  1.08: RMS = 10.852646024830669
-    Fringes scaled  1.12: RMS = 9.53614375927818
-    Fringes scaled  1.1600000000000001: RMS = 8.531799668011566
-    Fringes scaled  1.2000000000000002: RMS = 7.740201743078294
+    Fringes scaled       0.800: RMS =   2.7298
+    Fringes scaled       0.840: RMS =   2.7122
+    Fringes scaled       0.880: RMS =   2.6956
+    Fringes scaled       0.920: RMS =   2.6800
+    Fringes scaled       0.960: RMS =   2.6653
+    Fringes scaled       1.000: RMS =   2.6515
+    Fringes scaled       1.040: RMS =   2.6384
+    Fringes scaled       1.080: RMS =   2.6260
+    Fringes scaled       1.120: RMS =   2.6142
+    Fringes scaled       1.160: RMS =   2.6031
+    Fringes scaled       1.200: RMS =   2.5925
+    Fringes scaled       1.240: RMS =   2.5825
+    Fringes scaled       1.280: RMS =   2.5730
+    Fringes scaled       1.320: RMS =   2.5639
+    Fringes scaled       1.360: RMS =  12.0382
+    Fringes scaled       1.400: RMS =  10.9230
+    Fringes scaled       1.440: RMS =   5.0855
+    Fringes scaled       1.480: RMS =   4.9331
+    Fringes scaled       1.520: RMS =   4.7929
+    Fringes scaled       1.560: RMS =   4.6632
+    Fringes scaled       1.600: RMS =   4.5430
+    Fringes scaled       1.640: RMS =   4.4316
+    Fringes scaled       1.680: RMS =   4.3276
      
-     Best scale : 0.9660612672342681
+     Best scale :      1.284
     Output flat : odvkl3080_frr.fits
       (to be used as input to task 'defringe.py')
 
@@ -199,9 +255,8 @@ science product type is dependent on mode. (G750L: ``crj``, G750M:
 .. parsed-literal::
 
     Fringe flat data were read from the primary HDU
-    66 pixels in the fringe flat were less than or equal to 0
+    108 pixels in the fringe flat were less than or equal to 0
     Imset 1 done
-    Removing and recreating odvkl3050_drj.fits
     Defringed science saved to odvkl3050_drj.fits
 
 
@@ -220,3 +275,22 @@ to produce it, and may be worked with in the same manner.
 **G750M/G750L Point of Difference**: If working with a G750M
 observation, the output product by default will have the ``s2d``
 identifier.
+
+Extraction of 1D Spectra from Defringed Science Products
+--------------------------------------------------------
+
+As mentioned above, the defringed science products may be worked with as
+normal calstis products. Typically, the next step would be extract 1D
+spectra from these files. This can be accomplished by continuing the
+calibration through ``calstis.calstis`` or performing the extraction
+step individually using ``x1d.x1d``, please refer to the documentation
+for those tools if you’re looking for guidance on that step.
+
+1D Extraction of G750M Spectra
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It’s important to note that, at this time, ``x1d`` and ``calstis`` are
+not able to extract 1D spectra from the G750M ``sx2`` products. ``sx2``
+products have been geometrically rectified, which generates correlated
+errors between wavelength bins. These errors are not well-handled by the
+standard pipeline extraction algorithms.
