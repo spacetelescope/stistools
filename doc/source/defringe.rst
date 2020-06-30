@@ -4,11 +4,18 @@
 defringe
 **************************
 
+.. contents::
+   :local:
+   :depth: 0
+
+**Guides & Examples:**
+
 .. toctree::
    :maxdepth: 2
 
    Defringe User Guide <defringe_guide.rst>
    Defringe Examples <defringe_examples.rst>
+
 
 ---------------------------------------------------
 Table of File Inputs/Outputs for the Defringe Tools
@@ -63,9 +70,30 @@ the ratio of the data to the model for a given wavelength range.
   :width: 700
   :alt: Effectiveness of the Defringing Tools on an observation of GD71
 
+------------
+Routines
+------------
 
 .. currentmodule:: stistools.defringe
-
 .. automodule:: stistools.defringe
-   :members: prepspec, normspflat, mkfringeflat, defringe
-   :undoc-members:
+  :ignore-module-all:
+
+prepspec
+^^^^^^^^
+
+.. autofunction:: stistools.defringe.prepspec
+
+normspflat
+^^^^^^^^^^
+
+.. autofunction:: stistools.defringe.normspflat
+
+mkfringeflat
+^^^^^^^^^^^^
+
+.. autofunction:: stistools.defringe.mkfringeflat
+
+defringe
+^^^^^^^^
+
+.. autofunction:: stistools.defringe.defringe

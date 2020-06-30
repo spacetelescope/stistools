@@ -29,7 +29,7 @@ def prepspec(inspec, outroot='./', darkfile=None, pixelflat=None, initguess=None
         Name of pixel-to-pixel flat.  If None, use PIXELFLAT in main header of input
         spectrum.
     initguess: str or None
-        Method for initial value estimate for ocrreject: {None, 'minimum', 'median'}.
+        Method for initial value estimate for `ocrreject`: {None, 'minimum', 'median'}.
         (Default=None; Use the value in the CRREJTAB.)
 
     Returns

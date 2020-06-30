@@ -28,7 +28,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         Name of input science spectrum datafile
 
     inflat: str
-        Name of input fringe flat file (usually the output from normspflat)
+        Name of input fringe flat file (usually the output from `normspflat`)
 
     outflat: str
         Name of output fringe flat to be used in the defringe task
