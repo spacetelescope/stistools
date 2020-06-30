@@ -1,6 +1,5 @@
 """HSTCAL regression test helpers."""
-from astropy.extern.six.moves import urllib
-
+from six.moves import urllib
 import getpass
 import os
 import sys
