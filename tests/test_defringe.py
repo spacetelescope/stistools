@@ -18,7 +18,7 @@ class TestDefringe(BaseSTIS):
         output = flat_file+"_nsp_out.fits"
 
         for input_file in [flat_file+'_raw.fits', sci_file+'_wav.fits']:
-            self.get_data("input", input_file)
+            self.get_input_file("input", input_file)
         
         normspflat(flat_file+"_raw.fits",output, 
                    do_cal=True,wavecal=sci_file+"_wav.fits")
@@ -35,7 +35,7 @@ class TestDefringe(BaseSTIS):
         output = sci_file+"_crj.fits"
 
         for input_file in [sci_file+'_raw.fits', sci_file+'_wav.fits']:
-            self.get_data("input", input_file)
+            self.get_input_file("input", input_file)
 
         prepspec(sci_file+"_raw.fits")
 
@@ -51,7 +51,7 @@ class TestDefringe(BaseSTIS):
         output = flat_file+"_frr_out.fits"
 
         for input_file in [sci_file+'_crj.fits', flat_file+'_nsp.fits']:
-            self.get_data("input", input_file)
+            self.get_input_file("input", input_file)
 
         mkfringeflat(sci_file+"_crj.fits", flat_file+"_nsp.fits", output)
 
@@ -66,7 +66,7 @@ class TestDefringe(BaseSTIS):
         flat_file = 'o49x18020'
 
         for input_file in [sci_file+'_crj.fits', flat_file+'_frr.fits']:
-            self.get_data("input", input_file)
+            self.get_input_file("input", input_file)
 
         output = defringe(f"{sci_file}_crj.fits",f"{flat_file}_frr.fits")
 
@@ -82,7 +82,7 @@ class TestDefringe(BaseSTIS):
         output = flat_file+"_frr_out.fits"
 
         for input_file in [flat_file+'_raw.fits', sci_file+'_wav.fits']:
-            self.get_data("input", input_file)
+            self.get_input_file("input", input_file)
         
         normspflat(flat_file+"_raw.fits", output,
                    do_cal=True, wavecal=sci_file+"_wav.fits")
@@ -99,7 +99,7 @@ class TestDefringe(BaseSTIS):
         output = sci_file+"_sx2.fits"
 
         for input_file in [sci_file+'_raw.fits', sci_file+'_wav.fits']:
-            self.get_data("input", input_file)
+            self.get_input_file("input", input_file)
 
         prepspec(sci_file+"_raw.fits")
 
@@ -116,7 +116,7 @@ class TestDefringe(BaseSTIS):
         output = flat_file+"_frr_out.fits"
 
         for input_file in [sci_file+'_sx2.fits', flat_file+'_nsp.fits']:
-            self.get_data("input", input_file)
+            self.get_input_file("input", input_file)
 
         mkfringeflat(sci_file+"_sx2.fits", flat_file+"_nsp.fits", output,
                      beg_shift=-1.0, end_shift=0.5, shift_step=0.1,
@@ -133,7 +133,7 @@ class TestDefringe(BaseSTIS):
         flat_file = "oe36m10j0"
 
         for input_file in [sci_file+'_sx2.fits', flat_file+'_frr.fits']:
-            self.get_data("input", input_file)
+            self.get_input_file("input", input_file)
 
         output = defringe(f"{sci_file}_sx2.fits", f"{flat_file}_frr.fits")
 
