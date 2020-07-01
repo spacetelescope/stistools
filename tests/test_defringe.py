@@ -8,7 +8,6 @@ import pytest
 class TestDefringe(BaseSTIS):
 
     input_loc = 'defringe'
-    ref_loc = 'defringe/ref'
 
 
     def test_normspflat_g750l(self):
