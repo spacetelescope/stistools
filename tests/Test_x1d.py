@@ -1,9 +1,10 @@
 from stistools.x1d import x1d
 from .resources import BaseSTIS
-from .helpers.mark import require_bigdata
+import pytest
 
 
-@require_bigdata
+@pytest.mark.bigdata
+@pytest.mark.slow
 class TestX1d(BaseSTIS):
 
     input_loc = 'x1d'

@@ -2,10 +2,11 @@ import pytest
 
 from stistools.wx2d import wx2d
 from .resources import BaseSTIS
-from .helpers.mark import require_bigdata
+import pytest
 
 
-@require_bigdata
+@pytest.mark.bigdata
+@pytest.mark.slow
 class TestWx2d(BaseSTIS):
 
     input_loc = 'wx2d'

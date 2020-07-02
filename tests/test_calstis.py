@@ -1,9 +1,10 @@
 from stistools.calstis import calstis
 from .resources import BaseSTIS
-from .helpers.mark import require_bigdata
+import pytest
 
 
-@require_bigdata
+@pytest.mark.bigdata
+@pytest.mark.slow
 class TestCalstis(BaseSTIS):
 
     input_loc = 'calstis'

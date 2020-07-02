@@ -1,9 +1,10 @@
 from stistools.mktrace import mktrace
 from .resources import BaseSTIS
-from .helpers.mark import require_bigdata
+import pytest
 
 
-@require_bigdata
+@pytest.mark.bigdata
+@pytest.mark.slow
 class TestMktrace(BaseSTIS):
 
     input_loc = 'mktrace'
