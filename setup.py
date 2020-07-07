@@ -45,14 +45,15 @@ setup(
     ],
     install_requires = [
         'astropy',
-        'nose',
         'numpy',
-        'numpydoc',
         'scipy',
-        'sphinx',
-        'sphinx_rtd_theme',
-        'stsci_rtd_theme',
         'stsci.tools',
+    ],
+    tests_require = [
+        'pytest',
+        'six',
+        #'requests',
+        #'crds',
     ],
     packages = find_packages(),
     package_data = {

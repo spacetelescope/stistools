@@ -12,7 +12,6 @@ dependencies:
   - d2to1
   - stsci.distutils
   - stsci.tools
-  - ipython
   - pip:
     - stsci_rtd_theme
     - sphinx_automodapi
