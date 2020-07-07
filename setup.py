@@ -48,6 +48,7 @@ setup(
         'numpy',
         'scipy',
         'stsci.tools',
+        'scikit-image',
     ],
     tests_require = [
         'pytest',
