@@ -166,9 +166,10 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
         another, and they even vary depending on location on the detector.
         This argument specifies the slit angle, in degrees measured
         clockwise from the Y axis.  Here are some approximate values:
-            E230M   0.9 to 1.2
-            E230H   4.9 to 6.9
-            E140H  -3.8 to -5.8
+
+            - E230M:  0.9 to 1.2
+            - E230H:  4.9 to 6.9
+            - E140H: -3.8 to -5.8
 
     verbose: bool
         If True, calstis will print more info.

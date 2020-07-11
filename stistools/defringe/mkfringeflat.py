@@ -21,6 +21,37 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
 
     Based on the PyRAF `stsdas.hst_calib.stis.mkfringeflat` task.
 
+    In `mkfringeflat`, the user can specify a range of shifts and scales for the routine
+    to test creating an optimal fringe flat. `mkfringeflat` will go through the shift and
+    scale dimensions separately and calculate the RMS using the following steps:
+
+    1. For each shift step, apply the shift to the input flat field
+
+    2. Divide the science data by the shifted flat
+
+    3. Divide out the large-scale SED from the science image using a spline fit in order
+       to isolate the fringing pattern (this is called the response image)
+
+    4. Sum the response image along the columns within the RMS region
+
+    5. Calculate the mean and standard deviation of the summed columns of the response
+       image
+
+    6. The RMS value for that shift is given by the standard deviation divided by the mean
+       found in step 5
+
+    7. Fit the RMS values with a quadratic polynomial weighted by the inverse RMS to find
+       the optimal RMS value
+
+    8. Apply the best shift determined in step 7 to the data and repeat steps 1-7 with the
+       scale values to find the best scaling
+
+
+    The RMS values are printed out for each scale and shift but the final best shift and
+    best scale values do not necessarily correspond to the printed values. This is
+    because the routine is calculating the RMS values based on a fit of the data at each
+    scale and shift, rather than being calculated at each discrete step.
+
     Parameters
     ----------
 
@@ -28,7 +59,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         Name of input science spectrum datafile
 
     inflat: str
-        Name of input fringe flat file (usually the output from normspflat)
+        Name of input fringe flat file (usually the output from `normspflat`)
 
     outflat: str
         Name of output fringe flat to be used in the defringe task
@@ -68,17 +99,16 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         Extraction size in pixels.  If set to None, this will be set to a
         reasonable value by this routine
 
-    opti_sreg: str or None
-        A string representing the section to be used in normalizing the spectrum
+    opti_spreg: list or array-like or None
+        A list or array representing the section to be used in normalizing the spectrum
         of the science target before it is divided by the shifted/scaled fringe flat.
         If set to None, a reasonable range is chosen by this routine.  Should be
-        specified like a Python slice, zero indezed.
+        specified like a Python slice, zero indexed.
 
-    rms_region: str or None
-        A string representing the section to be used in the rms calculation.  If set
+    rms_region: list or array-like or None
+        A list or array representing the section to be used in the rms calculation.  If set
         to None, a reasonable range is chosen by this routine.  Should be specified
         like a Python slice, zero indexed.
-
     """
 
     print("mkfringeflat.py version {}".format(__version__))
@@ -184,10 +214,16 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         else:
             colstart = int(5/bincols) - 1
             colstop = int(1020/bincols)
+    else:
+        colstart, colstop = opti_spreg
+        colstart, colstop = int(colstart), int(colstop)
 
     if rms_region is None:
         rms_start = int(725/bincols) - 1
         rms_stop = int(900/bincols)
+    else:
+        rms_start, rms_stop = rms_region
+        rms_start, rms_stop = int(rms_start), int(rms_stop)
 
     print("Range to be normalized: [{}:{},{}:{}]".format(fline, lline, colstart, colstop))
 
@@ -246,7 +282,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
             mean = np.mean(summed_line[rms_start:rms_stop], dtype=np.float64)
             sigma = np.std(summed_line[rms_start:rms_stop], dtype=np.float64)
             rmsvalues[i] = sigma/mean
-            print("shift = {}, rms = {}".format(current_shift[i], rmsvalues[i]))
+            print("shift = {:10.3f}, rms = {:8.4f}".format(current_shift[i], rmsvalues[i]))
 
         #
         # Determine shift that delivers the best RMS by an inverse rms weighted average
@@ -275,7 +311,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
             theshift = theshift*shift_step + beg_shift
 
         print(" ")
-        print(" Best shift : {} pixels".format(theshift))
+        print(" Best shift : {:10.3f} pixels".format(theshift))
 
         # Apply the best shift and create output array
         flt_blk = block_reduce(fltdata, (binlines/fltbinlines, bincols/fltbincols),
@@ -351,7 +387,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
             mean = np.mean(summed_line[rms_start:rms_stop], dtype=np.float64)
             sigma = np.std(summed_line[rms_start:rms_stop], dtype=np.float64)
             rmsvalues[i] = sigma/mean
-            print("Fringes scaled  {}: RMS = {}".format(current_scale[i], rmsvalues[i]))
+            print("Fringes scaled  {:10.3f}: RMS = {:8.4f}".format(current_scale[i], rmsvalues[i]))
 
         #
         # Determine scale factor that delivers the best RMS by an inverse-weighted average
@@ -382,7 +418,7 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
             thescale = thescale * scale_step + beg_scale
 
         print(" ")
-        print(" Best scale : {}".format(thescale))
+        print(" Best scale : {:10.3f}".format(thescale))
 
         # Apply the best scale and create output array
         flat_scaled = fltdata.copy()

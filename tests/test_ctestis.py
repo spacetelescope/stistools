@@ -1,10 +1,11 @@
 import numpy as np
 from stistools.ctestis import ctestis
 from .resources import BaseSTIS
-from .helpers.mark import require_bigdata
+import pytest
 
 
-@require_bigdata
+@pytest.mark.bigdata
+@pytest.mark.slow
 class TestCtestis(BaseSTIS):
     """
     We need to add more tests for this
