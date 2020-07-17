@@ -9,10 +9,10 @@ dependencies:
   - scipy>=0.14
   - sphinx=1.8
   - stsci.tools
+  - ipython
   - d2to1
   - stsci.distutils
   - stsci.tools
-  - ipython
   - pip:
     - stsci_rtd_theme
     - sphinx_automodapi
