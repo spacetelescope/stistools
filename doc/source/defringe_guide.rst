@@ -95,9 +95,8 @@ in the normalized fringe flat. The following code accomplishes this:
 
     # Flatten the blue end of the flat-field image [ONLY FOR G750L]
     
-    with fits.open(f"{flat_file}_nsp.fits") as hdulist:
-        hdulist[1].data[:250,:] = 1
-        hdulist.writeto(f"{flat_file}_nsp.fits",overwrite=True)
+    with fits.open(f"{flat_file}_nsp.fits", mode='update') as hdulist:
+        hdulist[1].data[:,:250] = 1
 
 2. Prepare the Science File for the Defringing Correction (Optional)
 --------------------------------------------------------------------
