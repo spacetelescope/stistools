@@ -300,7 +300,9 @@ G750M Observation of AGK+81D266
 
 
 Subarray Data
-~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
+
+If the science data is subarray data, there are a few extra steps in the process before defringing. 
 
 .. code:: ipython3
 
@@ -311,7 +313,7 @@ Subarray Data
 
 .. code:: ipython3
 
-    # Normalize the contemporaneous flat field imagee
+    # Normalize the contemporaneous flat field image
     stistools.defringe.normspflat(f"{flat_file}_raw.fits",
                                   f"{flat_file}_nsp.fits", do_cal=True,
                                   wavecal=f"{sci_file}_wav.fits")
@@ -319,17 +321,18 @@ Subarray Data
 .. parsed-literal::
     File written:  /Users/stisuser/data/path/odqf11060_crj.fits
 
+If using G750L data, set the order sorter fringes in the flat field equal to one. This particular dataset is G750L data.
+
 .. code:: ipython3
 
-    # If using G750L data, set the order sorter fringes in the flat field equal to one.
-    # This particular dataset is G750L data.
     with fits.open(f"{flat_file}_nsp.fits", mode="update") as flat_hdu:
       flat_data = flat_hdu[1].data
       flat_data[:, :250] = 1
 
+Next, pad the subarray data with zeros so that it is the same size as the flat field data
+
 .. code:: ipython3
 
-    # Pad the subarray data with zeros so that it is the same size as the flat field data
     sci = fits.open(f"{sci_file}_crj.fits")
     sci_data = sci[1].data
     flat_data = fits.getdata(f"{flat_file}_nsp.fits")
@@ -354,12 +357,16 @@ Subarray Data
     fullframe_output = f"{sci_file}_fullfield_crj.fits"
     hdu.writeto(fullframe_output)
 
-    # Finally, change the LTV2 header keyword to zero
+
+Finally, change the LTV2 header keyword to zero
+.. code:: ipython3
+
     fits.setval(fullframe_output, 'LTV2', ext=1, value=0.0)
+
+Make the fringe flat by running the newly created full-frame image through mkfringeflat
 
 .. code:: ipython3
 
-    # Make the fringe flat by running the newly created full-frame image through mkfringeflat
     stistools.defringe.mkfringeflat(fullframe_output, f"{flat_file}_nsp.fits",
                                     f"{flat_file}_frr.fits")
 
@@ -407,10 +414,10 @@ Subarray Data
     Output flat : odqf11040_frr.fits
             (to be used as input to task 'defringe.py')
 
+Finally, defringe the data as usual.
 
 .. code:: ipython3
 
-    # defringe the data as usual
     stistools.defringe.defringe(fullframe_output, f"{flat_file}_frr.fits", overwrite=True)
 
 .. parsed-literal::
