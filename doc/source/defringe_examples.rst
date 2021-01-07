@@ -303,12 +303,14 @@ Subarray Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
+
     # Set up the data paths
     sci_file = 'odqf11trq'
     flat_file = 'odqf11060'
 
 
 .. code:: ipython3
+
     # Normalize the contemporaneous flat field imagee
     stistools.defringe.normspflat(f"{flat_file}_raw.fits",
                                   f"{flat_file}_nsp.fits", do_cal=True,
@@ -318,6 +320,7 @@ Subarray Data
     File written:  /Users/stisuser/data/path/odqf11060_crj.fits
 
 .. code:: ipython3
+
     # If using G750L data, set the order sorter fringes in the flat field equal to one.
     # This particular dataset is G750L data.
     flat_hdu = fits.open(f"{flat_file}_nsp.fits", mode="update")
@@ -327,6 +330,7 @@ Subarray Data
     flat_hdu.close()
 
 .. code:: ipython3
+
     # Pad the subarray data with zeros so that it is the same size as the flat field data
     sci = fits.open(f"{sci_file}_crj.fits")
     sci_data = sci[1].data
@@ -350,6 +354,7 @@ Subarray Data
     fits.setval(fullframe_output, 'LTV2', ext=1, value=0.0)
 
 .. code:: ipython3
+
     # Make the fringe flat by running the newly created full-frame image through mkfringeflat
     stistools.defringe.mkfringeflat(fullframe_output, f"{flat_file}_nsp.fits",
                                     f"{flat_file}_frr.fits")
@@ -400,6 +405,7 @@ Subarray Data
 
 
 .. code:: ipython3
+
     # defringe the data as usual
     stistools.defringe.defringe(fullframe_output, f"{flat_file}_frr.fits", overwrite=True)
 
