@@ -347,6 +347,12 @@ Subarray Data
     sci_header = fits.getheader(sci, 'SCI')
     # Use the same process to populate the error and data quality headers
 
+    # Create the new fits file
+    empty_primary = fits.PrimaryHDU(header=header1)
+    image_hdu = fits.ImageHDU(full_sci, name='SCI', header=sci_header)
+    # Use the same process to include the error and data quality headers
+
+    hdu = fits.HDUList([empty_primary, image_hdu])
     fullframe_output = f"{sci_file}_fullfield_crj.fits"
     hdu.writeto(fullframe_output)
 
