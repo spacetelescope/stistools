@@ -319,6 +319,7 @@ If the science data is subarray data, there are a few extra steps in the process
                                   wavecal=f"{sci_file}_wav.fits")
 
 .. parsed-literal::
+
     File written:  /Users/stisuser/data/path/odqf11060_crj.fits
 
 If using G750L data, set the order sorter fringes in the flat field equal to one. This particular dataset is G750L data.
@@ -369,6 +370,7 @@ Put the full frame data into a new file and populate the headers
 
 
 Finally, change the LTV2 header keyword to zero
+
 .. code:: ipython3
 
     fits.setval(fullframe_output, 'LTV2', ext=1, value=0.0)
@@ -381,6 +383,7 @@ Make the fringe flat by running the newly created full-frame image through mkfri
                                     f"{flat_file}_frr.fits")
 
 .. parsed-literal::
+
     mkfringeflat.py version 0.1
       - matching fringes in a flatfield to those in science data
       Extraction center: row 497
@@ -430,6 +433,7 @@ Finally, defringe the data as usual.
     stistools.defringe.defringe(fullframe_output, f"{flat_file}_frr.fits", overwrite=True)
 
 .. parsed-literal::
+
     Fringe flat data were read from the primary HDU
     4 pixels in the fringe flat were less than or equal to 0
     Imset 1 done
