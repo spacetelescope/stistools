@@ -354,7 +354,56 @@ Subarray Data
     stistools.defringe.mkfringeflat(fullframe_output, f"{flat_file}_nsp.fits",
                                     f"{flat_file}_frr.fits")
 
+.. parsed-literal::
+    - matching fringes in a flatfield to those in science data
+    mkfringeflat.py version 0.1
+    - matching fringes in a flatfield to those in science data
+    Extraction center: row 500
+    Extraction size: 11.0 pixels  [Aperture: 52X0.1]
+    Range to be normalized: [495:506,4:1020]
+
+    Determining best shift for fringe flat
+
+    shift =     -0.500, rms =   0.0200
+    shift =     -0.400, rms =   0.0179
+    shift =     -0.300, rms =   0.0162
+    shift =     -0.200, rms =   0.0148
+    shift =     -0.100, rms =   0.0138
+    shift =      0.000, rms =   0.0134
+    shift =      0.100, rms =   0.0138
+    shift =      0.200, rms =   0.0147
+    shift =      0.300, rms =   0.0161
+    shift =      0.400, rms =   0.0179
+    shift =      0.500, rms =   0.0199
+
+    Best shift :      0.000 pixels
+    Shifted flat : odqf11040_nsp_sh.fits
+            (Can be used as input flat for next iteration)
+
+    Determining best scaling of amplitude of fringes in flat
+
+    Fringes scaled       0.800: RMS =   0.0211
+    Fringes scaled       0.840: RMS =   0.0190
+    Fringes scaled       0.880: RMS =   0.0171
+    Fringes scaled       0.920: RMS =   0.0155
+    Fringes scaled       0.960: RMS =   0.0142
+    Fringes scaled       1.000: RMS =   0.0134
+    Fringes scaled       1.040: RMS =   0.0131
+    Fringes scaled       1.080: RMS =   0.0134
+    Fringes scaled       1.120: RMS =   0.0142
+    Fringes scaled       1.160: RMS =   0.0154
+    Fringes scaled       1.200: RMS =   0.0170
+
+    Best scale :      1.040
+    Output flat : odqf11040_frr.fits
+            (to be used as input to task 'defringe.py')
+
 
 .. code:: ipython3
     # defringe the data as usual
     stistools.defringe.defringe(fullframe_output, f"{flat_file}_frr.fits", overwrite=True)
+
+.. parsed-literal::
+    Fringe flat data were read from the primary HDU
+    Imset 1 done
+    Defringed science saved to odqf11taq_drj.fits
