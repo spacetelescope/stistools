@@ -323,11 +323,9 @@ Subarray Data
 
     # If using G750L data, set the order sorter fringes in the flat field equal to one.
     # This particular dataset is G750L data.
-    flat_hdu = fits.open(f"{flat_file}_nsp.fits", mode="update")
-    flat_data = flat_hdu[1].data
-    flat_data[:, :250] = 1
-    flat_hdu.flush()
-    flat_hdu.close()
+    with fits.open(f"{flat_file}_nsp.fits", mode="update") as flat_hdu:
+      flat_data = flat_hdu[1].data
+      flat_data[:, :250] = 1
 
 .. code:: ipython3
 
@@ -343,8 +341,8 @@ Subarray Data
     full_sci = [int(ymin):int(ymax), :] = sci_data
     # Use the same process to populate the error and data quality arrays.
 
-    header1 = fits.getheader(sci)
-    sci_header = fits.getheader(sci, 'SCI')
+    header1 = sci[0].header
+    sci_header = sci['SCI'].header
     # Use the same process to populate the error and data quality headers
 
     # Create the new fits file
