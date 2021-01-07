@@ -302,7 +302,7 @@ G750M Observation of AGK+81D266
 Subarray Data
 ~~~~~~~~~~~~~~
 
-If the science data is subarray data, there are a few extra steps in the process before defringing. 
+If the science data is subarray data, there are a few extra steps in the process before defringing.
 
 .. code:: ipython3
 
@@ -341,19 +341,29 @@ Next, pad the subarray data with zeros so that it is the same size as the flat f
     ymax_sci = sci[0].header['CENTERA2'] + (sci[0].header['SIZAXIS2']/2.)
 
     full_sci = np.zeros(np.shape(flat_data), dtype='float32')
-    full_sci = [int(ymin):int(ymax), :] = sci_data
-    # Use the same process to populate the error and data quality arrays.
+    full_sci = [int(ymin_sci):int(ymax_sci), :] = sci_data
+    full_dq = np.zeros(np.shape(flat_data), dtype='int16')
+    full_dq[int(ymin_sci):int(ymax_sci), :] = sci_dq
+    full_err = np.zeros(np.shape(flat_data), dtype='float32')
+    full_err[int(ymin_sci):int(ymax_sci), :] = sci_err
+
+Put the full frame data into a new file and populate the headers
+
+.. code:: ipython3
 
     header1 = sci[0].header
     sci_header = sci['SCI'].header
-    # Use the same process to populate the error and data quality headers
+    err_header = sci['ERR'].header
+    dq_header = sci['DQ'].header
+
 
     # Create the new fits file
     empty_primary = fits.PrimaryHDU(header=header1)
     image_hdu = fits.ImageHDU(full_sci, name='SCI', header=sci_header)
-    # Use the same process to include the error and data quality headers
-
+    err_hdu = fits.ImageHDU(full_err, name='ERR', header=err_header)
+    dq_hdu = fits.ImageHDU(full_dq, name='DQ', header=dq_header)
     hdu = fits.HDUList([empty_primary, image_hdu])
+
     fullframe_output = f"{sci_file}_fullfield_crj.fits"
     hdu.writeto(fullframe_output)
 
@@ -371,48 +381,47 @@ Make the fringe flat by running the newly created full-frame image through mkfri
                                     f"{flat_file}_frr.fits")
 
 .. parsed-literal::
-    - matching fringes in a flatfield to those in science data
     mkfringeflat.py version 0.1
-    - matching fringes in a flatfield to those in science data
-    Extraction center: row 500
-    Extraction size: 11.0 pixels  [Aperture: 52X0.1]
-    Range to be normalized: [495:506,4:1020]
+      - matching fringes in a flatfield to those in science data
+      Extraction center: row 497
+        Extraction size: 11.0 pixels  [Aperture: 52X2]
+    Range to be normalized: [492:503,4:1020]
 
     Determining best shift for fringe flat
 
-    shift =     -0.500, rms =   0.0200
-    shift =     -0.400, rms =   0.0179
-    shift =     -0.300, rms =   0.0162
-    shift =     -0.200, rms =   0.0148
-    shift =     -0.100, rms =   0.0138
-    shift =      0.000, rms =   0.0134
-    shift =      0.100, rms =   0.0138
-    shift =      0.200, rms =   0.0147
-    shift =      0.300, rms =   0.0161
-    shift =      0.400, rms =   0.0179
-    shift =      0.500, rms =   0.0199
+    shift =     -0.500, rms =   0.0163
+    shift =     -0.400, rms =   0.0152
+    shift =     -0.300, rms =   0.0145
+    shift =     -0.200, rms =   0.0145
+    shift =     -0.100, rms =   0.0149
+    shift =      0.000, rms =   0.0159
+    shift =      0.100, rms =   0.0165
+    shift =      0.200, rms =   0.0175
+    shift =      0.300, rms =   0.0189
+    shift =      0.400, rms =   0.0206
+    shift =      0.500, rms =   0.0225
 
-    Best shift :      0.000 pixels
-    Shifted flat : odqf11040_nsp_sh.fits
-            (Can be used as input flat for next iteration)
+      Best shift :     -0.205 pixels
+      Shifted flat : odqf11060_nsp_sh.fits
+                    (Can be used as input flat for next iteration)
 
     Determining best scaling of amplitude of fringes in flat
 
-    Fringes scaled       0.800: RMS =   0.0211
-    Fringes scaled       0.840: RMS =   0.0190
-    Fringes scaled       0.880: RMS =   0.0171
-    Fringes scaled       0.920: RMS =   0.0155
-    Fringes scaled       0.960: RMS =   0.0142
-    Fringes scaled       1.000: RMS =   0.0134
-    Fringes scaled       1.040: RMS =   0.0131
-    Fringes scaled       1.080: RMS =   0.0134
-    Fringes scaled       1.120: RMS =   0.0142
-    Fringes scaled       1.160: RMS =   0.0154
-    Fringes scaled       1.200: RMS =   0.0170
+    Fringes scaled       0.800: RMS =   0.0125
+    Fringes scaled       0.840: RMS =   0.0117
+    Fringes scaled       0.880: RMS =   0.0115
+    Fringes scaled       0.920: RMS =   0.0120
+    Fringes scaled       0.960: RMS =   0.0130
+    Fringes scaled       1.000: RMS =   0.0145
+    Fringes scaled       1.040: RMS =   0.0162
+    Fringes scaled       1.080: RMS =   0.0182
+    Fringes scaled       1.120: RMS =   0.0204
+    Fringes scaled       1.160: RMS =   0.0227
+    Fringes scaled       1.200: RMS =   0.0251
 
-    Best scale :      1.040
-    Output flat : odqf11040_frr.fits
-            (to be used as input to task 'defringe.py')
+      Best scale :      0.878
+    Output flat : odqf11060_frr.fits
+      (to be used as input to task 'defringe.py')
 
 Finally, defringe the data as usual.
 
@@ -422,5 +431,6 @@ Finally, defringe the data as usual.
 
 .. parsed-literal::
     Fringe flat data were read from the primary HDU
+    4 pixels in the fringe flat were less than or equal to 0
     Imset 1 done
-    Defringed science saved to odqf11taq_drj.fits
+    Defringed science saved to odqf11trq_fullfield_drj.fits
