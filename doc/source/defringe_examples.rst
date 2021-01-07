@@ -363,7 +363,7 @@ Put the full frame data into a new file and populate the headers
     image_hdu = fits.ImageHDU(full_sci, name='SCI', header=sci_header)
     err_hdu = fits.ImageHDU(full_err, name='ERR', header=err_header)
     dq_hdu = fits.ImageHDU(full_dq, name='DQ', header=dq_header)
-    hdu = fits.HDUList([empty_primary, image_hdu])
+    hdu = fits.HDUList([empty_primary, image_hdu, err_hdu, dq_hdu])
 
     fullframe_output = f"{sci_file}_fullfield_crj.fits"
     hdu.writeto(fullframe_output)
