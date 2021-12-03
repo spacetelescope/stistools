@@ -31,7 +31,7 @@ Run the following command, you can change "stisenv" to be whatever name for the 
 
 .. code-block:: sh
 
-    $ conda create -n stisenv stsci
+    $ conda create -n stisenv python=3.7 stsci
 
 Once the installation is complete, you can access your new environment by activating it:
 
