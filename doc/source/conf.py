@@ -209,4 +209,4 @@ latex_documents = [
 #latex_use_modindex = True
 
 def setup(app):
-    app.add_stylesheet("stsci.css")
+    app.add_css_file("stsci.css")
