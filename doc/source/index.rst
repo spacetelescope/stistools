@@ -15,7 +15,7 @@ tools are in active development, so there is more to come.
 
     The information here reflect the *latest* software info and might not
     be in-sync with the
-    `STIS Data Handbook <http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/>`_.
+    `STIS Data Handbook <https://hst-docs.stsci.edu/stisdhb/>`_.
 
 Relationship to the IRAF/PyRAF stis Package
 *******************************************
