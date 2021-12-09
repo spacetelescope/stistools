@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 from astropy.io import fits
-from astropy.nddata.utils import block_reduce
+from astropy.nddata.blocks import block_reduce
 import numpy as np
 import math
 import os
