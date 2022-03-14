@@ -34,7 +34,9 @@ subtracted exposures) should then be scaled to the exposure time of the CR
 split FLT image (e.g., if CRSPLIT=5, the net counts are divided by five).
 Note, that not all FLT files have equal exposure times so a fractional 
 scaling of the CR split to total exposure time of the science image should 
-be used to scale the counts.
+be used to scale the counts. The magnitude correction (dmagc) measured using 
+single-CR split parameters can be added to the magnitude derived from the 
+total exposure time science image with no further scaling.
 
 If working with CRSPLIT scaled sky and net counts values, the filename 
 (stisimage) should not be provided to avoid pulling incorrect information 
