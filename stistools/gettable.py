@@ -27,24 +27,24 @@ def getTable(table, filter, sortcol=None,
 
     Parameters
     -----------
-    table : string
+    table: str
         name of the reference table
-    filter : dict
+    filter: dict
         each key is a column name, and the corresponding value
         is a possible table value in that column
-    sortcol : string
+    sortcol: str
         the name of a column on which to sort the table rows
         (if there is more than one matching row), or None to disable sorting
-    exactly_one : bool
+    exactly_one: bool
         set this to True if there must be one and only one
         matching row
-    at_least_one : bool
+    at_least_one: bool
         set this to True if there must be at least one
         matching row
 
     Returns
     -------
-    match_rows : rec_array
+    match_rows: rec_array
         an array of the rows of the table that match the filter;
         note that if only one row matches the filter, the function value
         will still be an array
@@ -131,11 +131,11 @@ def rotateTrace(trace_info, expstart):
 
     Parameters
     -----------
-    trace_info : rec_array
+    trace_info: rec_array
         an array of the relevant rows of the table;
         the A2DISPL column will be modified in-place if the MJD and
         DEGPERYR columns are present
-    expstart : float
+    expstart: float
         exposure start time (MJD)
     """
 

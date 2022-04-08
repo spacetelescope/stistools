@@ -116,18 +116,18 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
 
     Parameters
     -----------
-    infile : string
+    infile: str
         STIS FITS file
-    exten : int, optional
+    exten: int, optional
         fits extension to be read
-    dc : int, optional
+    dc: int, optional
         the power in the first freq bin is set to zero for better
         plotting of the power spectrum.
-    verbose : int, optional [Default: 1]
+    verbose: int, optional [Default: 1]
         set to 0 if you do not want brief information about each image.
-    boxcar : int
+    boxcar: int
         width of boxcar smoothing to be applied.
-    wipe : ndarray
+    wipe: ndarray
         a 3-element array, specifying how to modify the data in
         frequency space. If set, the image is converted to a 1-D time
         series, fourier transformed to frequency space, modified, inverse
@@ -135,7 +135,7 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
         The first and second elements specify the range in frequencies to
         be scaled (in hz), and the third element specifies the scaling
         factor (should be 0-1).
-    window : ndarray
+    window: ndarray
         a 3 element array, specifying how to modify the data in
         frequency space.  The first element is the center of the window
         (in hz). The second element is the width of the window (in hz).
@@ -143,12 +143,12 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
         scale (in hz) of the tapering width.  Specifically, a square
         bandstop is convolved with a gaussian having the FWHM given by the
         third parameter.
-    outfile : string,optional
+    outfile: str, optional
         name of filtered image file
 
     Returns
     -------
-    noise_terms : tuple of arrays
+    noise_terms: tuple of arrays
         A tuple containing the arrays; namely, the arrays::
 
             freq  = frequency in power spectrum (hz)

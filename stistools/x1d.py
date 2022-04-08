@@ -145,27 +145,27 @@ def x1d(input, output="",
         If True, use the global cross correlation offset (i.e. average for
         all orders) for all spectral orders.
 
-    extrsize:  float or None
+    extrsize: float or None
         Size of extraction box.  None means extrsize is not specified.
 
-    bk1size:  float or None
+    bk1size: float or None
         Size of first background region.  None means bk1size is not specified.
 
-    bk2size:  float or None
+    bk2size: float or None
         Size of second background region.  None means bk2size is not specified.
 
-    bk1offst:  float or None
+    bk1offst: float or None
         Offset of first background region.  None means bk1offst is not
                 specified.
 
-    bk2offst:  float or None
+    bk2offst: float or None
         Offset of first background region.  None means bk2offst is not
         specified.
 
-    bktilt:  float or None
+    bktilt: float or None
         Background tilt.  None means bktilt is not specified.
 
-    backord:  int or None
+    backord: int or None
         Background order (0 or 1).  None means backord is not specified.
 
     bksmode: str

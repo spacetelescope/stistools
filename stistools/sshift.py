@@ -49,23 +49,23 @@ def sshift(input, output=None, shifts=None, platescale=None,
 
 Parameters
 ----------
-input : list
+input: list
     A list of input filenames.  These must be STIS flat-
     fielded (_flt) image FITS files.  This argument will accept a
     single filename or a list of filenames.
-shifts : list, optional
+shifts: list, optional
     A list of integers indicating the number of rows to shift
     each image of each file in the cross-dispersion (Y-) direction.
-platescale : float, optional
+platescale: float, optional
     The size of a pixel in arcseconds.  Used to convert
     the value of the POSTARG2 keyword to pixels.
-tolerance : float, optional
+tolerance: float, optional
     The allowed difference between calculated shifts and
     integer pixel shifts (fraction of pixel).
 
 Returns
 -------
-output : list, optional
+output: list, optional
     A list of output filenames. The number of output
     filenames must match the number of input filenames.  If no output
     is given, then the _flt substring of the input file is replace by

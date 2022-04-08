@@ -519,7 +519,7 @@ def _print_output(keywords, spt_exists):
 
     Returns
     -------
-    badacq: integer (bit flag)
+    badacq: int (bit flag)
         Bit flag integer containing :func:`tastis` error flags.
     """
 
