@@ -3,10 +3,10 @@ import numpy as np
 
 __doc__ = """
 The purpose of this ctestis task is to correct signal levels of point-like
-source in photometry tables measured from STIS CCD images for charge loss
+sources in photometry tables measured from STIS CCD images for charge loss
 due to imperfect Charge Transfer Efficiency (CTE). The algorithm used to
-correct for CTE-induced signal loss is the one published in Goudfrooij,
-Bohlin, Maiz-Apellaniz, & Kimble, 2006, PASP, October 2006 edition
+correct for CTE-induced signal loss is based on the equations published in 
+Goudfrooij, Bohlin, Maiz-Apellaniz, & Kimble, PASP, October 2006 edition
 (astro-ph/0608349). The values of CTE loss derived using this algorithm
 should be accurate to about 3% RMS (tested for data taken between March
 1997 and August 2004). No significant differences in CTE loss were found
@@ -21,6 +21,31 @@ due to distortions in the steller PDF cause by CTE trails. the algorithm
 is taken from the Equation 9 of Goodfrooij et al. (2006). Note, however,
 that the equation has been multiplied by -1, so that the resulting
 correction may be ADDED to measured Y centriod of each star.
+
+The code takes inputs of net counts for a source (background subtracted), a
+sky-background estimate, and the source Y-position on the detector (since
+CTI effects worsen furthest from the readout). The single-pixel
+sky-background estimate should be measured from individual cosmic-ray (CR)
+split, bias- and dark-subtracted, and flat-fielded images (flt.fits) that
+have not had any sky subtracted. This can determined with random sampling
+and/or iterative sigma-clipping of sky pixels (e.g., Goudfrooij et al.
+2006). The net counts measured from the science images (summed, sky-
+subtracted exposures) should then be scaled to the exposure time of the CR
+split FLT image (e.g., if CRSPLIT=5, the net counts are divided by five).
+Note that not all extensions composing an FLT file necessarily have equal
+exposure times, so a fractional scaling of the CR split to total exposure
+time of the CR-combined science image (e.g. CRJ) science image should be
+used to scale the counts. The magnitude correction (dmagc) measured using
+single-CR split parameters can be added to the magnitude derived from the
+total exposure time science image with no further scaling.
+
+If working with CRSPLIT scaled sky and net counts values, the filename 
+(stisimage) should not be provided to avoid pulling incorrect information 
+from the image headers. The following parameters therefore should be set 
+manually: nread=1 (indicating it is just one CRSPLIT exposures), gain, 
+mjd (start date), and ybin (BINAXIS2). If image is an sx2.fits file, set 
+sx2=True.
+
 
 Examples
 --------
@@ -72,9 +97,12 @@ def ctestis(ycol, net, sky, stisimage=None, mjd=None, nread=None,
     ycol : arr
         Y-column # of object
     net : arr
-        Net photometric counts
+        Net photometric counts (background subtracted) measured from science image
+        and scaled to cosmic-ray split exposure time (from which sky is measured)
     sky : arr
-        Counts in sky region, scaled to source area (?)
+        Single-pixel sky-background estimate measured from individual cosmic-ray
+        split, bias- and dark-subtracted, flat-fielded images (flt.fits) with no 
+        sky subtraction
     stisimage : str, optional
         The name of the SX2 file from which to pull the header keywords.
     mjd : float, optional
@@ -177,7 +205,7 @@ def ctestis(ycol, net, sky, stisimage=None, mjd=None, nread=None,
     dy512 = 0.025 * cti10000 - (0.00078 * cti10000 * cti10000)
 
     # prep ycol
-    if sx2 or "_sx2" in stisimage:
+    if sx2 or ((stisimage is not None) and ("_sx2" in stisimage)):
         remove_buffer = 38
     else:
         remove_buffer = 0
