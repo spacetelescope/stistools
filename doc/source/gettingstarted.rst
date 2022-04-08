@@ -5,33 +5,20 @@ Installation and Setup
 Installing stistools (Astroconda)
 =================================
 
-The simplest installation method for installing stistools is to install the "Standard Software Stack" of AstroConda.
-AstroConda is an STScI-maintained software distribution channel for Conda, a package and environment management system.
-The standard software stack of AstroConda contains all of STScI's publicly distributed software, as well as all of the
-dependencies to run them. Effectively, it takes care of everything for you.
+The simplest installation method for installing stistools is to install STScI's "Standard Software Stack" via conda-forge.
+The standard software stack contains all of STScI's publicly distributed software, as well as all of the dependencies to run them. 
+Effectively, it takes care of everything for you.
 
 The first step is to download Conda. There are a few different flavors of Conda, but for most cases we'd recommend installing
 the Python 3 version of miniconda. For a step-by-step guide on installing Conda, consult the
 `AstroConda documentation <https://astroconda.readthedocs.io/en/latest/getting_started.html#installing-conda-the-choice-is-yours>`_.
-
-With Conda installed, let's now create an AstroConda environment. For this step, you can continue to follow the
-`AstroConda documentation <https://astroconda.readthedocs.io/en/latest/getting_started.html#installing-conda-the-choice-is-yours>`_,
-which contains information on the different stack choices, or you can just read on and execute the commands we'd recommend for stistools.
-
-First, we need to configure Conda to grant it access to the AstroConda channel, which can be done by running the following command in a
-BASH shell.
-
-.. code-block:: sh
-
-    $ conda config --add channels http://ssb.stsci.edu/astroconda
-    # Writes changes to ~/.condarc
 
 Now we're ready to install the STScI Software Stack, we'll accomplish this by setting up a fresh Conda environment.
 Run the following command, you can change "stisenv" to be whatever name for the environment you wish.
 
 .. code-block:: sh
 
-    $ conda create -n stisenv python=3.7 stsci
+    $ conda create -n stisenv --file [insert URL of conda environment YAML file here]
 
 Once the installation is complete, you can access your new environment by activating it:
 
@@ -59,11 +46,11 @@ attempting to use stistools. When in your environment, you can now interact with
 =======================================
 Getting the Latest Version of stistools
 =======================================
-Sometimes, it may be the case that new additions to stistools have not yet been packaged into a proper release through Astroconda.
-In these instances, the installation of stistools through astroconda will not contain the most recent additions to the package. The following
+Sometimes, it may be the case that new additions to stistools have not yet been packaged into a proper release through conda-forge.
+In these instances, the installation of stistools through conda-forge will not contain the most recent additions to the package. The following
 instructions outline how to grab and install the latest version of stistools, if you require something that has been released very recently.
 
-To start, we'll assume that you've gone through the process above, installing stistools through astroconda. Even though astroconda does not
+To start, we'll assume that you've gone through the process above, installing stistools through conda-forge. Even though conda-forge does not
 contain our most up-to-date version of stistools in this case, it does still provide us with all of the necessary dependencies needed to run
 stistools.
 
@@ -82,7 +69,7 @@ finishes executing. We want to install this on top of our astroconda environment
     $ source activate stisenv
 
 Because developer versions of stistools share the same version numbers as the last release, we'll need to remove the version
-of stistools that came with our astroconda environment, we can do this through conda:
+of stistools that came with our conda-forge environment, we can do this through conda:
 
 .. code-block:: sh
 
@@ -96,7 +83,7 @@ the latest version of stistools. In the stistools directory, run:
     $ python setup.py install
 
 This builds the stistools package up based on the source code we cloned to our local machines. Note that this overwrites the existing
-version of stistools that was installed through astroconda. With this, you should now have the latest version of stistools installed
+version of stistools that was installed through conda-forge. With this, you should now have the latest version of stistools installed
 in your "stisenv" environment.
 
 
