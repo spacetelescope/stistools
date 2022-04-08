@@ -3,10 +3,11 @@ channels:
   - http://ssb.stsci.edu/astroconda
   - conda-forge
 dependencies:
-  - numpy>=1.5.1
+  - python=3.7
+  - numpy
   - numpydoc
-  - astropy>=3.1.1
-  - scipy>=0.14
+  - astropy>=4.1
+  - scipy
   - sphinx=1.8
   - stsci.tools
   - ipython
