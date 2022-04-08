@@ -22,20 +22,21 @@ is taken from the Equation 9 of Goodfrooij et al. (2006). Note, however,
 that the equation has been multiplied by -1, so that the resulting
 correction may be ADDED to measured Y centriod of each star.
 
-The code takes inputs of net counts for a source (background subtracted), 
-a sky-background estimate, and the source Y-position on the detector 
-(since CTI effects worsen furthest from the readout). The single-pixel 
-sky-background estimate should be measured from individual cosmic-ray (CR) 
-split, bias- and dark-subtracted, and flat-fielded images (flt.fits) that 
-have not had any sky subtracted. This can determined with random sampling 
-and/or iterative sigma-clipping of sky pixels (e.g., Goudfrooij et al. 
+The code takes inputs of net counts for a source (background subtracted), a
+sky-background estimate, and the source Y-position on the detector (since
+CTI effects worsen furthest from the readout). The single-pixel
+sky-background estimate should be measured from individual cosmic-ray (CR)
+split, bias- and dark-subtracted, and flat-fielded images (flt.fits) that
+have not had any sky subtracted. This can determined with random sampling
+and/or iterative sigma-clipping of sky pixels (e.g., Goudfrooij et al.
 2006). The net counts measured from the science images (summed, sky-
 subtracted exposures) should then be scaled to the exposure time of the CR
 split FLT image (e.g., if CRSPLIT=5, the net counts are divided by five).
-Note, that not all FLT files have equal exposure times so a fractional 
-scaling of the CR split to total exposure time of the science image should 
-be used to scale the counts. The magnitude correction (dmagc) measured using 
-single-CR split parameters can be added to the magnitude derived from the 
+Note that not all extensions composing an FLT file necessarily have equal
+exposure times, so a fractional scaling of the CR split to total exposure
+time of the CR-combined science image (e.g. CRJ) science image should be
+used to scale the counts. The magnitude correction (dmagc) measured using
+single-CR split parameters can be added to the magnitude derived from the
 total exposure time science image with no further scaling.
 
 If working with CRSPLIT scaled sky and net counts values, the filename 
@@ -204,7 +205,7 @@ def ctestis(ycol, net, sky, stisimage=None, mjd=None, nread=None,
     dy512 = 0.025 * cti10000 - (0.00078 * cti10000 * cti10000)
 
     # prep ycol
-    if sx2 or ((stisimage!=None) and ("_sx2" in stisimage)):
+    if sx2 or ((stisimage is not None) and ("_sx2" in stisimage)):
         remove_buffer = 38
     else:
         remove_buffer = 0
