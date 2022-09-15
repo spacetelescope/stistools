@@ -21,14 +21,14 @@ Once the installation is complete, you can access your new environment by activa
 
 .. code-block:: sh
 
-    $ source activate stisenv
+    $ conda activate stisenv
 
 Once activated, you now have access to all of the STScI software, including ``stistools``! If you want to deactivate an environment,
 you can do so like this:
 
 .. code-block:: sh
 
-    $ source deactivate stisenv
+    $ conda deactivate stisenv
 
 Keep in mind that whenever you open a new terminal, by default your environment will not be activated (this can be changed). So be sure to activate it before
 attempting to use ``stistools``. When in your environment, you can now interact with ``stistools`` like any other Python package.
@@ -63,7 +63,7 @@ finishes executing. We want to install this on top of our ``stenv`` environment,
 
 .. code-block:: sh
 
-    $ source activate stisenv
+    $ conda activate stisenv
 
 Because developer versions of ``stistools`` share the same version numbers as the last release, we'll need to remove the version
 of ``stistools`` that came with our ``stenv`` environment, we can do this through conda:
