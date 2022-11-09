@@ -11,9 +11,8 @@ from astropy.wcs import WCS
 import numpy as np
 import logging
 
+import stistools
 import pysiaf
-
-__version__ = '0.1'
 
 __doc__ = """
 
@@ -167,7 +166,7 @@ STIS_APERTURE_LOOKUP = {'0.1X0.03': '100X030',
                         'WEDGEB2.5': 'WGB25',
                         'WEDGEB2.8': 'WGB28'}
 
-h = pysiaf.Siaf('HST')
+hst_siaf = pysiaf.Siaf('HST')
 
 def get_files_to_process(indir='./'):
     """Find all _raw.fits and _tag.fits STIS files in the specified directory
@@ -176,31 +175,31 @@ def get_files_to_process(indir='./'):
     file_list = []
     file_list = file_list + glob.glob(os.path.join(indir, 'o*_raw.fits'))
     file_list = file_list + glob.glob(os.path.join(indir, 'o*_tag.fits'))
+    file_list.sort()
     return file_list
 
-def add_s_region(file, dry_run=False):
+def add_s_region(stisfile, dry_run=False):
     """Calculate the S_REGION keyword for a single STIS file. If the
     dry_run parameter is False, set the S_REGION in the SCI extensions with
     the calculated value.  If keyword isn't present, add it
     """
 
-    open_mode = 'readonly'
-    if not dry_run: open_mode = 'update'
-    with fits.open(file, mode=open_mode) as f1:
-        log.info('Processing file {}'.format(file))
+    open_mode = 'readonly' if dry_run else 'update'
+    with fits.open(stisfile, mode=open_mode) as f1:
+        log.info('Processing file {}'.format(stisfile))
         hdr0 = f1[0].header
         detector = hdr0['DETECTOR']
         aperture = hdr0['APERTURE']
         propaper = hdr0['PROPAPER']
         for ext in f1[1:]:
-            if ext.header['EXTNAME'] == 'SCI':
+            if ext.header['EXTNAME'] in ['SCI', 'EVENTS']:
                 hdr1 = ext.header
                 extver = hdr1['EXTVER']
                 pa_aper = hdr1['PA_APER']
                 pa_aper = pa_aper * DEGREESTORADIANS
                 ra_aper = hdr1['RA_APER']
                 dec_aper = hdr1['DEC_APER']
-                siaf_entry = get_siaf_entry(h, propaper, detector)
+                siaf_entry = get_siaf_entry(hst_siaf, propaper, detector)
                 x, y = siaf_entry.closed_polygon_points('idl')
                 wcslimits = get_wcs_limits(f1)
                 siaflimits = get_siaf_limits(x, y)
@@ -217,7 +216,7 @@ def add_s_region(file, dry_run=False):
                 s_region = 'POLYGON ICRS'
                 for ra, dec in zip(ra_corners, dec_corners):
                     s_region = s_region + ' {} {}'.format(ra, dec)
-                log.info("{}[SCI, {}] with aperture {} has S_REGION = {}".format(file,
+                log.info("{}[SCI, {}] with aperture {} has S_REGION = {}".format(stisfile,
                 extver, propaper, s_region))
                 if not dry_run:
                     write_keyword_to_header(ext, s_region)
@@ -240,7 +239,7 @@ def write_keyword_to_header(extension, s_region):
         log.info('New S_REGION keyword added and updated')
     return
 
-def get_siaf_entry(h, aperture, detector):
+def get_siaf_entry(hst_siaf, aperture, detector):
     """The SIAF entry aperture name doesn't correspond to the STIS
     APERTURE keyword value.  Construct the entry from the aperture and
     detector (here PROPAPER is used as the aperture keyword)
@@ -255,28 +254,40 @@ def get_siaf_entry(h, aperture, detector):
     entry = entry + detector_letters[detector]
     # The rest depends on the aperture
     entry = entry + STIS_APERTURE_LOOKUP[aperture]
-    return h[entry]
+    return hst_siaf[entry]
 
 def get_wcs_limits(f1):
     # For imaging data, any subarray will sometimes limit the observable
     # footprint.  Calculate the limits of the field of view using the WCS,
     # this will be compared with the limits from projecting the aperture
     hdr1 = f1[1].header
-    crpix1 = hdr1['CRPIX1']
-    crpix2 = hdr1['CRPIX2']
+    extname = hdr1['EXTNAME']
+    if extname == 'SCI':
+        crpix1 = hdr1['CRPIX1']
+        crpix2 = hdr1['CRPIX2']
+        nx = hdr1['NAXIS1']
+        ny = hdr1['NAXIS2']
+        if hdr1['CTYPE1'] == 'WAVE':
+            xmin = None
+            xmax = None
+    elif extname == 'EVENTS':
+        crpix1 = hdr1['TCRPX2']
+        crpix2 = hdr1['TCRPX3']
+        nx = hdr1['AXLEN1']
+        ny = hdr1['AXLEN2']
+        if hdr1['TCTYP2'] == 'WAVE':
+            xmin = None
+            xmax = None
+    else:
+        log.error('No SCI or EVENTS extension to get WCS information')
     # Calculate pixel scales in arcsec/pixel in the X (row) and Y (column)
     # direction
     cdelt1, cdelt2 = get_pixel_scales(f1)
-    nx = hdr1['NAXIS1']
-    ny = hdr1['NAXIS2']
     xmin = cdelt1 * crpix1 * -1.0
     xmax = cdelt1 * (nx - crpix1)
     ymin = cdelt2 * crpix2 * -1.0
     ymax = cdelt2 * (ny - crpix2)
     # If the x-axis is dispersed, don't use the WCS limits
-    if hdr1['CTYPE1'] == 'WAVE':
-        xmin = None
-        xmax = None
     return (xmin, xmax, ymin, ymax)
 
 def get_pixel_scales(f1):
@@ -284,10 +295,19 @@ def get_pixel_scales(f1):
     from the WCS CD matrix, in arcsec/pixel
     """
     hdr = f1[1].header
-    cd1_1 = hdr['CD1_1']
-    cd1_2 = hdr['CD1_2']
-    cd2_1 = hdr['CD2_1']
-    cd2_2 = hdr['CD2_2']
+    extname = hdr['EXTNAME']
+    if extname == 'SCI':
+        cd1_1 = hdr['CD1_1']
+        cd1_2 = hdr['CD1_2']
+        cd2_1 = hdr['CD2_1']
+        cd2_2 = hdr['CD2_2']
+    elif extname == 'EVENTS':
+        cd1_1 = hdr['TC2_2']
+        cd1_2 = hdr['TC2_3']
+        cd2_1 = hdr['TC3_2']
+        cd2_2 = hdr['TC3_3']
+    else:
+        log.error('No SCI or EVENTS extension to get WCS information')
     cdelt1 = math.sqrt(cd1_1*cd1_1 + cd2_1*cd2_1)
     cdelt2 = math.sqrt(cd1_2*cd1_2 + cd2_2*cd2_2)
     cdelt1 = cdelt1 * 3600.0
@@ -334,7 +354,7 @@ def coords_from_s_region(s_region):
     dec = [float(x) for x in dec]
     return (ra, dec)
 
-def write_region_file(file, include_mast=True):
+def write_region_file(input_file, include_mast=True):
     """Convenience function to write a DS9 regions file from the S_REGION
     value in the header of a file.  If include_mast is set to True, will
     also get the existing S_REGION value from the mast catalog and include
@@ -342,7 +362,7 @@ def write_region_file(file, include_mast=True):
     in blue, the RA_APER and DEC_APER in red, and the mast catalog value of the
     S_REGION in green, if include_mast is True"""
 
-    f1 = fits.open(file)
+    f1 = fits.open(input_file)
     rootname = f1[0].header['ROOTNAME']
     ra_aper = f1[1].header['RA_APER']
     dec_aper = f1[1].header['DEC_APER']
@@ -377,8 +397,8 @@ def write_region_file(file, include_mast=True):
 
 def main(dry_run=False):
     files_to_process = get_files_to_process()
-    for file in files_to_process:
-        add_s_region(file, dry_run=dry_run)
+    for input_file in files_to_process:
+        add_s_region(input_file, dry_run=dry_run)
     return
 
 if __name__ == '__main__':
@@ -391,13 +411,12 @@ if __name__ == '__main__':
         '--dry_run', action='store_true',
         help="Calculate S_REGION value, but don't write to data header[s]")
 
-    parser.add_argument('-v', '--version', help='Print version info', action='version',
-    version = __version__)
+    parser.add_argument('-v', '--version', help='Print STISTOOLS version info', action='version',
+    version = stistools.__version__)
 
     args = parser.parse_args()
-
-    if '--version' in args:
-        print(__version__)
-        sys.exit(0)
+    # if '--version' in args:
+    #     print(__version__)
+    #     sys.exit(0)
 
     main(dry_run=args.dry_run)
