@@ -65,6 +65,6 @@ setup(
         ]
     },
     scripts = [
-        'stistools/add_s_region.py',
+        'stistools/add_stis_s_region.py',
     ]
 )
