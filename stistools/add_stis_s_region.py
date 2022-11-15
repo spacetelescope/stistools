@@ -11,7 +11,6 @@ from astropy.wcs import WCS
 import numpy as np
 import logging
 
-import stistools
 import pysiaf
 
 __doc__ = """
@@ -41,7 +40,6 @@ usage: Add S_REGION value to raw data headers [-h] [--dry_run] [-v]
 options:
   -h, --help     show this help message and exit
   --dry_run      Calculate S_REGION value, but don't write to data header[s]
-  -v, --version  Print version info
 
 """
 
@@ -410,9 +408,6 @@ if __name__ == '__main__':
     parser.add_argument(
         '--dry_run', action='store_true',
         help="Calculate S_REGION value, but don't write to data header[s]")
-
-    parser.add_argument('-v', '--version', help='Print STISTOOLS version info', action='version',
-    version = stistools.__version__)
 
     args = parser.parse_args()
     # if '--version' in args:
