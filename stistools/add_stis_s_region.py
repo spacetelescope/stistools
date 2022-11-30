@@ -166,13 +166,21 @@ STIS_APERTURE_LOOKUP = {'0.1X0.03': '100X030',
 
 hst_siaf = pysiaf.Siaf('HST')
 
-def get_files_to_process(indir='./'):
-    """Find all _raw.fits and _tag.fits STIS files in the specified directory
+def get_files_to_process(rootnames):
+    """Create a list of files to process from the list of rootnames
+
     """
 
+    endings = ['_raw.fits',
+               '_tag.fits']
+
     file_list = []
-    file_list = file_list + glob.glob(os.path.join(indir, 'o*_raw.fits'))
-    file_list = file_list + glob.glob(os.path.join(indir, 'o*_tag.fits'))
+    for rootname in rootnames:
+        fitslist = glob.glob(rootname.lower() + '*.fits')
+        for input_file in fitslist:
+            for ending in endings:
+                if input_file.endswith(ending):
+                    file_list.append(input_file)
     file_list.sort()
     return file_list
 
@@ -192,6 +200,7 @@ def add_s_region(stisfile, dry_run=False):
         for ext in f1[1:]:
             if ext.header['EXTNAME'] in ['SCI', 'EVENTS']:
                 hdr1 = ext.header
+                extname = hdr1['EXTNAME']
                 extver = hdr1['EXTVER']
                 pa_aper = hdr1['PA_APER']
                 pa_aper = pa_aper * DEGREESTORADIANS
@@ -214,8 +223,8 @@ def add_s_region(stisfile, dry_run=False):
                 s_region = 'POLYGON ICRS'
                 for ra, dec in zip(ra_corners, dec_corners):
                     s_region = s_region + ' {} {}'.format(ra, dec)
-                log.info("{}[SCI, {}] with aperture {} has S_REGION = {}".format(stisfile,
-                extver, propaper, s_region))
+                log.info("{}[{}, {}] with aperture {} has S_REGION = {}".format(stisfile,
+                extname, extver, propaper, s_region))
                 if not dry_run:
                     write_keyword_to_header(ext, s_region)
                 else:
@@ -393,8 +402,11 @@ def write_region_file(input_file, include_mast=True):
 
 
 
-def main(dry_run=False):
-    files_to_process = get_files_to_process()
+def main(rootnames, dry_run=False):
+    if rootnames is None:
+        log.error("No rootnames specified")
+        return
+    files_to_process = get_files_to_process(rootnames)
     for input_file in files_to_process:
         add_s_region(input_file, dry_run=dry_run)
     return
@@ -405,6 +417,9 @@ if __name__ == '__main__':
     """Add S_REGION value to raw data headers"""
     )
 
+    parser.add_argument('rootnames', nargs='+',
+        help='Rootnames to be processed')
+
     parser.add_argument(
         '--dry_run', action='store_true',
         help="Calculate S_REGION value, but don't write to data header[s]")
@@ -414,4 +429,4 @@ if __name__ == '__main__':
     #     print(__version__)
     #     sys.exit(0)
 
-    main(dry_run=args.dry_run)
+    main(args.rootnames, dry_run=args.dry_run)
