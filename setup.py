@@ -64,7 +64,9 @@ setup(
             'LICENSE.txt',
         ]
     },
-    scripts = [
-        'stistools/add_stis_s_region.py',
-    ]
+    entry_points = {
+        'console_scripts': [
+            'add_stis_s_region = stistools.add_stis_s_region:call_main',
+        ],
+    },
 )

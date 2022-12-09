@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 import glob
 import math
@@ -164,7 +164,6 @@ STIS_APERTURE_LOOKUP = {'0.1X0.03': '100X030',
                         'WEDGEB2.5': 'WGB25',
                         'WEDGEB2.8': 'WGB28'}
 
-hst_siaf = pysiaf.Siaf('HST')
 
 def get_files_to_process(rootnames):
     """Create a list of files to process from the list of rootnames
@@ -176,15 +175,23 @@ def get_files_to_process(rootnames):
 
     file_list = []
     for rootname in rootnames:
+        if os.path.basename(rootname) != rootname:
+            log.warning("{}: rootnames should refer to files in the working directory".format(rootname))
         fitslist = glob.glob(rootname.lower() + '*.fits')
+        appended = False
         for input_file in fitslist:
             for ending in endings:
                 if input_file.endswith(ending):
+                    appended = True
                     file_list.append(input_file)
+        if not appended:
+            log.warning("No files selected for rootname {}".format(rootname))
+    if len(file_list) == 0:
+        log.error("No rootnames selected")
     file_list.sort()
     return file_list
 
-def add_s_region(stisfile, dry_run=False):
+def add_s_region(stisfile, hst_siaf, dry_run=False):
     """Calculate the S_REGION keyword for a single STIS file. If the
     dry_run parameter is False, set the S_REGION in the SCI extensions with
     the calculated value.  If keyword isn't present, add it
@@ -197,6 +204,7 @@ def add_s_region(stisfile, dry_run=False):
         detector = hdr0['DETECTOR']
         aperture = hdr0['APERTURE']
         propaper = hdr0['PROPAPER']
+        siaf_entry = get_siaf_entry(hst_siaf, propaper, detector)
         for ext in f1[1:]:
             if ext.header['EXTNAME'] in ['SCI', 'EVENTS']:
                 hdr1 = ext.header
@@ -206,7 +214,6 @@ def add_s_region(stisfile, dry_run=False):
                 pa_aper = pa_aper * DEGREESTORADIANS
                 ra_aper = hdr1['RA_APER']
                 dec_aper = hdr1['DEC_APER']
-                siaf_entry = get_siaf_entry(hst_siaf, propaper, detector)
                 x, y = siaf_entry.closed_polygon_points('idl')
                 wcslimits = get_wcs_limits(f1)
                 siaflimits = get_siaf_limits(x, y)
@@ -261,6 +268,23 @@ def get_siaf_entry(hst_siaf, aperture, detector):
     entry = entry + detector_letters[detector]
     # The rest depends on the aperture
     entry = entry + STIS_APERTURE_LOOKUP[aperture]
+    try:
+        siaf_entry = hst_siaf[entry]
+    except KeyError:
+        log.warning("Unable to get SIAF data for entry {}".format(entry))
+        log.warning("Trying other wavebands")
+        success = False
+        for letter in "VNF":
+            entry = 'O' + letter + STIS_APERTURE_LOOKUP[aperture]
+            try:
+                siaf_entry = hst_siaf[entry]
+                success = True
+                log.info("Succeeded with {}".format(entry))
+                break
+            except KeyError:
+                success = False
+        if not success:
+            log.error("No matching aperture found")
     return hst_siaf[entry]
 
 def get_wcs_limits(f1):
@@ -407,11 +431,12 @@ def main(rootnames, dry_run=False):
         log.error("No rootnames specified")
         return
     files_to_process = get_files_to_process(rootnames)
+    hst_siaf = pysiaf.Siaf('HST')
     for input_file in files_to_process:
-        add_s_region(input_file, dry_run=dry_run)
+        add_s_region(input_file, hst_siaf, dry_run=dry_run)
     return
 
-if __name__ == '__main__':
+def call_main():
 
     parser = argparse.ArgumentParser(
     """Add S_REGION value to raw data headers"""
@@ -430,3 +455,6 @@ if __name__ == '__main__':
     #     sys.exit(0)
 
     main(args.rootnames, dry_run=args.dry_run)
+
+if __name__ == '__main__':
+    call_main()
