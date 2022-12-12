@@ -48,8 +48,8 @@ setup(
         'numpy',
         'scipy',
         'stsci.tools',
-	'pysiaf',
-	'astroquery',
+        'pysiaf',
+        'astroquery',
     ],
     tests_require = [
         'pytest',
