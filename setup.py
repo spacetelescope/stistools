@@ -48,6 +48,8 @@ setup(
         'numpy',
         'scipy',
         'stsci.tools',
+        'pysiaf',
+        'astroquery',
     ],
     tests_require = [
         'pytest',
@@ -61,5 +63,10 @@ setup(
             'pars/*',
             'LICENSE.txt',
         ]
+    },
+    entry_points = {
+        'console_scripts': [
+            'add_stis_s_region = stistools.add_stis_s_region:call_main',
+        ],
     },
 )
