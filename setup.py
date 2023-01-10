@@ -34,6 +34,8 @@ setup(
     author = 'Paul Barrett, Phil Hodge',
     author_email = 'help@stsci.edu',
     description = 'Tools for STIS (Space Telescope Imaging Spectrograph)',
+    long_description='Tools for analyzing STIS data from the Hubble Space Telescope',
+    long_description_content_type='text/plain',
     url = 'https://github.com/spacetelescope/stistools',
     classifiers = [
         'Intended Audience :: Science/Research',
