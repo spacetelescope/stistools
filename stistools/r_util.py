@@ -9,7 +9,7 @@ def expandFileName(filename):
     """Expand environment variable in a file name.
 
     If the input file name begins with either a Unix-style or IRAF-style
-    environment variable (e.g. $lref/name_dqi.fits or lref$name_dqi.fits
+    environment variable (e.g. ``$lref/name_dqi.fits`` or ``lref$name_dqi.fits``
     respectively), this routine expands the variable and returns a complete
     path name for the file.
 

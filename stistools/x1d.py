@@ -138,8 +138,10 @@ def x1d(input, output="",
         The number of the spectral order to extract.
 
     a2center: float or None
+        Extraction position or center of cross correlation range (one-indexed).
 
     maxsrch: float or None
+        Cross correlation range.
 
     globalx: bool
         If True, use the global cross correlation offset (i.e. average for
