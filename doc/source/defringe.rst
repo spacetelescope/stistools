@@ -70,13 +70,12 @@ the ratio of the data to the model for a given wavelength range.
   :width: 700
   :alt: Effectiveness of the Defringing Tools on an observation of GD71
 
-------------
+--------
 Routines
-------------
+--------
 
 .. currentmodule:: stistools.defringe
 .. automodule:: stistools.defringe
-  :ignore-module-all:
 
 prepspec
 ^^^^^^^^
