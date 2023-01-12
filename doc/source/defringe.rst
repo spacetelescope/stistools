@@ -76,6 +76,7 @@ Routines
 
 .. currentmodule:: stistools.defringe
 .. automodule:: stistools.defringe
+  :ignore-module-all:
 
 prepspec
 ^^^^^^^^
