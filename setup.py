@@ -28,6 +28,16 @@ import relic.release
 version = relic.release.get_info()
 relic.release.write_template(version, 'stistools')
 
+install_requires = ['numpy',]
+if not os.getenv('READTHEDOCS'):
+    install_requires.extend([
+        'astropy>=4.1',
+        'scipy',
+        'stsci.tools',
+        'pysiaf',
+        'astroquery',
+    ])
+
 setup(
     name = 'stistools',
     version = version.pep386,
@@ -45,14 +55,7 @@ setup(
         'Topic :: Scientific/Engineering :: Astronomy',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    install_requires = [
-        'astropy>=4.1',
-        'numpy',
-        'scipy',
-        'stsci.tools',
-        'pysiaf',
-        'astroquery',
-    ],
+    install_requires = install_requires,
     tests_require = [
         'pytest',
         'six',
