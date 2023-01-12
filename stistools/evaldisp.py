@@ -9,7 +9,7 @@ def newton(x, coeff, cenwave, niter=4):
     in this file assumes that the grating is first order.
 
     Parameters
-    -----------
+    ----------
     x: float or ndarray
         a single pixel number or an array of pixel numbers
     coeff: array_like object
@@ -62,7 +62,7 @@ def evalDisp(coeff, wl):
     but this function converts to zero-indexed pixels.
 
     Parameters
-    -----------
+    ----------
     coeff: array_like object
         a list of eight elements containing the
         dispersion coefficients as read from a STIS _dsp.fits table
@@ -72,7 +72,7 @@ def evalDisp(coeff, wl):
         in Angstroms
 
     Returns
-    --------
+    -------
     pix_number: float or ndarray
         the pixel number (or array of pixel numbers) corresponding
         to the input wavelength(s); note that these are zero indexed

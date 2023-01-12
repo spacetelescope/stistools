@@ -287,7 +287,7 @@ def wavelet_resampling(hdu, img, errimg,
         name of the output file with the convolved image
 
     Returns
-    --------
+    -------
     img_arr: tuple of ndarrays
         the image and error arrays (to replace the input img and errimg)
     """
@@ -556,7 +556,7 @@ def apply_trace(image, a2center, a2displ, subdiv,
         resampled 2-D image array
 
     Notes
-    -------
+    -----
     The function value is a 2-D array containing the resampled image.
     This is binned by subdiv in Y (axis 0), after shifting by trace
     (multiplied by subdiv).
@@ -617,7 +617,7 @@ def extract(image, locn, subdiv):
         number of rows to add together
 
     Returns
-    --------
+    -------
     spec: ndarray
         a 1-D array containing the extracted row
 

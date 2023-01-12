@@ -73,7 +73,7 @@ output: list, optional
     accept a single filename or a list of filenames.
 
 Notes
-------
+-----
 Author:
   - Paul Barrett (STScI)
 

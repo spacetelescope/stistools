@@ -115,7 +115,7 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     can be saved as an output file.
 
     Parameters
-    -----------
+    ----------
     infile: str
         STIS FITS file
     exten: int, optional
@@ -155,7 +155,7 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
             magn  = magnitude in power spectrum
 
     Notes
-    ---------
+    -----
     Authors:
       - Original algorithm: Thomas M. Brown (STScI)
       - Python version: Paul Barrett (STScI)

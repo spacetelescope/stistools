@@ -18,7 +18,7 @@ def radialVel(ra_targ, dec_targ, mjd):
     in the direction toward the target.
 
     Parameters
-    -----------
+    ----------
     ra_targ: float
         right ascension of the target (degrees)
     dec_targ: float
@@ -27,7 +27,7 @@ def radialVel(ra_targ, dec_targ, mjd):
         Modified Julian Date at the time of observation
 
     Returns
-    --------
+    -------
     radial_vel: float
         the radial velocity in km/s
     """
@@ -173,7 +173,7 @@ def precess(mjd, target):
     .. [2] J.H. Lieske, 1979, Astron & Astrophys vol 73, 282-284.
 
     Parameters
-    -----------
+    ----------
     mjd: float
         time, Modified Julian Date
     target: array_like object

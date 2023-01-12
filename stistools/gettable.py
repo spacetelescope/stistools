@@ -26,7 +26,7 @@ def getTable(table, filter, sortcol=None,
     but more than one row matches the filter.
 
     Parameters
-    -----------
+    ----------
     table: str
         name of the reference table
     filter: dict
@@ -130,7 +130,7 @@ def rotateTrace(trace_info, expstart):
     """Rotate a2displ, if MJD and DEGPERYR are in the trace table.
 
     Parameters
-    -----------
+    ----------
     trace_info: rec_array
         an array of the relevant rows of the table;
         the A2DISPL column will be modified in-place if the MJD and
