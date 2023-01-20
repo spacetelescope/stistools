@@ -1,4 +1,3 @@
-include RELIC-INFO
 exclude stistools/version.py
 recursive-include stistools/pars *.cfg*
 

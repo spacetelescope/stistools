@@ -1,0 +1,63 @@
+[project]
+name = "stistools"
+description = "Tools for STIS (Space Telescope Imaging Spectrograph)"
+authors = [
+    { name = "Paul Barrett" },
+    { name = "Phil Hodge" },
+]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "astropy>=4.1",
+    "numpy",
+    "scipy",
+    "stsci.tools",
+    "pysiaf",
+    "astroquery",
+]
+dynamic = [
+    "version",
+]
+
+[project.scripts]
+add_stis_s_region = "stistools.add_stis_s_region:call_main"
+
+[build-system]
+requires = [
+    "setuptools>=61.2",
+    "setuptools_scm[toml]>=3.4",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+namespaces = false
+
+[tool.setuptools.package-data]
+stistools = [
+    "pars/*",
+    "LICENSE.txt",
+]
+
+[tool.distutils.bdist_wheel]
+universal = 1
+
+[tool.pytest.ini_options]
+minversion = "3"
+norecursedirs = [
+    ".eggs",
+    "build",
+    "docs/_build",
+    "relic",
+]
+junit_family = "xunit2"
+
+[tool.setuptools_scm]
