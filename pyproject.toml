@@ -25,6 +25,10 @@ dynamic = [
     "version",
 ]
 
+[project.readme]
+text = 'Tools for analyzing STIS data from the Hubble Space Telescope'
+content-type = 'text/plain'
+
 [project.scripts]
 add_stis_s_region = "stistools.add_stis_s_region:call_main"
 
