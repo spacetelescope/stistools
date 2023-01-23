@@ -204,6 +204,9 @@ def add_s_region(stisfile, hst_siaf, dry_run=False):
         detector = hdr0['DETECTOR']
         aperture = hdr0['APERTURE']
         propaper = hdr0['PROPAPER']
+        if propaper.upper() == 'DEF':
+            log.info('PROPAPER keyword = DEF, using APERTURE keyword instead')
+            propaper = hdr0['APERTURE']
         siaf_entry = get_siaf_entry(hst_siaf, propaper, detector)
         for ext in f1[1:]:
             if ext.header['EXTNAME'] in ['SCI', 'EVENTS']:
