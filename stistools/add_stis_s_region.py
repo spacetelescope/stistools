@@ -225,9 +225,9 @@ def add_s_region(stisfile, hst_siaf, dry_run=False):
                 hdr1 = ext.header
                 ra_aper = hdr1['RA_APER']
                 dec_aper = hdr1['DEC_APER']
+                extname = hdr1['EXTNAME']
+                extver = hdr1['EXTVER']
                 if siaf_entry is not None:
-                    extname = hdr1['EXTNAME']
-                    extver = hdr1['EXTVER']
                     pa_aper = hdr1['PA_APER']
                     pa_aper = pa_aper * DEGREESTORADIANS
                     x, y = siaf_entry.closed_polygon_points('idl')
