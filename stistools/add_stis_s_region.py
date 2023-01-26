@@ -248,8 +248,8 @@ def add_s_region(stisfile, hst_siaf, dry_run=False):
                         s_region = s_region + ' {} {}'.format(ra, dec)
                 else:
                     log.warning("S_REGION set to 10 arcsec diameter circle centered on (RA_APER, DEC_APER)")
-                    diameter = 10.0 / 3600.0
-                    s_region = 'CIRCLE ICRS {0:.8f} {1:.7f} {2:.8f}'.format(ra_aper, dec_aper, diameter)
+                    radius = 5.0 / 3600.0
+                    s_region = 'CIRCLE ICRS {0:.8f} {1:.7f} {2:.8f}'.format(ra_aper, dec_aper, radius)
                 log.info("{}[{}, {}] with aperture {} has S_REGION = {}".format(stisfile,
                 extname, extver, propaper, s_region))
                 if not dry_run:
