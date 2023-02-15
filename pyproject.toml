@@ -29,6 +29,10 @@ dynamic = [
 file = "README.md"
 content-type = "text/markdown"
 
+[project.license]
+file = "LICENSE.txt"
+content-type = "text/plain"
+
 [project.scripts]
 add_stis_s_region = "stistools.add_stis_s_region:call_main"
 
