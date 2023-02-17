@@ -33,6 +33,18 @@ content-type = "text/markdown"
 file = "LICENSE.txt"
 content-type = "text/plain"
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+docs = [
+    "ipython",
+    "sphinx",
+    "stsci_rtd_theme",
+    "sphinx_automodapi",
+    'tomli; python_version <"3.11"',
+]
+
 [project.scripts]
 add_stis_s_region = "stistools.add_stis_s_region:call_main"
 
