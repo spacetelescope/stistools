@@ -64,7 +64,6 @@ norecursedirs = [
     ".eggs",
     "build",
     "docs/_build",
-    "relic",
 ]
 junit_family = "xunit2"
 
