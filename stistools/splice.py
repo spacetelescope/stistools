@@ -4,7 +4,48 @@ import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 
-__all__ = ["nearest_index", "read_spectrum", "find_overlap", "merge_overlap", 
+__doc__ = """
+The ``splice`` module concatenates the several orders contained in a STIS 
+Echelle ``_x1d`` spectrum while co-adding the overlapping sections. This code
+emulates the splice module previously implemented on the STSDAS IRAF package.
+
+The function :func:`splice_pipeline` takes as input an ``_x1d`` Echelle spectrum
+(including path) and outputs an Astropy Table containing the wavelength, flux,
+flux uncertainty and data-quality flags. The spliced spectrum can be saved as
+an additional extension to the ``_x1d`` file by setting ``update_fits`` to 
+``True``. The spliced spectrum can also be exported to an ascii file by setting
+a path and filename to ``output_file``.
+
+Examples
+--------
+
+Read a spectrum with :func:`read_spectrum` and plot all the different orders
+using ``matplotlib`` to visualize how an echelle extracted spectrum looks like:
+
+>>> import matplotlib.pyplot as plt
+>>> from stistools import splice
+>>> spectrum = splice.read_spectrum('oblh01040_x1d.fits')
+>>> for s in spectrum:
+>>>     plt.plot(s['wavelength'], s['flux'])
+>>> _ = plt.xlabel(r'Wavelength (${\rm \AA}$)')
+>>> _ = plt.ylabel(r'Flux density (erg s$^{-1}$ cm$^{-2}$ ${\rm \AA}^{-1}$)')
+
+Splice the Echelle spectrum orders with :func:`splice_pipeline` and plot it
+using ``matplotlib``:
+>>> import matplotlib.pyplot as plt
+>>> from stistools import splice
+>>> spliced_spectrum = splice.splice_pipeline('oblh01040_x1d.fits')
+>>> plt.errorbar(spliced_spectrum['WAVELENGTH'], spliced_spectrum['FLUX'],
+>>>              yerr=spliced_spectrum['ERROR'])
+>>> _ = plt.xlabel(r'Wavelength (${\rm \AA}$)')
+>>> _ = plt.ylabel(r'Flux density (erg s$^{-1}$ cm$^{-2}$ ${\rm \AA}^{-1}$)')
+
+"""
+__taskname__ = "splice"
+__version__ = "1.0"
+__vdate__ = "28-February-2023"
+__author__ = "Leonardo Dos Santos"
+__all__ = ["nearest_index", "read_spectrum", "find_overlap", "merge_overlap",
            "splice", "splice_pipeline"]
 
 
@@ -752,7 +793,7 @@ def splice_pipeline(x1d_input, update_fits=False, output_file=None,
 
     # This feature modifies the fits input file! Use carefully!
     if update_fits is True:
-        with fits.open(prefix + '%s_x1d.fits' % dataset, mode='update') as hdul:
+        with fits.open(x1d_input, mode='update') as hdul:
             hdul.append(table_hdu)
     else:
         pass
