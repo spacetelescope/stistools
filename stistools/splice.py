@@ -35,7 +35,7 @@ using ``matplotlib``:
 
 >>> import matplotlib.pyplot as plt
 >>> from stistools import splice
->>> spliced_spectrum = splice.splice_pipeline('oblh01040_x1d.fits')
+>>> spliced_spectrum = splice.splice('oblh01040_x1d.fits')
 >>> plt.errorbar(spliced_spectrum['WAVELENGTH'], spliced_spectrum['FLUX'],
 >>>              yerr=spliced_spectrum['ERROR'])
 >>> _ = plt.xlabel(r'Wavelength (${\rm \AA}$)')
@@ -47,7 +47,7 @@ __version__ = "1.0"
 __vdate__ = "28-February-2023"
 __author__ = "Leonardo Dos Santos"
 __all__ = ["nearest_index", "read_spectrum", "find_overlap", "merge_overlap",
-           "splice", "splice_pipeline"]
+           "concatenate_sections", "splice"]
 
 
 # Useful tool when dealing with binned data
@@ -660,7 +660,8 @@ def merge_overlap(overlap_sections,
 
 
 # Splice the spectra
-def splice(unique_spectra_list, merged_pair_list, merged_trio_list):
+def concatenate_sections(unique_spectra_list, merged_pair_list,
+                         merged_trio_list):
     """
     Concatenate the unique and the (merged) overlapping spectra.
 
@@ -722,9 +723,9 @@ def splice(unique_spectra_list, merged_pair_list, merged_trio_list):
 
 
 # The splice pipeline does everything
-def splice_pipeline(x1d_input, update_fits=False, output_file=None,
-                    truncate_edge_left=None, truncate_edge_right=None,
-                    acceptable_dq_flags=(0, 64, 128, 1024, 2048)):
+def splice(x1d_input, update_fits=False, output_file=None,
+           truncate_edge_left=None, truncate_edge_right=None,
+           acceptable_dq_flags=(0, 64, 128, 1024, 2048)):
     """
     The main workhorse of the package. This pipeline performs all the steps
     necessary to merge overlapping spectral sections and splice them with the
@@ -783,8 +784,9 @@ def splice_pipeline(x1d_input, update_fits=False, output_file=None,
     # order.
 
     # Finally splice the unique and merged sections
-    wavelength, flux, uncertainty, dq = splice(unique_sections, merged_pairs,
-                                               merged_trios)
+    wavelength, flux, uncertainty, dq = concatenate_sections(unique_sections,
+                                                             merged_pairs,
+                                                             merged_trios)
 
     # Instantiate the spectrum dictionary
     spectrum_dict = \
