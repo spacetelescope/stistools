@@ -32,6 +32,7 @@ using ``matplotlib`` to visualize how an echelle extracted spectrum looks like:
 
 Splice the Echelle spectrum orders with :func:`splice_pipeline` and plot it
 using ``matplotlib``:
+
 >>> import matplotlib.pyplot as plt
 >>> from stistools import splice
 >>> spliced_spectrum = splice.splice_pipeline('oblh01040_x1d.fits')
