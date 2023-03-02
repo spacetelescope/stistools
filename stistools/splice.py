@@ -9,7 +9,7 @@ The ``splice`` module concatenates the several orders contained in a STIS
 Echelle ``_x1d`` spectrum while co-adding the overlapping sections. This code
 emulates the splice module previously implemented on the STSDAS IRAF package.
 
-The function :func:`splice_pipeline` takes as input an ``_x1d`` Echelle spectrum
+The function :func:`splice` takes as input an ``_x1d`` Echelle spectrum
 (including path) and outputs an Astropy Table containing the wavelength, flux,
 flux uncertainty and data-quality flags. The spliced spectrum can be saved as
 an additional extension to the ``_x1d`` file by setting ``update_fits`` to 
@@ -30,7 +30,7 @@ using ``matplotlib`` to visualize how an echelle extracted spectrum looks like:
 >>> _ = plt.xlabel(r'Wavelength (${\rm \AA}$)')
 >>> _ = plt.ylabel(r'Flux density (erg s$^{-1}$ cm$^{-2}$ ${\rm \AA}^{-1}$)')
 
-Splice the Echelle spectrum orders with :func:`splice_pipeline` and plot it
+Splice the Echelle spectrum orders with :func:`splice` and plot it
 using ``matplotlib``:
 
 >>> import matplotlib.pyplot as plt
