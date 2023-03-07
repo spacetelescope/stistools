@@ -50,7 +50,12 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-STIS_APERTURE_LOOKUP = {'0.1X0.03': '100X030',
+STIS_APERTURE_LOOKUP = {'0.05X29': '050X29',
+                        '0.09X29': '090X29',
+                        '0.2X29': '200X29',
+                        '0.05X31NDA': '050X31A',
+                        '0.05X31NDB': '050X31B',
+                        '0.1X0.03': '100X030',
                         '0.1X0.06': '100X060',
                         '0.1X0.09': '100X090',
                         '0.1X0.2': '100X200',
@@ -83,7 +88,7 @@ STIS_APERTURE_LOOKUP = {'0.1X0.03': '100X030',
                         '31X0.05NDB': '31X050B',
                         '31X0.05NDC': '31X050C',
                         '36X0.05P45': '36X050P',
-                        '36X0.05N45': '36N050N',
+                        '36X0.05N45': '36X050N',
                         '36X0.6P45': '36X600P',
                         '36X0.6N45': '36X600N',
                         '50CCD': '50',
@@ -103,7 +108,11 @@ STIS_APERTURE_LOOKUP = {'0.1X0.03': '100X030',
                         '52X0.1F2': 'L100F2',
                         '52X0.1F2-R': 'L100R2',
                         '52X0.1B1.0': 'LBAR1',
+                        '52X0.1B1.0-R': 'LBARR1',
+                        '52X0.1B0.5': 'LBAR2',
+                        '52X0.1B0.5-R': 'LBARR2',
                         '52X0.1B3.0': 'LBAR3',
+                        '52X0.1B3.0-R': 'LBARR3',
                         '52X0.2': 'L200',
                         '52X0.2D1': 'L200D1',
                         '52X0.2E1': 'L200E1',
@@ -121,7 +130,7 @@ STIS_APERTURE_LOOKUP = {'0.1X0.03': '100X030',
                         '52X0.5F2': 'L500F2',
                         '52X0.5F2-R': 'L500R2',
                         '52X2': 'L2',
-                        '52X2D1': 'L2D2',
+                        '52X2D1': 'L2D1',
                         '52X2E1': 'L2E1',
                         '52X2E2': 'L2E2',
                         '52X2F1': 'L2F1',
@@ -204,32 +213,43 @@ def add_s_region(stisfile, hst_siaf, dry_run=False):
         detector = hdr0['DETECTOR']
         aperture = hdr0['APERTURE']
         propaper = hdr0['PROPAPER']
+        if propaper.upper() not in STIS_APERTURE_LOOKUP.keys():
+            log.info('PROPAPER keyword {} not in lookup table, using APERTURE keyword instead'.format(propaper))
+            if aperture.upper() not in STIS_APERTURE_LOOKUP.keys():
+                log.warning('No match for APERTURE keyword either')
+            else:
+                propaper = aperture
         siaf_entry = get_siaf_entry(hst_siaf, propaper, detector)
         for ext in f1[1:]:
             if ext.header['EXTNAME'] in ['SCI', 'EVENTS']:
                 hdr1 = ext.header
-                extname = hdr1['EXTNAME']
-                extver = hdr1['EXTVER']
-                pa_aper = hdr1['PA_APER']
-                pa_aper = pa_aper * DEGREESTORADIANS
                 ra_aper = hdr1['RA_APER']
                 dec_aper = hdr1['DEC_APER']
-                x, y = siaf_entry.closed_polygon_points('idl')
-                wcslimits = get_wcs_limits(f1)
-                siaflimits = get_siaf_limits(x, y)
-                x, y = smallest_size(wcslimits, siaflimits)
-                # This is to get the parity right
-                x = x * -1.0
-                costheta = math.cos(pa_aper)
-                sintheta = math.sin(pa_aper)
-                dra = x * costheta + y * sintheta
-                dra = dra / math.cos(dec_aper * DEGREESTORADIANS) / 3600.0
-                ddec = (-x * sintheta + y * costheta) / 3600.0
-                ra_corners = ra_aper + dra
-                dec_corners = dec_aper + ddec
-                s_region = 'POLYGON ICRS'
-                for ra, dec in zip(ra_corners, dec_corners):
-                    s_region = s_region + ' {} {}'.format(ra, dec)
+                extname = hdr1['EXTNAME']
+                extver = hdr1['EXTVER']
+                if siaf_entry is not None:
+                    pa_aper = hdr1['PA_APER']
+                    pa_aper = pa_aper * DEGREESTORADIANS
+                    x, y = siaf_entry.closed_polygon_points('idl')
+                    wcslimits = get_wcs_limits(f1)
+                    siaflimits = get_siaf_limits(x, y)
+                    x, y = smallest_size(wcslimits, siaflimits)
+                    # This is to get the parity right
+                    x = x * -1.0
+                    costheta = math.cos(pa_aper)
+                    sintheta = math.sin(pa_aper)
+                    dra = x * costheta + y * sintheta
+                    dra = dra / math.cos(dec_aper * DEGREESTORADIANS) / 3600.0
+                    ddec = (-x * sintheta + y * costheta) / 3600.0
+                    ra_corners = ra_aper + dra
+                    dec_corners = dec_aper + ddec
+                    s_region = 'POLYGON ICRS'
+                    for ra, dec in zip(ra_corners, dec_corners):
+                        s_region = s_region + ' {} {}'.format(ra, dec)
+                else:
+                    log.warning("S_REGION set to 10 arcsec diameter circle centered on (RA_APER, DEC_APER)")
+                    radius = 5.0 / 3600.0
+                    s_region = 'CIRCLE ICRS {0:.8f} {1:.7f} {2:.8f}'.format(ra_aper, dec_aper, radius)
                 log.info("{}[{}, {}] with aperture {} has S_REGION = {}".format(stisfile,
                 extname, extver, propaper, s_region))
                 if not dry_run:
@@ -267,6 +287,11 @@ def get_siaf_entry(hst_siaf, aperture, detector):
                         "FUV-MAMA": "F"}
     entry = entry + detector_letters[detector]
     # The rest depends on the aperture
+    try:
+        lookup = STIS_APERTURE_LOOKUP[aperture]
+    except KeyError:
+        log.warning("No match for aperture {}".format(aperture))
+        return None
     entry = entry + STIS_APERTURE_LOOKUP[aperture]
     try:
         siaf_entry = hst_siaf[entry]
