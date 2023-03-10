@@ -9,6 +9,9 @@ sphinx:
   configuration: doc/source/conf.py
 
 python:
-  version: '3'
-conda:
-  environment: doc/environment.yml
+  version: "3.8"
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
