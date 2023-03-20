@@ -9,7 +9,6 @@ import subprocess
 import numpy.random as rn               # used by mkRandomName
 from astropy.io import fits
 
-from stsci.tools import parseinput, teal
 
 """
 Perform wavelength calibration of STIS data.
@@ -61,7 +60,7 @@ def main(args):
     try:
         (options, pargs) = getopt.getopt(args, "srtv:",
                                          ["version"])
-    except Exception as error:
+    except Exception:
         prtOptions()
         sys.exit()
 
@@ -93,7 +92,7 @@ def main(args):
         sys.exit()
     input = pargs[0]
     if nargs == 2:
-        outroot = pargs[1]
+        pargs[1]
 
     status = wavecal(input, wavecal=inwave, debugfile="",
                      savetmp=savetmp,
@@ -206,10 +205,10 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
     """
 
     if print_version:
-        status = subprocess.call(["cs4.e", "--version"])
+        subprocess.call(["cs4.e", "--version"])
         return 0
     if print_revision:
-        status = subprocess.call(["cs4.e", "-r"])
+        subprocess.call(["cs4.e", "-r"])
         return 0
 
     # infiles may include one or more file names, separated by blanks

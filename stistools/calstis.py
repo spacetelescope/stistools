@@ -6,7 +6,6 @@ import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput, teal
 
 __doc__ = """
 Calibrate STIS data.
@@ -54,7 +53,7 @@ def main(args):
     try:
         (options, pargs) = getopt.getopt(args, "srtvw:",
                                          ["version"])
-    except Exception as error:
+    except Exception:
         prtOptions()
         sys.exit()
 

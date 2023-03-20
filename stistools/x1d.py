@@ -6,7 +6,6 @@ import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput, teal
 
 __doc__ = """
 Extract 1-D spectrum.
@@ -48,7 +47,7 @@ def main(args):
     try:
         (options, pargs) = getopt.getopt(args, "rtv:",
                                          ["version"])
-    except Exception as error:
+    except Exception:
         prtOptions()
         sys.exit()
 
