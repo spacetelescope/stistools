@@ -80,3 +80,11 @@ junit_family = "xunit2"
 
 [tool.setuptools_scm]
 write_to = "stistools/version.py"
+
+[tool.ruff]
+extend-ignore = [
+    "E402", # Module level import not at top of file
+    "E501", # Line too long
+    "F403", # import *` used; unable to detect undefined names
+    "F841", # Local variable assigned but never used
+]

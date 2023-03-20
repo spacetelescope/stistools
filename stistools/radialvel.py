@@ -188,7 +188,7 @@ def precess(mjd, target):
     """
 
     target_j2000 = N.array(target, dtype=N.float64)
-    target_mjd = target_j2000.copy()
+    target_j2000.copy()
 
     dt = (mjd - REFDATE) / 36525.
     dt2 = dt**2

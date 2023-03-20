@@ -2,7 +2,6 @@ import pytest
 
 from stistools.wx2d import wx2d
 from .resources import BaseSTIS
-import pytest
 
 
 @pytest.mark.bigdata

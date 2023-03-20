@@ -179,7 +179,7 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
 
             row_avgs = np.array([np.average(row) for row in flatdata[t_row:b_row, l_col:r_col]])
             max_row_idx = np.where(row_avgs == np.max(abs(row_avgs)))[0][0] + t_row  # CL does an absolute value here
-            max_row = flatdata[max_row_idx]     # xxx should this be used?
+            flatdata[max_row_idx]     # xxx should this be used?
             #    Does some flux-filtering -- I think this is for determining the max rows
 
         # Set rows (startrow, lastrow) to be fit according to aperture name (and possibly OPT_ELEM):

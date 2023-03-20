@@ -1,7 +1,6 @@
 import pytest
 from stistools.tastis import tastis
 from .resources import BaseSTIS
-import pytest
 
 
 @pytest.mark.bigdata

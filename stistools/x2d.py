@@ -6,7 +6,6 @@ import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput, teal
 
 __doc__ = """
 Rectify 2-D STIS spectral data.
@@ -48,12 +47,11 @@ def main(args):
     try:
         (options, pargs) = getopt.getopt(args, "rtv:",
                                          ["version"])
-    except Exception as error:
+    except Exception:
         prtOptions()
         sys.exit()
 
     output = ""
-    blazeshift = None
     verbose = False
     timestamps = False
 

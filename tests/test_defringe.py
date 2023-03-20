@@ -31,7 +31,6 @@ class TestDefringe(BaseSTIS):
         """Compare prepspec output for a g750l spectrum"""
         
         sci_file = 'o49x18010'
-        flat_file = 'o49x18020'
         output = sci_file+"_crj.fits"
 
         for input_file in [sci_file+'_raw.fits', sci_file+'_wav.fits']:
@@ -95,7 +94,6 @@ class TestDefringe(BaseSTIS):
         """Compare prepspec output for a g750m spectrum"""
 
         sci_file = "oe36m10g0"
-        flat_file = "oe36m10j0"
         output = sci_file+"_sx2.fits"
 
         for input_file in [sci_file+'_raw.fits', sci_file+'_wav.fits']:

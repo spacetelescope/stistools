@@ -64,7 +64,7 @@ def cmp_fitshdr(left, right, **kwargs):
                                         rtol=rtol,
                                         **kwargs)
 
-    if no_assert:
+    if 'no_assert' in kwargs and kwargs['no_assert']:
         return result
 
     assert result.identical, result.report()

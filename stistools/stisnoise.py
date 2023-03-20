@@ -202,7 +202,7 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     fin = fits.open(infile)
     extname = fin[exten].header['EXTNAME']
     inimage = fin[exten].data
-    himage = fin[0].data
+    fin[0].data
 
     amp = fin[0].header['CCDAMP']
     if verbose == 1:

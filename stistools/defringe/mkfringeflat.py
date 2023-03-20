@@ -336,9 +336,9 @@ def mkfringeflat(inspec, inflat, outflat, do_shift=True, beg_shift=-0.5, end_shi
         print("")
 
 
-        ilow = int(round(beg_scale*100.0))
-        iupp = int(round(end_scale*100.0))
-        istep = int(round(scale_step*100.0))
+        int(round(beg_scale*100.0))
+        int(round(end_scale*100.0))
+        int(round(scale_step*100.0))
 
         fltdata = get_flat_data(inflat, shifted_flat)
 

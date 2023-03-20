@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-import sys
 import math
 import numpy as np
 
@@ -579,6 +578,3 @@ class Doppinfo(object):
 
             print("")
 
-if __name__ == "__main__":
-
-    main(sys.argv[1:])

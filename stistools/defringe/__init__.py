@@ -1,7 +1,3 @@
-from .prepspec import prepspec
-from .normspflat import normspflat
-from .mkfringeflat import mkfringeflat
-from .defringe import defringe
 
 __doc__ = """
 .. HST/STIS CCD Defringing Tools
