@@ -36,6 +36,7 @@ content-type = "text/plain"
 [project.optional-dependencies]
 test = [
     "pytest",
+    "crds",
 ]
 docs = [
     "ipython",
