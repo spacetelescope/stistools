@@ -1,7 +1,7 @@
 from .resources import BaseSTIS
 import pytest
 import numpy as np
-from stistools.splice import splice_pipeline
+from stistools.splice import splice
 
 
 @pytest.mark.bigdata
@@ -14,7 +14,7 @@ class TestSplice(BaseSTIS):
         path_input = self.get_data("splice/input", dataset)
         path_truth = self.get_data("splice/truth", truth)
 
-        spectrum_table = splice_pipeline(path_input)
+        spectrum_table = splice(path_input, weight='snr')
 
         truth = np.loadtxt(path_truth)
         wl_truth = truth[:, 0]
