@@ -16,6 +16,14 @@ an additional extension to the ``_x1d`` file by setting ``update_fits`` to
 ``True``. The spliced spectrum can also be exported to an ascii file by setting
 a path and filename to ``output_file``.
 
+The codebase from the ULLYSES project, which is also sponsored by STScI, possess
+routines that can be used to co-add and splice STIS echelle spectra. The main 
+differences between these codes are the following: 1) ``splice`` does not change
+the spectra in non-overlap regions; 2) ``splice`` takes into account 
+data-quality (DQ) flags and assignes specific DQ values to co-added pixels; 
+3) ``splice`` only works for STIS spectra and does not concatenate or co-add
+COS spectra or multiple STIS spectra.
+
 Examples
 --------
 
@@ -57,14 +65,14 @@ def nearest_index(array, target_value):
 
     Parameters
     ----------
-    array (``numpy.array``):
+    array : ``numpy.array``
         Target array.
-    target_value (``float``):
+    target_value : ``float``
         Target value.
 
     Returns
     -------
-    index (``int``):
+    index : ``int``
         Index of the value in ``array`` that is closest to ``target_value``.
     """
     index = array.searchsorted(target_value)
@@ -83,22 +91,22 @@ def read_spectrum(x1d_input, truncate_edge_left=None, truncate_edge_right=None):
 
     Parameters
     ----------
-    x1d_input (``str``):
+    x1d_input : ``str``
         Path and name of the ``*_x1d.fits`` file containing the spectrum.
 
-    truncate_edge_left (``int``, optional):
+    truncate_edge_left : ``int``, optional
         Set the number of low-resolution pixels at the left edge of the detector
         where the spectra should be truncated. If ``None``, then no truncation
         is applied. Default is ``None``.
 
-    truncate_edge_right (``int``, optional):
+    truncate_edge_right : ``int``, optional
         Set the number of low-resolution pixels at the right edge of the
         detector where the spectra should be truncated. If ``None``, then no
         truncation is applied. Default is ``None``.
 
     Returns
     -------
-    spectrum (``list``):
+    spectrum : ``list``
         List of all the orders contained in the Echelle spectrum and their
         respective fluxes.
     """
@@ -142,19 +150,19 @@ def find_overlap(spectrum):
 
     Parameters
     ----------
-    spectrum (``list``):
+    spectrum : ``list``
         List of dictionaries containing the orders of the Echelle spectrum.
         It should resemble the output of ``read_spectrum()``.
 
     Returns
     -------
-    unique_sections (``list``):
+    unique_sections : ``list``
         List containing the unique sections of the spectrum.
 
-    overlap_pair_sections (``list``):
+    overlap_pair_sections : ``list``
         List containing the overlapping pairs of the spectrum.
 
-    overlap_trio_sections (``list``):
+    overlap_trio_sections : ``list``
         List containing the overlapping trios of the spectrum.
     """
     n_orders = len(spectrum)
@@ -532,7 +540,8 @@ def find_overlap(spectrum):
 
 # Merge overlapping sections
 def merge_overlap(overlap_sections,
-                  acceptable_dq_flags=(0, 64, 128, 1024, 2048)):
+                  acceptable_dq_flags=(0, 64, 128, 1024, 2048),
+                  weight='sensitivity'):
     """
     Merges overlapping spectral regions. The basic workflow of this function
     is to interpolate the sections into a common wavelength table and calculate
@@ -547,20 +556,25 @@ def merge_overlap(overlap_sections,
 
     Parameters
     ----------
-    overlap_sections (``list``):
+    overlap_sections : ``list``
         List of dictionaries containing the overlapping spectra of neighboring
         orders.
 
-    acceptable_dq_flags (array-like, optional):
+    acceptable_dq_flags : array-like, optional
         Data-quality flags that are acceptable when co-adding overlapping
         spectra. The default values are (0, 64, 128, 1024, 2048), which
         correspond to: 0 = regular pixel, 64 = vignetted pixel, 128 = pixel in
         overscan region, 1024 = small blemish, 2048 = more than 30% of
         background pixels rejected by sigma-clipping in the data reduction.
 
+    weight : ``str``, optional
+        Defines how to merge the overlapping sections. The options currently
+        implemented are ``'sensitivity'`` and ``'snr'`` (inverse square of the
+        uncertainties). Default is ``'sensitivity'``.
+
     Returns
     -------
-    overlap_merged (``dict``):
+    overlap_merged : ``dict``
         Dictionary containing the merged overlapping spectrum.
     """
     n_overlaps = len(overlap_sections)
@@ -576,6 +590,7 @@ def merge_overlap(overlap_sections,
 
     f_interp = []
     err_interp = []
+    net_interp = []
     for i in range(n_overlaps - 1):
         f_interp.append(np.interp(overlap_ref['wavelength'],
                                   overlap_sections[i]['wavelength'],
@@ -583,15 +598,30 @@ def merge_overlap(overlap_sections,
         err_interp.append(np.interp(overlap_ref['wavelength'],
                                     overlap_sections[i]['wavelength'],
                                     overlap_sections[i]['uncertainty']))
+        net_interp.append(np.interp(overlap_ref['wavelength'],
+                                    overlap_sections[i]['wavelength'],
+                                    overlap_sections[i]['net']))
     f_interp = np.array(f_interp)
     err_interp = np.array(err_interp)
+    net_interp = np.array(net_interp)
+    sens_interp = f_interp / net_interp  # This is a good estimate of the
+    # sensitivity
+    sens_ref = overlap_ref['flux'] / overlap_ref['net']
 
     # Merge the spectra. We will take the weighted averaged, with weights equal
     # to the inverse of the uncertainties squared multiplied by a scale factor
     # to avoid numerical overflows.
-    scale = 1E-20
-    weights_interp = (1 / err_interp) ** 2 * scale
-    weights_ref = (1 / overlap_ref['uncertainty']) ** 2 * scale
+    if weight == 'sensitivity':
+        scale = 1E-10
+        weights_interp = sens_interp / scale
+        weights_ref = sens_ref / scale
+    elif weight == 'snr':
+        scale = 1E-20
+        weights_interp = (1 / err_interp) ** 2 * scale
+        weights_ref = (1 / overlap_ref['uncertainty']) ** 2 * scale
+    else:
+        raise ValueError(
+            'The weighting option "{}" is not implemented.'.format(weight))
 
     # Here we deal with the data-quality flags. We only accept flags that are
     # listed in `acceptable_dq_flags`. Let's initialize the dq flag arrays
@@ -667,24 +697,24 @@ def concatenate_sections(unique_spectra_list, merged_pair_list,
 
     Parameters
     ----------
-    unique_spectra_list (``list``):
+    unique_spectra_list : ``list``
         List of unique spectra.
 
-    merged_pair_list (``list``):
+    merged_pair_list : ``list``
         List of merged overlapping pair spectra.
 
-    merged_trio_list (``list``):
+    merged_trio_list : ``list``
         List of merged overlapping trio spectra.
 
     Returns
     -------
-    spliced_wavelength (``numpy.ndarray``):
+    spliced_wavelength : ``numpy.ndarray``
         Array containing the wavelengths in the entire spectrum.
 
-    spliced_flux (``numpy.ndarray``):
+    spliced_flux : ``numpy.ndarray``
         Array containing the fluxes in the entire spectrum.
 
-    spliced_uncertainty (``numpy.ndarray``):
+    spliced_uncertainty : ``numpy.ndarray``
         Array containing the flux uncertainties in the entire spectrum.
     """
     n_pair_overlap = len(merged_pair_list)
@@ -723,8 +753,7 @@ def concatenate_sections(unique_spectra_list, merged_pair_list,
 
 
 # The splice pipeline does everything
-def splice(x1d_input, update_fits=False, output_file=None,
-           truncate_edge_left=None, truncate_edge_right=None,
+def splice(x1d_input, update_fits=False, output_file=None, weight='sensitivity',
            acceptable_dq_flags=(0, 64, 128, 1024, 2048)):
     """
     The main workhorse of the package. This pipeline performs all the steps
@@ -733,20 +762,25 @@ def splice(x1d_input, update_fits=False, output_file=None,
 
     Parameters
     ----------
-    x1d_input (``str``):
+    x1d_input : ``str``
         Path and name of the ``*_x1d.fits`` file containing the spectrum.
 
-    update_fits (``bool``, optional):
+    update_fits : ``bool``, optional
         Use carefully, since it can modify fits files permanently. Parameter
         that decides whether to update the ``*_x1d.fits`` file with a new
         extension containing the spliced spectrum.
 
-    output_file (``str`` or ``None``, optional):
+    output_file : ``str`` or ``None``, optional
         String containing the location to save the output spectrum as an ascii
         file. If ``None``, no output file is saved and the code returns an
         Astropy Table instead. Default is ``None``.
 
-    acceptable_dq_flags (array-like, optional):
+    weight : ``str``, optional
+        Defines how to merge the overlapping sections. The options currently
+        implemented are ``'sensitivity'`` and ``'snr'`` (inverse square of the
+        uncertainties). Default is ``'sensitivity'``.
+
+    acceptable_dq_flags : array-like, optional
         Data-quality flags that are acceptable when co-adding overlapping
         spectra. The default values are (0, 64, 128, 1024, 2048), which
         correspond to: 0 = regular pixel, 64 = vignetted pixel, 128 = pixel in
@@ -755,7 +789,7 @@ def splice(x1d_input, update_fits=False, output_file=None,
 
     Returns
     -------
-    spliced_spectrum_table (``astropy.Table`` object):
+    spliced_spectrum_table : ``astropy.Table`` object
         Astropy Table containing the spliced spectrum. Only returned if
         ``output_file`` is ``None``.
     """
@@ -773,7 +807,7 @@ def splice(x1d_input, update_fits=False, output_file=None,
 
     if len(overlap_trio_sections) > 0:
         merged_trios = [
-            merge_overlap(overlap_trio_sections[k], acceptable_dq_flags)
+            merge_overlap(overlap_trio_sections[k], acceptable_dq_flags, weight)
             for k in range(len(overlap_trio_sections))
         ]
     else:
