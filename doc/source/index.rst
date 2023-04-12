@@ -17,8 +17,8 @@ tools are in active development, so there is more to come.
     be in-sync with the
     `STIS Data Handbook <http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/>`_.
 
-Relationship to the IRAF/PyRAF stis Package
-*******************************************
+Relationship to the IRAF/PyRAF `stis` Package
+*********************************************
 
 The intent of this package is to provide the user community with many of the useful tools contained within the original IRAF/PyRAF
 stis package in Python. This is consistent with a larger effort to transition the user community from IRAF/PyRAF to Python,
@@ -68,10 +68,8 @@ for getting started.
    Defringe Examples <defringe_examples.rst>
 
 
-==================
-Indices and tables
-==================
+Indices and Tables
+******************
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`

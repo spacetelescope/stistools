@@ -97,10 +97,6 @@ def inttag(tagfile, output, starttime=None, increment=None,
 
         verbose: bool
             Print additional info?
-
-        Returns
-        -------
-
 """
     # Open Input File (_tag.fits)
     with fits.open(tagfile) as tag_hdr:
@@ -311,17 +307,13 @@ def exp_range(starttime, stoptime, events_data, gti_data, tzero_mjd):
             to non-GTI time (if the user is not using allevents).
 
         expstart: float
-
             Start time of the imset exposure
 
         expstop: float
-
             Stop time of the imset exposure
 
         good_events: float
             The events list within the imset exposure time and within the GTIs.
-
-
 """
     sec_per_day = (1*u.day).to(u.second).value
     imset_events = events_data[(events_data['TIME'] > starttime) * (events_data['TIME'] < stoptime)]  # within imset
