@@ -14,9 +14,9 @@ class TestSplice(BaseSTIS):
         path_input = self.get_data("splice/input", dataset)
         path_truth = self.get_data("splice/truth", truth)
 
-        spectrum_table = splice(path_input, weight='snr')
+        spectrum_table = splice(path_input, weight='sensitivity')
 
-        truth = np.loadtxt(path_truth)
+        truth = np.loadtxt(path_truth, skiprows=1)
         wl_truth = truth[:, 0]
         f_truth = truth[:, 1]
         u_truth = truth[:, 2]

@@ -581,14 +581,14 @@ def merge_overlap(overlap_sections,
     n_overlaps = len(overlap_sections)
     bitwise_or_acceptable_dq_flags = reduce(np.bitwise_or, acceptable_dq_flags)
 
-    # First we need to determine which spectrum has a higher SNR
-    avg_snr = np.array([np.mean(ok['flux'] / ok['uncertainty'])
-                        for ok in overlap_sections])
+    # First we need to determine which spectrum has a higher sensitivity
+    avg_sensitivity = np.array([np.nanmean(ok['net'] / ok['flux'])
+                                for ok in overlap_sections])
 
     # We interpolate the lower-SNR spectra to the wavelength bins of the higher
     # SNR spectrum.
-    min_snr_idx = np.where(avg_snr == max(avg_snr))[0][0]
-    overlap_ref = overlap_sections.pop(min_snr_idx)
+    max_sens_idx = np.where(avg_sensitivity == max(avg_sensitivity))[0][0]
+    overlap_ref = overlap_sections.pop(max_sens_idx)
 
     f_interp = []
     err_interp = []
