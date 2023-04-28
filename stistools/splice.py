@@ -314,6 +314,11 @@ def find_overlap(spectrum):
             overlap_idx_123 = None
             unique_idx_2 = np.arange(idx[2], idx[1], 1)
             overlap_idx_23 = np.arange(idx[1], idx[3], 1)
+        elif idx[2] == idx[1]:
+            overlap_idx_12 = np.arange(idx[0], idx[2], 1)
+            overlap_idx_123 = None
+            unique_idx_2 = np.array([idx[2], ])
+            overlap_idx_23 = np.arange(idx[1], idx[3], 1)
         else:
             overlap_idx_12 = np.arange(idx[0], idx[1], 1)
             overlap_idx_123 = np.arange(idx[1], idx[2], 1)
