@@ -592,7 +592,7 @@ def merge_overlap(overlap_sections,
 
     # We interpolate the lower-SNR spectra to the wavelength bins of the higher
     # SNR spectrum.
-    max_sens_idx = np.where(avg_sensitivity == max(avg_sensitivity))[0][0]
+    max_sens_idx = np.where(avg_sensitivity == np.nanmax(avg_sensitivity))[0][0]
     overlap_ref = overlap_sections.pop(max_sens_idx)
 
     f_interp = []
