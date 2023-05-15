@@ -49,6 +49,7 @@ for getting started.
    inttag
    mktrace
    ocrreject
+   override_crrej
    radialvel
    r_util
    sshift
