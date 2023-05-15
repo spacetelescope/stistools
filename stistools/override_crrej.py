@@ -84,17 +84,21 @@ def override_crrej(input, wavecal='', outroot='', savetmp=False, verbose=False,
         default CR-rejection parameters below.
 
     scalense: str, default=''
+        Multiplicative scale factor applied to noise.  
         If specified, this overrides SCALENSE in the CRREJTAB.
 
     initgues: str, default=''
+        Initial guess method.  
         If specified, this overrides INITGUES in the CRREJTAB.
         The allowed values are 'minimum' and 'median' and ''.
 
     skysub: str, default=''
+        Sky value subtracted.  
         If specified, this overrides SKYSUB in the CRREJTAB.
         The allowed values are 'none', 'mode' and ''.
 
     crsigmas: str, default=''
+        Statistical rejection criteria.  
         If specified, this overrides CRSIGMAS in the CRREJTAB.  The
         value should be a comma-separated string of one or more
         integer or float values.  For each such value, calstis will
