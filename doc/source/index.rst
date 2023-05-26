@@ -41,6 +41,7 @@ for getting started.
 
    basic2d
    calstis
+   crrej_from_raw
    ctestis
    defringe
    doppinfo
@@ -49,7 +50,6 @@ for getting started.
    inttag
    mktrace
    ocrreject
-   override_crrej
    radialvel
    r_util
    sshift

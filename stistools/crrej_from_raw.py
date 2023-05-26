@@ -12,7 +12,7 @@ from astropy.io import fits
 from astropy.table import Table
 
 
-__taskname__ = "override_crrej"
+__taskname__ = "crrej_from_raw"
 __version__ = "0.1"
 __vdate__ = "12-May-2023"
 __author__ = "Sean Lockwood, STScI, May 2023."
@@ -22,7 +22,7 @@ HIST_LINE = 'CRREJTAB temporarily modified for processing.'
 ENV_VAR = 'TEMPCRR'
 
 
-def override_crrej(input, wavecal='', outroot='', savetmp=False, verbose=False,
+def crrej_from_raw(input, wavecal='', outroot='', savetmp=False, verbose=False,
     timestamps=False, trailer='', print_version=False, print_revision=False,
     crrejtab='', scalense=None, initgues=None, skysub=None, crsigmas=None,
     crradius=None, crthresh=None, badinpdq=None, crmask=None):
@@ -194,7 +194,7 @@ def override_crrej(input, wavecal='', outroot='', savetmp=False, verbose=False,
     # Convert dict to Astropy Table:
     new_crr = create_new_crr(crr_par)
 
-    with TemporaryDirectory(prefix='override_crrej_') as directory:
+    with TemporaryDirectory(prefix='crrej_from_raw_') as directory:
         # Write new CRREJTAB to a temporary location:
         new_crr_name = 'temp_crr.fits'
         new_crr.write(os.path.join(directory, new_crr_name))
@@ -239,6 +239,19 @@ def determine_crrejtab(input, crrejtab=None):
     - update the input file's CRREJTAB keyword to point to a new temporary file
     - temporarily store the old CRREJTAB value (if valid) in a new PREV_CRR keyword
     - read the CRREJTAB FITS table
+
+    Parameters
+    ----------
+    input: str
+        Name of the RAW FITS file to update.
+
+    crrejtab: str or None, default=None
+        User-supplied CRREJTAB to be used instead of the file specified in the ext=0
+        header.
+
+    Returns
+    -------
+        Astropy Table of CRREJTAB contents
     '''
     with fits.open(input, 'update') as f:
         # Add a HISTORY line to the RAW file so subsequent products get modified.
@@ -270,6 +283,15 @@ def determine_crrejtab(input, crrejtab=None):
 
 def create_new_crr(crr_par):
     '''Convert a dict to a 1-row Astropy Table with the correct column dtypes.
+
+    Parameters
+    ----------
+    crr_par: dict
+        Dictionary of CRREJECTAB contents
+
+    Returns
+    -------
+    Astropy Table of CRREJECTAB contents
     '''
     # Convert to an Astropy table:
     type_map = {'CRSPLIT':'i2', 'MEANEXP':'f', 'SCALENSE':'a8', 'INITGUES':'a8',

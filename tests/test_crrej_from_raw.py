@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from astropy.io import fits
 import warnings
 warnings.filterwarnings('ignore', module='stsci.tools')
-from stistools.override_crrej import override_crrej, create_new_crr, HIST_LINE
+from stistools.crrej_from_raw import crrej_from_raw, create_new_crr, HIST_LINE
 
 
 CRDS_REF_FILE = 'test_crr.fits'
@@ -47,10 +47,10 @@ def make_mock_crr(filename):
     new_crr.write(filename)
 
 
-class Test_override_crrej:
+class Test_crrej_from_raw:
     @classmethod
     def setup_class(cls):
-        cls.refdir = TemporaryDirectory(prefix='test_override_crrej_ref_')
+        cls.refdir = TemporaryDirectory(prefix='test_crrej_from_raw_ref_')
         os.environ[ENVIRON_VAR] = cls.refdir.name + os.path.sep
         make_mock_crr(os.path.join(cls.refdir.name, CRDS_REF_FILE))
         cls.crds_ref_file = f"${ENVIRON_VAR}/{CRDS_REF_FILE}"
@@ -62,7 +62,7 @@ class Test_override_crrej:
 
     def setup_method(self, method):
         self.cwd = os.getcwd()
-        self.directory = TemporaryDirectory(prefix='test_override_crrej_')
+        self.directory = TemporaryDirectory(prefix='test_crrej_from_raw_')
         os.chdir(self.directory.name)
         self.filename = 'test.fits'
         make_mock_datafile(self.filename, crds_ref=self.crds_ref_file)
@@ -76,7 +76,7 @@ class Test_override_crrej:
         make_mock_crr(crr)
         with fits.open(crr, 'update') as f:
             f[1].data['CRSIGMAS'][0] = '3.5'
-        assert override_crrej(self.filename, crrejtab=crr) == 0
+        assert crrej_from_raw(self.filename, crrejtab=crr) == 0
         # Do something here to check selected CRSIGMAS value.
 
     def test_user_crrejtab(self):
@@ -90,51 +90,51 @@ class Test_override_crrej:
         with fits.open(self.filename, 'update') as f:
             f[1].header['EXPTIME'] = 110.  # Out of range in standard test CRRJECTAB
             f[4].header['EXPTIME'] = 110.  # Out of range in standard test CRRJECTAB
-        assert override_crrej(self.filename, crrejtab=crr) == 0
+        assert crrej_from_raw(self.filename, crrejtab=crr) == 0
 
     @pytest.mark.parametrize('meanexp,expected_meanexp', [(1.2, 4.4), (4.4, 4.4)])
     def test_meanexp_selection(self, meanexp, expected_meanexp):
         with fits.open(self.filename, 'update') as f:
             f[1].header['EXPTIME'] = meanexp
             f[4].header['EXPTIME'] = meanexp
-        assert override_crrej(self.filename) == 0
+        assert crrej_from_raw(self.filename) == 0
 
     def test_bad_meanexp_selection(self):
         with fits.open(self.filename, 'update') as f:
             f[1].header['EXPTIME'] = 110.  # Out of range in test CRRJECTAB
             f[4].header['EXPTIME'] = 110.  # Out of range in test CRRJECTAB
         with pytest.raises(ValueError):
-            override_crrej(self.filename)
+            crrej_from_raw(self.filename)
 
     def test_scalense(self):
-        override_crrej(self.filename, scalense='2.1')
-        override_crrej(self.filename, scalense=2.2)
+        crrej_from_raw(self.filename, scalense='2.1')
+        crrej_from_raw(self.filename, scalense=2.2)
         
     @pytest.mark.parametrize('initgues', ['minimum', 'median'])
     def test_initgues(self, initgues):
-        assert override_crrej(self.filename, initgues=initgues) == 0
+        assert crrej_from_raw(self.filename, initgues=initgues) == 0
 
     def test_bad_initgues(self):
         with pytest.raises(ValueError):
-            override_crrej(self.filename, initgues='bad_value')
+            crrej_from_raw(self.filename, initgues='bad_value')
 
     @pytest.mark.parametrize('skysub', ['none', 'mode'])
     def test_skysub(self, skysub):
-        assert override_crrej(self.filename, skysub=skysub) == 0
+        assert crrej_from_raw(self.filename, skysub=skysub) == 0
 
     def test_bad_skysub(self):
         with pytest.raises(ValueError):
-            override_crrej(self.filename, skysub='bad_value')
+            crrej_from_raw(self.filename, skysub='bad_value')
 
     @pytest.mark.parametrize('crsigmas', ['3', '3,4', '3,4.0', 5, 5.2])
     def test_crsigmas(self, crsigmas):
-        override_crrej(self.filename, crsigmas=crsigmas)
+        crrej_from_raw(self.filename, crsigmas=crsigmas)
 
     def test_crradius(self):
         '''Checks a user-specified `crradius` value and checks that the input FITS file
         header is returned to its original form.
         '''
-        assert override_crrej(self.filename, crradius=2., verbose=True) == 0
+        assert crrej_from_raw(self.filename, crradius=2., verbose=True) == 0
         # Check header keywords in input file:
         assert fits.getval(self.filename, ext=0, keyword='CRREJTAB') == f"${ENVIRON_VAR}/{CRDS_REF_FILE}"
         with pytest.raises(KeyError):
@@ -148,27 +148,27 @@ class Test_override_crrej:
 
     @pytest.mark.parametrize('crthresh', [1.1, 3, 0, -2.])
     def test_crthresh(self, crthresh):
-        assert override_crrej(self.filename, crthresh=crthresh) == 0
+        assert crrej_from_raw(self.filename, crthresh=crthresh) == 0
 
     @pytest.mark.parametrize('badinpdq', [18, 2.0001, '9600'])
     def test_badinpdq(self, badinpdq):
-        assert override_crrej(self.filename, badinpdq=badinpdq) == 0
+        assert crrej_from_raw(self.filename, badinpdq=badinpdq) == 0
 
     @pytest.mark.parametrize('crmask', [True, False, None, 1, 0])
     def test_crmask(self, crmask):
-        assert override_crrej(self.filename, crmask=crmask) == 0
+        assert crrej_from_raw(self.filename, crmask=crmask) == 0
 
 
 class Test_versions:
     def test_version(self):
         with pytest.raises(SystemExit) as pytest_wrapped_e:
-            override_crrej(None, print_version=True)
+            crrej_from_raw(None, print_version=True)
         assert pytest_wrapped_e.type == SystemExit
         assert pytest_wrapped_e.value.code == 0
 
     def test_revision(self):
         with pytest.raises(SystemExit) as pytest_wrapped_e:
-            override_crrej(None, print_revision=True)
+            crrej_from_raw(None, print_revision=True)
         assert pytest_wrapped_e.type == SystemExit
         assert pytest_wrapped_e.value.code == 0
 
