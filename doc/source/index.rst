@@ -41,6 +41,7 @@ for getting started.
 
    basic2d
    calstis
+   crrej_from_raw
    ctestis
    defringe
    doppinfo
