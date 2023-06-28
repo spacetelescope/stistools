@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import numpy as np
-from stistools.calstis import calstis
-from stistools.r_util import expandFileName
 from tempfile import TemporaryDirectory
 import os
 import sys
@@ -10,6 +8,8 @@ import warnings
 from numbers import Number
 from astropy.io import fits
 from astropy.table import Table
+from .calstis import calstis
+from .r_util import expandFileName
 
 
 __taskname__ = "crrej_from_raw"
