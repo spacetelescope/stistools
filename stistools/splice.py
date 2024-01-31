@@ -644,7 +644,7 @@ def merge_overlap(overlap_sections,
         weights_ref = (1 / overlap_ref['uncertainty']) ** 2 * scale
     else:
         raise ValueError(
-            'The weighting option "{}" is not implemented.'.format(weighting))
+            'The weighting option "{}" is not implemented.'.format(weight))
 
     # Here we deal with the data-quality flags. We only accept flags that are
     # listed in `acceptable_dq_flags`. Let's initialize the dq flag arrays
