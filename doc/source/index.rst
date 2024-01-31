@@ -51,6 +51,7 @@ for getting started.
    ocrreject
    radialvel
    r_util
+   splice
    sshift
    stisnoise
    tastis
