@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 import numpy as np
 from astropy.io import fits
-import astropy.stats
 from astropy import units as u
 from astropy.time import Time
 from datetime import datetime as dt
