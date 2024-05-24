@@ -125,22 +125,29 @@ def read_spectrum(x1d_input, truncate_edge_left=None, truncate_edge_right=None):
     net_counts = data['NET']
     n_orders = len(wavelength)
 
-    tel = truncate_edge_left
-    if truncate_edge_right is not None:
-        ter = -truncate_edge_right
-    else:
-        ter = truncate_edge_right
-
     # We index the spectral regions as a `dict` in order to avoid confusion with
     # too many numerical indexes. Also, since the orders are in reverse order,
     # we index them in the opposite way
-    spectrum = [{'wavelength': wavelength[-i - 1][tel:ter],
-                 'flux': flux[-i - 1][tel:ter],
-                 'uncertainty': uncertainty[-i - 1][tel:ter],
-                 'data_quality': data_quality[-i - 1][tel:ter],
-                 'gross': gross_counts[-i - 1][tel:ter],
-                 'net': net_counts[-i - 1][tel:ter]}
+    spectrum = [{'wavelength': wavelength[-i - 1],
+                 'flux': flux[-i - 1],
+                 'uncertainty': uncertainty[-i - 1],
+                 'data_quality': data_quality[-i - 1],
+                 'gross': gross_counts[-i - 1],
+                 'net': net_counts[-i - 1]}
                 for i in range(n_orders)]
+
+    # If edge truncation is passed, we simply assign a different DQ flags to the
+    # pixels to be truncated. We choose the flag 4096, which corresponds to
+    # "Extracted flux affected by bad input data."
+    if truncate_edge_right is not None:
+        for sk in spectrum:
+            sk['data_quality'][-truncate_edge_right:] = 4096
+    elif truncate_edge_left is not None:
+        for sk in spectrum:
+            sk['data_quality'][:truncate_edge_left] = 4096
+    else:
+        pass
+
     return spectrum
 
 
@@ -642,9 +649,12 @@ def merge_overlap(overlap_sections,
         scale = 1E-20
         weights_interp = (1 / err_interp) ** 2 * scale
         weights_ref = (1 / overlap_ref['uncertainty']) ** 2 * scale
+    elif weight == 'binary':
+        weights_interp = np.zeros_like(sens_interp)
+        weights_ref = np.ones_like(sens_ref)
     else:
         raise ValueError(
-            'The weighting option "{}" is not implemented.'.format(weighting))
+            'The weighting option "{}" is not implemented.'.format(weight))
 
     # Here we deal with the data-quality flags. We only accept flags that are
     # listed in `acceptable_dq_flags`. Let's initialize the dq flag arrays
@@ -778,7 +788,8 @@ def concatenate_sections(unique_spectra_list, merged_pair_list,
 
 # The splice pipeline does everything
 def splice(x1d_input, update_fits=False, output_file=None, weight='sensitivity',
-           acceptable_dq_flags=(0, 64, 128, 1024, 2048)):
+           acceptable_dq_flags=(0, 64, 128, 1024, 2048),
+           truncate_edge_left=None, truncate_edge_right=None):
     """
     The main workhorse of the package. This pipeline performs all the steps
     necessary to merge overlapping spectral sections and splice them with the
@@ -811,6 +822,16 @@ def splice(x1d_input, update_fits=False, output_file=None, weight='sensitivity',
         overscan region, 1024 = small blemish, 2048 = more than 30% of
         background pixels rejected by sigma-clipping in the data reduction.
 
+    truncate_edge_left (``int``, optional):
+        Set the number of low-resolution pixels at the left edge of the detector
+        where the spectra should be truncated. If ``None``, then no truncation
+        is applied. Default is ``None``.
+
+    truncate_edge_right (``int``, optional):
+        Set the number of low-resolution pixels at the right edge of the
+        detector where the spectra should be truncated. If ``None``, then no
+        truncation is applied. Default is ``None``.
+
     Returns
     -------
     spliced_spectrum_table : ``astropy.Table`` object
@@ -818,7 +839,8 @@ def splice(x1d_input, update_fits=False, output_file=None, weight='sensitivity',
         ``output_file`` is ``None``.
     """
     # Read the data
-    sections = read_spectrum(x1d_input)
+    sections = read_spectrum(x1d_input, truncate_edge_left=truncate_edge_left,
+                             truncate_edge_right=truncate_edge_right)
 
     unique_sections, overlap_pair_sections, overlap_trio_sections = \
         find_overlap(sections)
