@@ -325,4 +325,4 @@ def call_ocrrej_exam():
 
 
 if __name__ == '__main__':
-    call_crrej_exam()
+    call_ocrrej_exam()
