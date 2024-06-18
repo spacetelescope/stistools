@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 __author__ = 'Joleen K. Carlberg & Matt Dallas'
 __version__ = 1.0
 
-def ocrrej_exam(obs_id, dir=None, plot=False, plot_dir=None):
+def ocrreject_exam(obs_id, dir=None, plot=False, plot_dir=None):
     ''' Compares the rate of cosmic rays in the extraction box and everywhere else 
         in a CCD spectroscopic image. Based on crrej_exam from STIS ISR 2019-02.
 
@@ -33,7 +33,7 @@ def ocrrej_exam(obs_id, dir=None, plot=False, plot_dir=None):
 
         plot_dir : str
             Directory to save diagnostic plots in if plot=True. 
-            Defaults to pwd and requires trailing /
+            Defaults to dir parameter and requires trailing /
 
         Returns
         -------
@@ -53,18 +53,18 @@ def ocrrej_exam(obs_id, dir=None, plot=False, plot_dir=None):
         dir = os.getcwd()+'/'
 
     if not plot_dir:
-        plot_dir = os.getcwd()+'/'
+        plot_dir = dir
 
     # Get flt and sx1 filepaths
     flt_file = os.path.join(dir, obs_id+'_flt.fits')
 
     if not os.path.exists(flt_file):
-      raise IOError(f"No _flt file in working directory for {obs_id}")
+      raise IOError(f"No _flt file in {dir} for {obs_id}")
 
     sx1_file = os.path.join(dir, obs_id+'_sx1.fits')
 
     if not os.path.exists(sx1_file):
-      raise IOError(f"No _sx1 file in working directory for {obs_id}")
+      raise IOError(f"No _sx1 file in {dir} for {obs_id}")
 
     # Check that the number of sci extensions matches the number of crsplits
     with fits.open(flt_file) as flt_hdul:
@@ -140,7 +140,7 @@ def ocrrej_exam(obs_id, dir=None, plot=False, plot_dir=None):
     results ={'extr_fracs':extr_fracs, 'outside_fracs':outside_fracs, 'ratios':ratios, 'avg_extr_frac':avg_extr_frac, 'avg_outside_frac':avg_outside_frac, 'avg_ratio':avg_ratio}
 
     if plot:
-        cr_rejected_stack = sum(cr_rejected_locs) # stack all located crs on top of eachother
+        cr_rejected_stack = np.sum(cr_rejected_locs, axis=0) # stack all located crs on top of eachother
         stacked_exposure_time = sum(exposure_times)
         stack_plot(cr_rejected_stack, box_lower, box_upper, len(cr_rejected_locs), stacked_exposure_time, obs_id, propid, plot_dir)
         split_plot(cr_rejected_locs, box_lower, box_upper, len(cr_rejected_locs), exposure_times, stacked_exposure_time, obs_id, propid, plot_dir)
@@ -216,7 +216,7 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
         Parameters
         ----------
         splits : list
-            list of cr placements in each subexposure (ie the cr_rejected_locs output of ocrrej_exam)
+            list of cr placements in each subexposure (ie the cr_rejected_locs output of ocrreject_exam)
 
         box_lower : array
             1d array of ints of the bottom of the extraction box 0 indexed. 
@@ -303,26 +303,29 @@ def gen_color(cmap, n):
         
     return colorlist
 
-def call_ocrrej_exam():
+def call_ocrreject_exam():
     '''Command line usage of ocrreject_exam'''
     
     parser = argparse.ArgumentParser(description='Calculate fractions of cosmic ray rejected pixels inside and outside of an extraction box to test for cr algorithm failures.',
         epilog=f'v{__version__};  Written by {__author__}')
 
     parser.add_argument(dest='obsids', nargs='*', help='observation ids in ipppssoots format')
-    parser.add_argument('-d', dest='dir', default=None, 
-        help="directory containing observation flt and sx1 files os.getcwd()+'/'")
+    parser.add_argument('-d', dest='dir', default=None, help="directory containing observation flt and sx1 files. Defaults to pwd and requires trailing /")
+    parser.add_argument('-p', dest='plot', help="option to create diagnostic plots", action='store_true')
+    parser.add_argument('-pd', dest='plot_dir', default=None, help="directory to store diagnostic plots if plot=True. Defaults to dir argument and requires trailing /")
+    
     args = parser.parse_args()
+    #TODO add check that obsid arg actually has stuff stored in it
     
     for obsid in args.obsids:    
-       print(f'Analyzing {osbid}:')
-       result = ocrrej_exam(obsid, dir=args.dir)
+       print(f'\nAnalyzing {obsid}:')
+       result = ocrreject_exam(obsid, dir=args.dir, plot=args.plot, plot_dir=args.plot_dir)
     
        print('Fraction of Pixels Rejected as CRs')
        print(f"  Average across all extraction boxes: {result['avg_extr_frac']:.1%}")
        print(f"  Average across all external regions: {result['avg_outside_frac']:.1%}")
-       print(f"  Average ratio between the two: {result['avg_ratio']:.1%}")
+       print(f"  Average ratio between the two: {result['avg_ratio']:.2f}")
 
 
 if __name__ == '__main__':
-    call_ocrrej_exam()
+    call_ocrreject_exam()
