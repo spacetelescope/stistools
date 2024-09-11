@@ -57,9 +57,16 @@ def poisson_err(x1dfile, output,  verbose=True):
     """
     #Open the file
     with fits.open(x1dfile) as hdu:
+        #Read in primary header
         header = hdu[0].header
+
+        #Spit out warning if using CCD data
+        if 'CCD' in header['DETECTOR']:
+            print('Warning: The errors from this script are only')
+            print('valid for MAMA data, not CCD data!')
+
         for i in range(1,len(hdu)):
-            #Read-in important rows and numbers
+            #Read in important rows and numbers
             exptime = hdu[i].header['EXPTIME']
             darkcount = hdu[i].header['MEANDARK']
             extrsize = hdu[i].data['EXTRSIZE']
