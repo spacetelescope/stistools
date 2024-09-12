@@ -16,6 +16,7 @@ from . import doppinfo
 from . import tastis
 from . import ctestis
 from . import defringe
+from . import poisson_err
 
 # These lines allow TEAL to print out the names of TEAL-enabled tasks
 # upon importing this package.
