@@ -3,7 +3,6 @@ from six.moves import urllib
 import getpass
 import os
 import sys
-import math
 from io import StringIO
 import shutil
 import datetime
@@ -21,8 +20,8 @@ from astropy.utils.data import conf
 from .helpers.io import get_bigdata, upload_results
 
 __all__ = ['download_crds',
-           'ref_from_image', 'raw_from_asn', 'BaseACS',
-           'BaseSTIS', 'BaseWFC3IR', 'BaseWFC3UVIS', 'BaseWFPC2']
+           'ref_from_image', 'raw_from_asn', 
+           'BaseSTIS']
 
 
 def _download_file(url, filename, filemode='wb', timeout=None):

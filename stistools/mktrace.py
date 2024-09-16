@@ -103,7 +103,6 @@ def mktrace(fname, tracecen=0.0, weights=None):
     sciline = sparams[0] + sparams[1] * X
     refline = rparams[0] + rparams[1] * X
 
-    deltaline = sciline - refline
 
     # create a complete trace similar to a row in a _1dt file
     # used only for debugging

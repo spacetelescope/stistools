@@ -149,7 +149,7 @@ def fit_once(x, y, weights, function, order):
 
     """
 
-    nx = len(x)
+    len(x)
     if function[:6] == "spline":
         #
         # Number of knots is 1 fewer than the order
@@ -231,7 +231,8 @@ def fit_with_rejection(x, y, weights, function, order, low_reject, high_reject, 
         rej_weights[below_low_rej] = 0.0
         nlow = len(below_low_rej[0])
         nbad = nhigh + nlow
-        if nbad == 0: break
+        if nbad == 0: 
+            break
         fitted = fit_once(x, y, weights*rej_weights, function, order)
     return fitted
 
@@ -262,7 +263,7 @@ def calc_rms_deviation(x, y, weights, fitted):
     """
 
     sumsq = 0.0
-    npts = len(x)
+    len(x)
     deviation = y - fitted(x)
     devsquared = weights*deviation*deviation
     sumsq = devsquared.sum()

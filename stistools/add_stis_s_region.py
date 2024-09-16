@@ -3,11 +3,9 @@
 import glob
 import math
 import os
-import sys
 import argparse
 
 from astropy.io import fits
-from astropy.wcs import WCS
 import numpy as np
 import logging
 
@@ -288,13 +286,13 @@ def get_siaf_entry(hst_siaf, aperture, detector):
     entry = entry + detector_letters[detector]
     # The rest depends on the aperture
     try:
-        lookup = STIS_APERTURE_LOOKUP[aperture]
+        STIS_APERTURE_LOOKUP[aperture]
     except KeyError:
         log.warning("No match for aperture {}".format(aperture))
         return None
     entry = entry + STIS_APERTURE_LOOKUP[aperture]
     try:
-        siaf_entry = hst_siaf[entry]
+        hst_siaf[entry]
     except KeyError:
         log.warning("Unable to get SIAF data for entry {}".format(entry))
         log.warning("Trying other wavebands")
@@ -302,7 +300,7 @@ def get_siaf_entry(hst_siaf, aperture, detector):
         for letter in "VNF":
             entry = 'O' + letter + STIS_APERTURE_LOOKUP[aperture]
             try:
-                siaf_entry = hst_siaf[entry]
+                hst_siaf[entry]
                 success = True
                 log.info("Succeeded with {}".format(entry))
                 break
@@ -385,7 +383,7 @@ def smallest_size(wcslimits, siaflimits):
     the limits from the SIAF projected aperture and those calculated from the
     WCS applied to the limits of the data array
     """
-    if wcslimits[0] == None:
+    if wcslimits[0] is None:
         xmin = siaflimits[0]
         xmax = siaflimits[1]
     else:

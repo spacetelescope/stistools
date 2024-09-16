@@ -7,7 +7,6 @@ import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput, teal
 
 __doc__ = """
 Add STIS exposures, rejecting cosmic rays.
@@ -49,7 +48,7 @@ def main(args):
     try:
         (options, pargs) = getopt.getopt(args, "rtv:",
                                          ["version"])
-    except Exception as error:
+    except Exception:
         prtOptions()
         sys.exit()
 
