@@ -252,12 +252,15 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         If True, uses plotly to create an interactive zoomable html plot
     """
     
+    stack_shape = stack_image.shape
+    max_stack_value = int(np.max(stack_image)) # This is usually equal to stack_shape,
+    # in the case where a cr pixel is not in all splits at the same location this value should be used
+    cmap = colors.ListedColormap(gen_color('turbo', max_stack_value+1))
+    bounds = np.arange(max_stack_value+2)
+    norm = colors.BoundaryNorm(bounds, cmap.N)
+    
     if not interactive:
-        stack_shape = stack_image.shape
-        cmap = colors.ListedColormap(gen_color('turbo', split_num+1))
-        bounds = np.arange(split_num+2)
-        norm = colors.BoundaryNorm(bounds, cmap.N)
-
+        # create matplotlib image
         fig, (ax1,ax2,ax3) = plt.subplots(nrows=1, ncols=3, figsize=(9,20*(9/41)), gridspec_kw={'width_ratios': [1, 1, 0.05], 'height_ratios': [1]})
 
         for axis in [ax1,ax2]:
@@ -276,8 +279,8 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         else:
             ax2.set_title('full image already 20 pixels above/below extraction box')
 
-        cb = fig.colorbar(colormap.ScalarMappable(norm=norm, cmap=cmap), cax=ax3, label='# times flagged as cr', ticks=np.arange(split_num, split_num+2)-0.5)
-        cb.set_ticklabels(np.arange(split_num, split_num+2)-1)
+        cb = fig.colorbar(colormap.ScalarMappable(norm=norm, cmap=cmap), cax=ax3, label='# times flagged as cr', ticks=np.arange(max_stack_value, max_stack_value+2)-0.5)
+        cb.set_ticklabels(np.arange(max_stack_value, max_stack_value+2)-1)
 
         fig.suptitle('CR flagged pixels in stacked image: '+obs_id+'\n Proposal '+str(propid)+', exposure time '+f'{texpt:.2f}'+', '+str(split_num)+' subexposures')
         fig.tight_layout()
@@ -288,11 +291,6 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         plt.close()
     
     else:
-        stack_shape = stack_image.shape
-        cmap = colors.ListedColormap(gen_color('turbo', split_num+1))
-        bounds = np.arange(split_num+2)
-        norm = colors.BoundaryNorm(bounds, cmap.N)
-
         # Create plotly image
         fig = go.Figure()
 
@@ -320,7 +318,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         zoom_options = [{'label':'Full Detector', 'yaxis_range':[0, stack_shape[0]]}, 
                         {'label':'Extraction Box', 'yaxis_range':[(min(box_lower)-20), (max(box_upper)+20)]}]
 
-        # Add the toggle buttons using `updatemenus`
+        # Add the toggle buttons
         button_options = [{'label':zoom_options[0]['label'], 'method':'relayout', 'args':[{'yaxis.range':zoom_options[0]['yaxis_range']}]},
                         {'label':zoom_options[1]['label'], 'method':'relayout', 'args':[{'yaxis.range': zoom_options[1]['yaxis_range']}]}]
 
@@ -339,9 +337,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         fig.update_xaxes(range=[0, stack_shape[1]])
 
         fig.update_layout(width=stack_shape[1]+ 50, height=int(stack_shape[1] * stack_shape[1] / stack_shape[0]) ) # adds space for colorbar to not squeeze the x axis
-
         fig.update_layout(title={'text':title_text, 'x':0.5}, font={'family':'Arial, sans-serif', 'size':16})
-
         fig.write_html(file_path)
 
 def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_times, texpt, obs_id, propid, plot_dir, interactive):
@@ -379,21 +375,21 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
     interactive : bool 
         If True, uses plotly to create an interactive zoomable html plot
     """
+    cmap = colors.ListedColormap(gen_color('autumn', 3))
+    bounds = np.arange(4)
+    norm = colors.BoundaryNorm(bounds, cmap.N)
+
+    # Define grid, dependent on number of splits:
+    if ((len(splits))%2) == 0:
+        nrows =  (len(splits))/2
+    else:
+        nrows = ((len(splits))+1)/2
+
+    row_value = int(nrows)
+
     if not interactive:
-        # Define grid, dependent on number of splits:
-        if ((len(splits))%2) == 0:
-            nrows =  (len(splits))/2
-        else:
-            nrows = ((len(splits))+1)/2
-
-        row_value = int(nrows)
-
         fig, ax = plt.subplots(nrows=row_value, ncols=2, figsize=(9, nrows*2))
         ax = ax.flatten()
-
-        cmap = colors.ListedColormap(gen_color('autumn', 3))
-        bounds = np.arange(4)
-        norm = colors.BoundaryNorm(bounds, cmap.N)
 
         # Plot each subexposure with cr pixels a different color
         for num, axis in enumerate(ax):
@@ -423,7 +419,53 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
         plt.close()
     
     else:
-        print('have not figured this out yet!')
+        subplot_titles = [f'zoomed subexposure {i+1}, exposure time {individual_exposure_times[i]}' for i in range(len(splits))]
+
+        title_text = 'CR flagged pixels in individual splits for: '+obs_id+ '<br>'+'Proposal '+str(propid)+', total exposure time '+f'{texpt:.2f}'+', '+str(split_num)+' subexposures'
+        plot_name = obs_id + '_splits.html'
+        file_path = plot_dir + plot_name
+
+        # Make plotly figure
+        fig = make_subplots(row_value, 2, horizontal_spacing=0.15, subplot_titles=subplot_titles)
+
+        # Set up discrete color values
+        dcolorsc = discrete_colorscale(bvals=list(bounds[:-1]), colors=cmap.colors[:-1])
+
+        # Add plots in each subplot
+        row_iterator = 1
+        for num, split in enumerate(splits):
+            # calculate required x and y range to not center the pixels at 0,0
+            x = np.arange(start=0, stop=split.shape[1]+1, step=1)
+            y = np.arange(start=0, stop=split.shape[0]+1, step=1)
+            
+            # determine correct row, column to put the plot in
+            if (num+1)%2 != 0:
+                current_row = row_iterator
+                row_iterator+=1
+            else:
+                current_row = current_row
+            
+            if (num+1)%2 == 0:
+                current_column = 2
+            else:
+                current_column = 1
+
+            # plot the pixel of each split and the extraction box values
+            fig.add_trace(go.Heatmap(z=split, colorscale=dcolorsc, showscale=False, x=x, y=y, hoverinfo='text'), current_row, current_column)
+            fig.add_trace(go.Scatter(x=np.arange(len(box_upper)),y=box_upper,mode="lines",line=go.scatter.Line(color='white', dash='dash'),showlegend=False, opacity=0.75, line_shape='hv', name='extraction box'), current_row, current_column)
+            fig.add_trace(go.Scatter(x=np.arange(len(box_lower)),y=box_lower,mode="lines",line=go.scatter.Line(color='white', dash='dash'),showlegend=False, opacity=0.75, line_shape='hv',  name='extraction box'), current_row, current_column)
+
+            # zoom the plot to near the extraction region
+            fig.update_yaxes(range=[min(box_lower)-20,max(box_upper)+20])
+            fig.update_xaxes(range=[0, split.shape[1]])
+
+            # make plots zoom at the same time
+            fig.update_xaxes(matches='x')
+            fig.update_yaxes(matches='y')
+        
+        fig.update_layout(width=split.shape[1]*1.75, height=((((max(box_upper)+20)- (min(box_lower)-20))*3*len(splits))))
+        fig.update_layout(title={'text':title_text, 'x':0.5, 'y':1.0-(0.15/len(splits))}, font={'family':'Arial, sans-serif', 'size':16}, title_pad={'b': 20*len(splits)})
+        fig.write_html(file_path)
 
 def call_ocrreject_exam():
     """Command line usage of ocrreject_exam"""
