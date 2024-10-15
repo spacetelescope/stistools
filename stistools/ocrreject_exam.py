@@ -21,7 +21,7 @@ USER_WARNED = False
 __author__ = 'Joleen K. Carlberg & Matt Dallas'
 __version__ = 1.0
 
-def ocrreject_exam(obs_id, data_dir=None, plot=False, plot_dir=None, interactive=False):
+def ocrreject_exam(obs_id=None, data_dir=None, flt=None, sx1=None, plot=False, plot_dir=None, interactive=False):
     """Compares the rate of cosmic rays in the extraction box and everywhere else 
     in a CCD spectroscopic image. Based on crrej_exam from STIS ISR 2019-02.
 
@@ -37,6 +37,12 @@ def ocrreject_exam(obs_id, data_dir=None, plot=False, plot_dir=None, interactive
         Directory containing both the flat fielded (_flt.fits) and extracted 
         spectrum (_sx1.fits or _x1d.fits) files of the observation. 
         Defaults to pwd and requires trailing /
+
+    flt : str
+        Path to flt file. Useful if flt and sx1 are in different locations or have custom names.
+
+    sx1 : str
+        Path to sx1 file. Useful if flt and sx1 are in different locations or have custom names.
 
     plot : bool
         Option to generate diagnostic plots, default=False
@@ -70,22 +76,34 @@ def ocrreject_exam(obs_id, data_dir=None, plot=False, plot_dir=None, interactive
     if not plot_dir:
         plot_dir = data_dir
 
-    # Get flt and sx1/x1d filepaths
-    flt_file = os.path.join(data_dir, obs_id+'_flt.fits')
+    if obs_id is None:
+        if flt is None or sx1 is None:
+            raise ValueError("If 'obs_id' is not provided, both 'flt' and 'sx1' must be specified.")
+        else:
+            flt_file = flt
+            sx1_file = sx1
 
-    if not os.path.exists(flt_file):
-        raise IOError(f"No _flt file in {data_dir} for {obs_id}")
+    elif obs_id is not None:
+        if flt is not None or sx1 is not None:
+            raise ValueError("If 'obs_id' is provided, both 'flt' and 'sx1' must not be provided.")
+        else:
+            # Get flt and sx1/x1d filepaths
+            flt_file = os.path.join(data_dir, obs_id+'_flt.fits')
 
-    sx1_file = os.path.join(data_dir, obs_id+'_sx1.fits')
+            if not os.path.exists(flt_file):
+                raise IOError(f"No _flt file in {data_dir} for {obs_id}")
 
-    if not os.path.exists(sx1_file):
-        sx1_file = os.path.join(data_dir, obs_id+'_x1d.fits') # if sx1 doesn't exist check for custom made x1d
-        if not os.path.exists(sx1_file):
-            raise IOError(f"No _sx1 file in {data_dir} for {obs_id}")
+            sx1_file = os.path.join(data_dir, obs_id+'_sx1.fits')
+
+            if not os.path.exists(sx1_file):
+                sx1_file = os.path.join(data_dir, obs_id+'_x1d.fits') # if sx1 doesn't exist check for custom made x1d
+                if not os.path.exists(sx1_file):
+                    raise IOError(f"No _sx1 file in {data_dir} for {obs_id}")
 
     # Check that the number of sci extensions matches the number of crsplits
     with fits.open(flt_file) as flt_hdul:
         propid = flt_hdul[0].header['PROPOSID']
+        rootname = flt_hdul[0].header['ROOTNAME']
         nrptexp_num = flt_hdul[0].header['NRPTEXP']
         crsplit_num = flt_hdul[0].header['CRSPLIT']
         sci_num = len([hdu.name for hdu in flt_hdul if "SCI" in hdu.name]) # Counts the number of sci extensions
@@ -159,14 +177,14 @@ def ocrreject_exam(obs_id, data_dir=None, plot=False, plot_dir=None, interactive
     if plot and not interactive: # case with interactive = false
         cr_rejected_stack = np.sum(cr_rejected_locs, axis=0) # stack all located crs on top of eachother
         stacked_exposure_time = sum(exposure_times)
-        stack_plot(cr_rejected_stack, box_lower, box_upper, len(cr_rejected_locs), stacked_exposure_time, obs_id, propid, plot_dir, interactive=interactive)
-        split_plot(cr_rejected_locs, box_lower, box_upper, len(cr_rejected_locs), exposure_times, stacked_exposure_time, obs_id, propid, plot_dir, interactive=interactive)
+        stack_plot(cr_rejected_stack, box_lower, box_upper, len(cr_rejected_locs), stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
+        split_plot(cr_rejected_locs, box_lower, box_upper, len(cr_rejected_locs), exposure_times, stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
     
     elif plot and interactive and HAS_PLOTLY: # case with interactive = True and plotly is installed
         cr_rejected_stack = np.sum(cr_rejected_locs, axis=0) # stack all located crs on top of eachother
         stacked_exposure_time = sum(exposure_times)
-        stack_plot(cr_rejected_stack, box_lower, box_upper, len(cr_rejected_locs), stacked_exposure_time, obs_id, propid, plot_dir, interactive=interactive)
-        split_plot(cr_rejected_locs, box_lower, box_upper, len(cr_rejected_locs), exposure_times, stacked_exposure_time, obs_id, propid, plot_dir, interactive=interactive)
+        stack_plot(cr_rejected_stack, box_lower, box_upper, len(cr_rejected_locs), stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
+        split_plot(cr_rejected_locs, box_lower, box_upper, len(cr_rejected_locs), exposure_times, stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
     
     elif plot and interactive and not USER_WARNED: # case with interactive = True and plotly is not installed
         warnings.warn('Plotly required for intercative plotting')
