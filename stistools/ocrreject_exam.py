@@ -20,6 +20,12 @@ USER_WARNED = False
 __author__ = 'Joleen K. Carlberg & Matt Dallas'
 __version__ = 1.0
 
+class BoxExtended(Exception):
+    def __init__(self, message='Extraction box extends beyond frame'):
+        # Call the base class constructor with the parameters it needs
+        super(BoxExtended, self).__init__(message)
+
+
 def ocrreject_exam(obs_id=None, data_dir=None, flt=None, sx1=None, plot=False, plot_dir=None, interactive=False):
     """Compares the rate of cosmic rays in the extraction box and everywhere else 
     in a CCD spectroscopic image. Based on crrej_exam from STIS ISR 2019-02.
@@ -132,7 +138,7 @@ def ocrreject_exam(obs_id=None, data_dir=None, flt=None, sx1=None, plot=False, p
         
         # Check that the extraction box doesn't extend beyond the image: this breaks the method
         if np.any(box_lower < 0) or np.any(box_upper-1 > flt_shape[0]): # Subtract 1 because the box extends to the value of the pixel before
-            raise ValueError(f"Extraction box coords extend above or below the cr subexposures for {obs_id}")
+            raise BoxExtended(f"Extraction box coords extend above or below the cr subexposures for {propid}")
 
         extr_mask = np.zeros(flt_shape)
         outside_mask = np.ones(flt_shape)
