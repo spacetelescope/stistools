@@ -308,7 +308,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         fig.tight_layout()
 
         plot_name = obs_id + '_stacked.png'
-        file_path = plot_dir + plot_name
+        file_path = str(plot_dir) + plot_name
         plt.savefig(file_path, dpi=150, bbox_inches='tight')
         plt.close()
     
@@ -327,7 +327,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
 
         title_text = 'CR flagged pixels in stacked image: '+obs_id+'<br>'+'Proposal '+str(propid)+', exposure time '+f'{texpt:.2f}'+', '+str(split_num)+' subexposures'
         plot_name = obs_id + '_stacked.html'
-        file_path = plot_dir + plot_name
+        file_path = str(plot_dir) + plot_name
 
         # add image of detector
         fig.add_trace(go.Heatmap(z=stack_image, colorscale=dcolorsc, x=x, y=y, hoverinfo='text', colorbar={'tickvals':tickvals, 'ticktext':ticktext, 'title':{'text':'# times flagged as cr', 'side':'right', 'font':{'size':18}}}, name=''))
@@ -439,7 +439,7 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
         fig.tight_layout()
 
         plot_name = obs_id + '_splits.png'
-        file_path = plot_dir + plot_name
+        file_path = str(plot_dir) + plot_name
         plt.savefig(file_path, dpi=150, bbox_inches='tight')
         plt.close()
     
@@ -448,7 +448,7 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
 
         title_text = 'CR flagged pixels in individual splits for: '+obs_id+ '<br>'+'Proposal '+str(propid)+', total exposure time '+f'{texpt:.2f}'+', '+str(split_num)+' subexposures'
         plot_name = obs_id + '_splits.html'
-        file_path = plot_dir + plot_name
+        file_path = str(plot_dir) + plot_name
 
         # Make plotly figure
         fig = make_subplots(row_value, 2, horizontal_spacing=0.15, subplot_titles=subplot_titles)
