@@ -22,7 +22,6 @@ __version__ = 1.0
 
 class BoxExtended(Exception):
     def __init__(self, message='Extraction box extends beyond frame'):
-        # Call the base class constructor with the parameters it needs
         super(BoxExtended, self).__init__(message)
 
 
