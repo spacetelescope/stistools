@@ -35,18 +35,20 @@ def ocrreject_exam(obs_id=None, data_dir=None, flt=None, sx1=None, plot=False, p
     Parameters
     ----------
     obsid : str
-        A STIS observation ID rootname in ipppssoot format (ie odvkl1040)
+        A STIS observation ID rootname in ipppssoot format (ie odvkl1040). 
+        Mutually exclusive with the "flt" and "sx1" arguments.
 
     data_dir : str
         Directory containing both the flat fielded (_flt.fits) and extracted 
         spectrum (_sx1.fits or _x1d.fits) files of the observation if using obs_id argument. 
         Defaults to pwd and requires trailing /
+        Mutually exclusive with the "flt" and "sx1" arguments.
 
     flt : str
-        Path to flt file. Useful if flt and sx1 are in different locations or have custom names.
+        Path to flt file to use instead of "osbid" argument. Useful if flt and sx1 are in different locations or have custom names.
 
     sx1 : str
-        Path to sx1 file. Useful if flt and sx1 are in different locations or have custom names.
+        Path to sx1 file to use instead of "osbid" argument. Useful if flt and sx1 are in different locations or have custom names.
 
     plot : bool
         Option to generate diagnostic plots, default=False
@@ -74,25 +76,33 @@ def ocrreject_exam(obs_id=None, data_dir=None, flt=None, sx1=None, plot=False, p
     """
     global USER_WARNED
 
-    if not data_dir:
-        data_dir = os.getcwd()+'/'
-
-    if not plot_dir:
-        plot_dir = data_dir
+    # Check for different combinations of obs_id, data_dir, flt, and sx1: 
+    # If obs_id is not provided, must provide flt and sx1, and cannot have data_dir
+    # If obs_id is provided, cannot have flt or sx1 and data_dir can be provided, but defaults to ./
 
     if obs_id is None:
         if flt is None or sx1 is None:
-            raise ValueError("If 'obs_id' is not provided, both 'flt' and 'sx1' must be specified.")
+            raise ValueError("If 'obs_id' is not provided, both 'flt' and 'sx1' must be provided.")
         else:
-            # potentially include check for data_dir here? The code doesn't use data_dir if flt and sx1 paths are specified
-            flt_file = flt
-            sx1_file = sx1
+            if data_dir is not None:
+                raise ValueError("If 'flt' and 'sx1' are provided, 'data_dir' must not be provided")
+            else:
+                flt_file = flt
+                sx1_file = sx1
+                if not plot_dir:
+                    plot_dir = os.getcwd()+'/'
 
     elif obs_id is not None:
         if flt is not None or sx1 is not None:
-            raise ValueError("If 'obs_id' is provided, both 'flt' and 'sx1' must not be provided.")
+            raise ValueError("If 'obs_id' is provided both 'flt' and 'sx1' must not be provided.")
         else:
             # Get flt and sx1/x1d filepaths
+            if data_dir is None:
+                data_dir = os.getcwd()+'/'
+
+            if plot_dir is None:
+                plot_dir = data_dir
+
             flt_file = os.path.join(data_dir, obs_id+'_flt.fits')
 
             if not os.path.exists(flt_file):
