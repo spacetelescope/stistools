@@ -34,7 +34,7 @@ def ocrreject_exam(obs_id=None, data_dir=None, flt=None, sx1=None, plot=False, p
 
     data_dir : str
         Directory containing both the flat fielded (_flt.fits) and extracted 
-        spectrum (_sx1.fits or _x1d.fits) files of the observation. 
+        spectrum (_sx1.fits or _x1d.fits) files of the observation if using obs_id argument. 
         Defaults to pwd and requires trailing /
 
     flt : str
@@ -79,6 +79,7 @@ def ocrreject_exam(obs_id=None, data_dir=None, flt=None, sx1=None, plot=False, p
         if flt is None or sx1 is None:
             raise ValueError("If 'obs_id' is not provided, both 'flt' and 'sx1' must be specified.")
         else:
+            # potentially include check for data_dir here? The code doesn't use data_dir if flt and sx1 paths are specified
             flt_file = flt
             sx1_file = sx1
 
