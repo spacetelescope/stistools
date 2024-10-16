@@ -4,7 +4,6 @@ import warnings
 import numpy as np
 import astropy.io.fits as fits
 import argparse
-from matplotlib import colormaps
 import matplotlib.cm as colormap
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
@@ -198,16 +197,14 @@ def gen_color(cmap, n):
     
     Based on mycolorpy's gen_color() from https://github.com/binodbhttr/mycolorpy"""
 
-    c_map = colormaps[cmap]
     colorlist = []
-    
-    for c in np.linspace(0,1,n):
-        rgba=c_map(c) # select the rgba value of the cmap at point c which is a number between 0 to 1
-        clr=colors.rgb2hex(rgba) # convert to hex
-        colorlist.append(str(clr)) # create a list of these colors
 
-    colorlist.pop(0) # Make it dark grey rather than black at the beginning (I think it's easier on the eyes)
-    colorlist.insert(0, '#A9A9A9')
+    for c in cmap.colors[0:n]:
+        clr = colors.rgb2hex(c) # convert to hex
+        colorlist.append(str(clr)) # create a list of these colors
+    
+    colorlist.pop(0) # Make it light grey rather than black at the beginning (I think it's easier on the eyes)
+    colorlist.insert(0, '#F5F5F5')
         
     return colorlist
 
@@ -273,7 +270,8 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
     stack_shape = stack_image.shape
     max_stack_value = int(np.max(stack_image)) # This is usually equal to stack_shape,
     # in the case where a cr pixel is not in all splits at the same location this value should be used
-    cmap = colors.ListedColormap(gen_color('turbo', max_stack_value+1))
+    custom_cmap = colors.ListedColormap(['k', 'tab:orange', 'tab:blue', 'tab:green', 'tab:red', 'tab:cyan', 'tab:olive', 'tab:purple', 'tab:pink', 'tab:brown', 'tab:grey'])
+    cmap = colors.ListedColormap(gen_color(custom_cmap, max_stack_value+1))
     bounds = np.arange(max_stack_value+2)
     norm = colors.BoundaryNorm(bounds, cmap.N)
     
@@ -283,8 +281,8 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
 
         for axis in [ax1,ax2]:
             axis.imshow(stack_image, interpolation='none', origin="lower", extent=(0, stack_shape[1], 0, stack_shape[0]), cmap=cmap, norm=norm, aspect='auto')
-            axis.step(np.arange(len(box_upper)), box_upper, color='w', where='post', lw=0.5, alpha=0.5, ls='--')
-            axis.step(np.arange(len(box_lower)), box_lower, color='w', where='post', lw=0.5, alpha=0.5, ls='--')
+            axis.step(np.arange(len(box_upper)), box_upper, color='#222222', where='post', lw=0.7, alpha=0.7, ls='--')
+            axis.step(np.arange(len(box_lower)), box_lower, color='#222222', where='post', lw=0.7, alpha=0.7, ls='--')
 
         ax1.set_title('Full image')
 
@@ -329,8 +327,8 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         fig.add_trace(go.Heatmap(z=stack_image, colorscale=dcolorsc, x=x, y=y, hoverinfo='text', colorbar={'tickvals':tickvals, 'ticktext':ticktext, 'title':{'text':'# times flagged as cr', 'side':'right', 'font':{'size':18}}}, name=''))
 
         # add extraction box
-        fig.add_trace(go.Scatter(x=np.arange(len(box_upper)),y=box_upper,mode="lines",line=go.scatter.Line(color='white', dash='dash'),showlegend=False, opacity=0.75, line_shape='hv', name='extraction box'))
-        fig.add_trace(go.Scatter(x=np.arange(len(box_lower)),y=box_lower,mode="lines",line=go.scatter.Line(color='white', dash='dash'),showlegend=False, opacity=0.75, line_shape='hv',  name='extraction box'))
+        fig.add_trace(go.Scatter(x=np.arange(len(box_upper)),y=box_upper,mode="lines",line=go.scatter.Line(color='#222222', dash='dash'),showlegend=False, opacity=0.7, line_shape='hv', name='extraction box'))
+        fig.add_trace(go.Scatter(x=np.arange(len(box_lower)),y=box_lower,mode="lines",line=go.scatter.Line(color='#222222', dash='dash'),showlegend=False, opacity=0.7, line_shape='hv',  name='extraction box'))
 
         # y-axis zoom ranges
         zoom_options = [{'label':'Full Detector', 'yaxis_range':[0, stack_shape[0]]}, 
@@ -393,7 +391,10 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
     interactive : bool 
         If True, uses plotly to create an interactive zoomable html plot
     """
-    cmap = colors.ListedColormap(gen_color('autumn', 3))
+
+    custom_cmap = colors.ListedColormap(['k', 'tab:orange', 'tab:blue', 'tab:green', 'tab:red', 'tab:cyan', 'tab:olive', 'tab:purple', 'tab:pink', 'tab:brown', 'tab:grey'])
+    cmap = colors.ListedColormap(gen_color(custom_cmap, 3))
+
     bounds = np.arange(4)
     norm = colors.BoundaryNorm(bounds, cmap.N)
 
@@ -415,8 +416,8 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
                 axis.imshow(splits[num], interpolation='none', origin='lower', 
                             extent=(0, splits[num].shape[1], 0, splits[num].shape[0]),
                             cmap=cmap, norm=norm, aspect='auto')
-                axis.step(np.arange(len(box_upper)), box_upper, color='w', where='post', lw=0.5, alpha=0.5, ls='--')
-                axis.step(np.arange(len(box_lower)), box_lower, color='w', where='post', lw=0.5, alpha=0.5, ls='--')
+                axis.step(np.arange(len(box_upper)), box_upper, color='#222222', where='post', lw=0.7, alpha=0.7, ls='--')
+                axis.step(np.arange(len(box_lower)), box_lower, color='#222222', where='post', lw=0.7, alpha=0.7, ls='--')
 
                 if ((splits[num].shape[0] - max(box_upper)) > 20) and (min(box_lower) >20):
                     axis.set_ylim([(min(box_lower)-20),(max(box_upper)+20)])
@@ -470,8 +471,8 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
 
             # plot the pixel of each split and the extraction box values
             fig.add_trace(go.Heatmap(z=split, colorscale=dcolorsc, showscale=False, x=x, y=y, hoverinfo='text'), current_row, current_column)
-            fig.add_trace(go.Scatter(x=np.arange(len(box_upper)),y=box_upper,mode="lines",line=go.scatter.Line(color='white', dash='dash'),showlegend=False, opacity=0.75, line_shape='hv', name='extraction box'), current_row, current_column)
-            fig.add_trace(go.Scatter(x=np.arange(len(box_lower)),y=box_lower,mode="lines",line=go.scatter.Line(color='white', dash='dash'),showlegend=False, opacity=0.75, line_shape='hv',  name='extraction box'), current_row, current_column)
+            fig.add_trace(go.Scatter(x=np.arange(len(box_upper)),y=box_upper,mode="lines",line=go.scatter.Line(color='#222222', dash='dash'),showlegend=False, opacity=0.7, line_shape='hv', name='extraction box'), current_row, current_column)
+            fig.add_trace(go.Scatter(x=np.arange(len(box_lower)),y=box_lower,mode="lines",line=go.scatter.Line(color='#222222', dash='dash'),showlegend=False, opacity=0.7, line_shape='hv',  name='extraction box'), current_row, current_column)
 
             # zoom the plot to near the extraction region
             fig.update_yaxes(range=[min(box_lower)-20,max(box_upper)+20])
@@ -491,23 +492,41 @@ def call_ocrreject_exam():
     parser = argparse.ArgumentParser(description='Calculate fractions of cosmic ray rejected pixels inside and outside of an extraction box to test for cr algorithm failures.',
         epilog=f'v{__version__};  Written by {__author__}')
 
-    parser.add_argument(dest='obsids', nargs='*', help='observation ids in ipppssoots format')
-    parser.add_argument('-d', dest='data_dir', default=None, help="directory containing observation flt and sx1 files. Defaults to pwd and requires trailing /")
+    parser.add_argument('--obs', dest='obs_ids', nargs='*', default=None, help='observation ids in ipppssoots format')
+    parser.add_argument('--flt', dest='flt', default=None, help='path to flt file')
+    parser.add_argument('--sx1', dest='sx1', default=None, help='path to sx1 file')
+    parser.add_argument('--d', dest='data_dir', default=None, help="directory containing observation flt and sx1 files. Defaults to pwd and requires trailing /")
     parser.add_argument('-p', dest='plot', help="option to create diagnostic plots", action='store_true')
-    parser.add_argument('-pd', dest='plot_dir', default=None, help="directory to store diagnostic plots if plot=True. Defaults to data_dir argument and requires trailing /")
+    parser.add_argument('--pd', dest='plot_dir', default=None, help="directory to store diagnostic plots if plot=True. Defaults to data_dir argument and requires trailing /")
     parser.add_argument('-i', dest='interactive', default=False, help="option to create zoomable html plots instead of static pngs. Defaults to False and requires plotly if True")
 
     args = parser.parse_args()
-    #TODO add check that obsid arg actually has stuff stored in it
     
-    for obsid in args.obsids:    
-       print(f'\nAnalyzing {obsid}:')
-       result = ocrreject_exam(obsid, data_dir=args.data_dir, plot=args.plot, plot_dir=args.plot_dir, interactive=args.interactive)
+    if args.obs_ids is not None:
+        if args.flt is not None or args.sx1 is not None:
+            raise ValueError("If 'obs_id' is provided, both 'flt' and 'sx1' must not be provided.")
+        else:
+            for obsid in args.obs_ids:    
+                print(f'\nAnalyzing {obsid}:')
+                result = ocrreject_exam(obsid=args.obs_ids, data_dir=args.data_dir, flt=args.flt, sx1=args.sx1, plot=args.plot, plot_dir=args.plot_dir, interactive=args.interactive)
+                
+                print('Fraction of Pixels Rejected as CRs')
+                print(f"  Average across all extraction boxes: {result['avg_extr_frac']:.1%}")
+                print(f"  Average across all external regions: {result['avg_outside_frac']:.1%}")
+                print(f"  Average ratio between the two: {result['avg_ratio']:.2f}")
+
+    elif args.flt is None or args.flt is None:
+        raise ValueError("If 'obs_id' is not provided, both 'flt' and 'sx1' must be specified.")
+
+    else:
+        result = ocrreject_exam(obsid=args.obs_ids, data_dir=args.data_dir, flt=args.flt, sx1=args.sx1, plot=args.plot, plot_dir=args.plot_dir, interactive=args.interactive)
+            
+        print('Fraction of Pixels Rejected as CRs')
+        print(f"  Average across all extraction boxes: {result['avg_extr_frac']:.1%}")
+        print(f"  Average across all external regions: {result['avg_outside_frac']:.1%}")
+        print(f"  Average ratio between the two: {result['avg_ratio']:.2f}")
+
     
-       print('Fraction of Pixels Rejected as CRs')
-       print(f"  Average across all extraction boxes: {result['avg_extr_frac']:.1%}")
-       print(f"  Average across all external regions: {result['avg_outside_frac']:.1%}")
-       print(f"  Average ratio between the two: {result['avg_ratio']:.2f}")
 
 
 if __name__ == '__main__':
