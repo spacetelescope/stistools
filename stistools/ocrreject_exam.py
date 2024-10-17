@@ -286,7 +286,13 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
     stack_shape = stack_image.shape
     max_stack_value = int(np.max(stack_image)) # This is usually equal to stack_shape,
     # in the case where a cr pixel is not in all splits at the same location this value should be used
-    custom_cmap = colors.ListedColormap(['k', 'tab:orange', 'tab:blue', 'tab:green', 'tab:red', 'tab:cyan', 'tab:olive', 'tab:purple', 'tab:pink', 'tab:brown', 'tab:grey'])
+    
+    color_list = ['k', 'tab:orange', 'tab:blue', 'tab:green', 'tab:red', 'tab:cyan', 'tab:olive', 'tab:purple', 'tab:pink', 'tab:brown', 'tab:grey', 
+    'darkkhaki', 'gold', 'lightskyblue', 'peru', 'slateblue', 'darkolivegreen', 'mediumseagreen', 'tomato', 'paleturquoise', 'lightgreen', 'chocolate', 
+    'yellowgreen', 'darksalmon', 'olive', 'darkgoldenrod', 'firebrick', 'teal', 'magenta', 'mediumaquamarine', 'darkslategrey', 'blueviolet', 'peachpuff']
+    # hardcoded to 32 values, this should cover all cr split numbers
+    
+    custom_cmap = colors.ListedColormap(color_list)
     cmap = colors.ListedColormap(gen_color(custom_cmap, max_stack_value+1))
     bounds = np.arange(max_stack_value+2)
     norm = colors.BoundaryNorm(bounds, cmap.N)
