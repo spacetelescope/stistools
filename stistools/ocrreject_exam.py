@@ -541,7 +541,7 @@ def call_ocrreject_exam():
         raise ValueError("If 'obs_id' is not provided, both 'flt' and 'sx1' must be specified.")
 
     else:
-        result = ocrreject_exam(obsid=args.obs_ids, data_dir=args.data_dir, flt=args.flt, sx1=args.sx1, plot=args.plot, plot_dir=args.plot_dir, interactive=args.interactive)
+        result = ocrreject_exam(obs_id=args.obs_ids, data_dir=args.data_dir, flt=args.flt, sx1=args.sx1, plot=args.plot, plot_dir=args.plot_dir, interactive=args.interactive)
             
         print('Fraction of Pixels Rejected as CRs')
         print(f"  Average across all extraction boxes: {result['avg_extr_frac']:.1%}")
