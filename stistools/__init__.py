@@ -1,6 +1,9 @@
 from __future__ import absolute_import
 from .version import *
 
+from .r_util import check_hstcal_status
+check_hstcal_status()  # Is the 'hstcal' dependency installed?
+
 from . import calstis
 from . import basic2d
 from . import ocrreject
