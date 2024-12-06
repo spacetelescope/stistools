@@ -1,9 +1,12 @@
 #! /usr/bin/env python
+
 import os
 import warnings
 import numpy as np
 import astropy.io.fits as fits
 import argparse
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.cm as colormap
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
@@ -15,17 +18,40 @@ try:
 except ImportError:
     HAS_PLOTLY = False
 
-USER_WARNED = False
+__doc__ = """
+Checks STIS CCD 1D spectroscpopic data for cosmic ray overflagging. 
 
-__author__ = 'Joleen K. Carlberg & Matt Dallas'
-__version__ = 1.0
+Examples
+--------
+
+In Python without TEAL:
+
+>>> import stistools
+>>> stistools.ocrreject_exam.ocrreject_exam("odvkl1040")
+
+In Python with TEAL:
+
+>>> from stistools import ocrreject_exam
+>>> from stsci.tools import teal
+>>> teal.teal("ocrreject_exam")
+
+From command line::
+
+% ./basic2d.py -v -s odvkl1040_flt.fits odvkl1040_flt.fits
+% ./basic2d.py -r
+"""
+
+__taskname__ = "ocrreject_exam"
+__version__ = "1.0"
+__vdate__ = "06-December-2024"
+__author__ = "Matt Dallas, Joleen Carlberg, Sean Lockwood, STScI, December 2024."
 
 class BoxExtended(Exception):
     def __init__(self, message='Extraction box extends beyond frame'):
         super(BoxExtended, self).__init__(message)
 
 
-def ocrreject_exam(obs_id=None, data_dir=None, flt=None, sx1=None, plot=False, plot_dir=None, interactive=False):
+def ocrreject_exam(obs_ids, data_dir='.', plot=False, plot_dir=None, interactive=False, verbose=False):
     """Compares the rate of cosmic rays in the extraction box and everywhere else 
     in a CCD spectroscopic image. Based on crrej_exam from STIS ISR 2019-02.
 
@@ -34,36 +60,32 @@ def ocrreject_exam(obs_id=None, data_dir=None, flt=None, sx1=None, plot=False, p
 
     Parameters
     ----------
-    obsid : str
-        A STIS observation ID rootname in ipppssoot format (ie odvkl1040). 
-        Mutually exclusive with the "flt" and "sx1" arguments.
+    obs_ids : iter of str or str
+        One of more STIS observation ID rootnames in ipppssoot format (ie odvkl1040). 
 
     data_dir : str
         Directory containing both the flat fielded (_flt.fits) and extracted 
-        spectrum (_sx1.fits or _x1d.fits) files of the observation if using obs_id argument. 
-        Defaults to pwd and requires trailing /
-        Mutually exclusive with the "flt" and "sx1" arguments.
-
-    flt : str
-        Path to flt file to use instead of "osbid" argument. Useful if flt and sx1 are in different locations or have custom names.
-
-    sx1 : str
-        Path to sx1 file to use instead of "osbid" argument. Useful if flt and sx1 are in different locations or have custom names.
+        spectrum (_sx1.fits or _x1d.fits) files of the observation if using obs_ids argument. 
+        Defaults to current working directory.
 
     plot : bool
         Option to generate diagnostic plots, default=False
 
-    plot_dir : str
+    plot_dir : str or None
         Directory to save diagnostic plots in if plot=True. 
-        Defaults to dir parameter and requires trailing /
+        Defaults to data_dir parameter
 
     interactive : bool
         Option to generate zoomable html plots using plotly, default=False
+
+    verbose : bool
+        Option to print some results
 
     Returns
     -------
     results : dict
         Dictionary containing 
+            rootname : obs_id
             extr_fracs : cr rejection rates in the extraction boxes for each crsplit
             outside_fracs : cr rejection rates outside the extraction boxes for each crsplit
             ratios : extr_fracs/outside_fracs
@@ -74,141 +96,131 @@ def ocrreject_exam(obs_id=None, data_dir=None, flt=None, sx1=None, plot=False, p
     If called from the command line, prints the avg extraction, outside, and ratio values for quick verification.
 
     """
-    global USER_WARNED
 
-    # Check for different combinations of obs_id, data_dir, flt, and sx1: 
-    # If obs_id is not provided, must provide flt and sx1, and cannot have data_dir
-    # If obs_id is provided, cannot have flt or sx1 and data_dir can be provided, but defaults to ./
+    if isinstance(obs_ids, (str,)):
+        obs_ids = [obs_ids]
 
-    if obs_id is None:
-        if flt is None or sx1 is None:
-            raise ValueError("If 'obs_id' is not provided, both 'flt' and 'sx1' must be provided.")
-        else:
-            if data_dir is not None:
-                raise ValueError("If 'flt' and 'sx1' are provided, 'data_dir' must not be provided")
-            else:
-                flt_file = flt
-                sx1_file = sx1
-                if not plot_dir:
-                    plot_dir = os.getcwd()+'/'
+    result_list = []
+    for obs_id in obs_ids:
+        flt_file = os.path.join(data_dir, obs_id.lower()+'_flt.fits')
+        if not os.access(flt_file, os.R_OK):
+            raise FileNotFoundError(f"FLT file for {obs_id} not found in '{data_dir}'")
 
-    elif obs_id is not None:
-        if flt is not None or sx1 is not None:
-            raise ValueError("If 'obs_id' is provided both 'flt' and 'sx1' must not be provided.")
-        else:
-            # Get flt and sx1/x1d filepaths
-            if data_dir is None:
-                data_dir = os.getcwd()+'/'
+        sx1_file = os.path.join(data_dir, obs_id.lower()+'_sx1.fits')
+        x1d_file = os.path.join(data_dir, obs_id.lower()+'_x1d.fits')
+        if os.access(sx1_file, os.F_OK) and os.access(x1d_file, os.F_OK):
+            warnings.warn(f"Found both SX1 and X1D files for {obs_id} in '{data_dir}', defaulting to use SX1")
 
-            if plot_dir is None:
-                plot_dir = data_dir
+        if not os.access(sx1_file, os.R_OK):
+            sx1_file = x1d_file
+            if not os.access(sx1_file, os.R_OK):
+                raise FileNotFoundError(f"SX1/X1D file for {obs_id} not found in '{data_dir}'")
 
-            flt_file = os.path.join(data_dir, obs_id+'_flt.fits')
-
-            if not os.path.exists(flt_file):
-                raise IOError(f"No _flt file in {data_dir} for {obs_id}")
-
-            sx1_file = os.path.join(data_dir, obs_id+'_sx1.fits')
-
-            if not os.path.exists(sx1_file):
-                sx1_file = os.path.join(data_dir, obs_id+'_x1d.fits') # if sx1 doesn't exist check for custom made x1d
-                if not os.path.exists(sx1_file):
-                    raise IOError(f"No _sx1 file in {data_dir} for {obs_id}")
-
-    # Check that the number of sci extensions matches the number of crsplits
-    with fits.open(flt_file) as flt_hdul:
-        propid = flt_hdul[0].header['PROPOSID']
-        rootname = flt_hdul[0].header['ROOTNAME']
-        nrptexp_num = flt_hdul[0].header['NRPTEXP']
-        crsplit_num = flt_hdul[0].header['CRSPLIT']
-        sci_num = len([hdu.name for hdu in flt_hdul if "SCI" in hdu.name]) # Counts the number of sci extensions
-
-    if ((crsplit_num)*(nrptexp_num))-(sci_num)!= 0:
-        raise ValueError(f"cr-split or nrptexp value in flt header does not match the number of sci extentsions for {obs_id}")
-
-    # Calculate cr fraction in and out of extraction box
-    with fits.open(sx1_file) as sx1_hdul:
-        spec = sx1_hdul[1].data[0]
-        shdr = sx1_hdul[0].header
-
-    extrlocy = spec['EXTRLOCY']-1 # y coords of the middle of the extraction box 
-    del_pix = spec['EXTRSIZE']/2. # value the extraction box extends above or below extrlocy
-    box_upper=np.ceil(extrlocy+del_pix).astype(int) # Ints of pixel values above end of trace bc python is upper bound exclusive 
-    box_lower=np.floor(extrlocy-del_pix).astype(int) # Ints of pixel values below end of trace
-
-    # Fill each of these lists with values for each cr split
-    extr_fracs = [] # fraction of pixels flagged as cr inside the extraction box for each split
-    outside_fracs = [] # fraction of pixels flagged as cr outside the extraction box for each split
-    cr_rejected_locs = [] # 2d array of 1s where a cr exists and 0 elsewhere
-    exposure_times = []
-
-    with fits.open(flt_file) as flt_hdul:
-        flt_shape = flt_hdul['sci', 1].data.shape # shape of the data 
+        if plot and plot_dir is None:
+            plot_dir = data_dir
         
-        # Check that the extraction box doesn't extend beyond the image: this breaks the method
-        if np.any(box_lower < 0) or np.any(box_upper-1 > flt_shape[0]): # Subtract 1 because the box extends to the value of the pixel before
-            raise BoxExtended(f"Extraction box coords extend above or below the cr subexposures for {propid}")
+        # Check that the number of sci extensions matches the number of crsplits
+        with fits.open(flt_file) as flt_hdul:
+            propid = flt_hdul[0].header['PROPOSID']
+            rootname = flt_hdul[0].header['ROOTNAME']
+            nrptexp_num = flt_hdul[0].header['NRPTEXP']
+            crsplit_num = flt_hdul[0].header['CRSPLIT']
+            sci_num = len([hdu.name for hdu in flt_hdul if "SCI" in hdu.name]) # Counts the number of sci extensions
 
-        extr_mask = np.zeros(flt_shape)
-        outside_mask = np.ones(flt_shape)
+        if ((crsplit_num)*(nrptexp_num))-(sci_num)!= 0:
+            raise ValueError(f"cr-split or nrptexp value in flt header does not match the number of sci extentsions for {obs_id}")
 
-        for column in range(0,flt_shape[1]):
-            extr_mask[box_lower[column]:box_upper[column], column] = 1 # 1s inside the extraction box, 0s outside
-            outside_mask[box_lower[column]:box_upper[column], column] = 0 # 0s inside the extraction box, 1s outside
+        # Calculate cr fraction in and out of extraction box
+        with fits.open(sx1_file) as sx1_hdul:
+            spec = sx1_hdul[1].data[0]
+            shdr = sx1_hdul[0].header
 
-        n_extr = np.count_nonzero(extr_mask) # number of pixels inside the extraction box
-        n_outside = np.count_nonzero(outside_mask) # number of pixels outside the extraction box
+        extrlocy = spec['EXTRLOCY']-1 # y coords of the middle of the extraction box 
+        del_pix = spec['EXTRSIZE']/2. # value the extraction box extends above or below extrlocy
+        box_upper=np.ceil(extrlocy+del_pix).astype(int) # Ints of pixel values above end of trace bc python is upper bound exclusive 
+        box_lower=np.floor(extrlocy-del_pix).astype(int) # Ints of pixel values below end of trace
 
-        for i, hdu in enumerate(flt_hdul):
-            if hdu.name == 'SCI':
-                exposure_times.append(hdu.header['EXPTIME'])
-                dq_array = flt_hdul[i+2].data # dq array corresponding to each sci extentsion
+        # Fill each of these lists with values for each cr split
+        extr_fracs = [] # fraction of pixels flagged as cr inside the extraction box for each split
+        outside_fracs = [] # fraction of pixels flagged as cr outside the extraction box for each split
+        cr_rejected_locs = [] # 2d array of 1s where a cr exists and 0 elsewhere
+        exposure_times = []
 
-                extr_rej_pix = np.zeros(flt_shape) # 2d array where there is a 1 if a pixel inside the extraction box is marked as a cr
-                np.place(extr_rej_pix, ((extr_mask == 1) & (dq_array & 2**13 != 0)), 1)
+        with fits.open(flt_file) as flt_hdul:
+            flt_shape = flt_hdul['sci', 1].data.shape # shape of the data 
+            
+            # Check that the extraction box doesn't extend beyond the image: this breaks the method
+            if np.any(box_lower < 0) or np.any(box_upper-1 > flt_shape[0]): # Subtract 1 because the box extends to the value of the pixel before
+                raise BoxExtended(f"Extraction box coords extend above or below the cr subexposures for {propid}")
 
-                outside_rej_pix = np.zeros(flt_shape) # 2d array where there is a 1 if a pixel outside the extraction box is marked as a cr
-                np.place(outside_rej_pix, ((outside_mask == 1) & (dq_array & 2**13 != 0)), 1)
+            extr_mask = np.zeros(flt_shape)
+            outside_mask = np.ones(flt_shape)
 
-                extr_cr_count = np.count_nonzero(extr_rej_pix)
-                outside_cr_count = np.count_nonzero(outside_rej_pix)
+            for column in range(0,flt_shape[1]):
+                extr_mask[box_lower[column]:box_upper[column], column] = 1 # 1s inside the extraction box, 0s outside
+                outside_mask[box_lower[column]:box_upper[column], column] = 0 # 0s inside the extraction box, 1s outside
 
-                extr_fracs.append(extr_cr_count/n_extr)
-                outside_fracs.append(outside_cr_count/n_outside)
+            n_extr = np.count_nonzero(extr_mask) # number of pixels inside the extraction box
+            n_outside = np.count_nonzero(outside_mask) # number of pixels outside the extraction box
 
-                cr_rejected_pix = extr_rej_pix+outside_rej_pix
-                cr_rejected_locs.append(cr_rejected_pix)
+            for i, hdu in enumerate(flt_hdul):
+                if hdu.name == 'SCI':
+                    exposure_times.append(hdu.header['EXPTIME'])
+                    dq_array = flt_hdul[i+2].data # dq array corresponding to each sci extentsion
 
-    extr_fracs = np.asarray(extr_fracs)
-    outside_fracs = np.asarray(outside_fracs)
-    ratios = extr_fracs/outside_fracs # ratio of extraction to outside the box in each image
+                    extr_rej_pix = np.zeros(flt_shape) # 2d array where there is a 1 if a pixel inside the extraction box is marked as a cr
+                    np.place(extr_rej_pix, ((extr_mask == 1) & (dq_array & 2**13 != 0)), 1)
 
-    avg_extr_frac = (np.sum(extr_fracs))/(len(extr_fracs)) # Average fraction of crs inside extraction box
-    avg_outside_frac = (np.sum(outside_fracs))/(len(outside_fracs)) # Average fraction of crs outside extraction box
-    avg_ratio = avg_extr_frac/avg_outside_frac # Average ratio of the stack
+                    outside_rej_pix = np.zeros(flt_shape) # 2d array where there is a 1 if a pixel outside the extraction box is marked as a cr
+                    np.place(outside_rej_pix, ((outside_mask == 1) & (dq_array & 2**13 != 0)), 1)
 
-    results ={'extr_fracs':extr_fracs, 'outside_fracs':outside_fracs, 'ratios':ratios, 'avg_extr_frac':avg_extr_frac, 'avg_outside_frac':avg_outside_frac, 'avg_ratio':avg_ratio}
+                    extr_cr_count = np.count_nonzero(extr_rej_pix)
+                    outside_cr_count = np.count_nonzero(outside_rej_pix)
 
-    if plot and not interactive: # case with interactive = false
-        cr_rejected_stack = np.sum(cr_rejected_locs, axis=0) # stack all located crs on top of eachother
-        stacked_exposure_time = sum(exposure_times)
-        stack_plot(cr_rejected_stack, box_lower, box_upper, len(cr_rejected_locs), stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
-        split_plot(cr_rejected_locs, box_lower, box_upper, len(cr_rejected_locs), exposure_times, stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
+                    extr_fracs.append(extr_cr_count/n_extr)
+                    outside_fracs.append(outside_cr_count/n_outside)
+
+                    cr_rejected_pix = extr_rej_pix+outside_rej_pix
+                    cr_rejected_locs.append(cr_rejected_pix)
+
+        extr_fracs = np.asarray(extr_fracs)
+        outside_fracs = np.asarray(outside_fracs)
+        ratios = extr_fracs/outside_fracs # ratio of extraction to outside the box in each image
+
+        avg_extr_frac = (np.sum(extr_fracs))/(len(extr_fracs)) # Average fraction of crs inside extraction box
+        avg_outside_frac = (np.sum(outside_fracs))/(len(outside_fracs)) # Average fraction of crs outside extraction box
+        avg_ratio = avg_extr_frac/avg_outside_frac # Average ratio of the stack
+
+        results ={'rootname':obs_id, 'extr_fracs':extr_fracs, 'outside_fracs':outside_fracs, 'ratios':ratios, 'avg_extr_frac':avg_extr_frac, 'avg_outside_frac':avg_outside_frac, 'avg_ratio':avg_ratio}
+
+        if plot and (not interactive or not HAS_PLOTLY): # case with interactive = false
+            if not HAS_PLOTLY and interactive:
+                warnings.warn('Plotly required for interactive plotting, using matplotlib and static pngs.')
+                interactive = False
+            
+            cr_rejected_stack = np.sum(cr_rejected_locs, axis=0) # stack all located crs on top of eachother
+            stacked_exposure_time = sum(exposure_times)
+            stack_plot(cr_rejected_stack, box_lower, box_upper, len(cr_rejected_locs), stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
+            split_plot(cr_rejected_locs, box_lower, box_upper, len(cr_rejected_locs), exposure_times, stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
+        
+        elif plot and interactive and HAS_PLOTLY: # case with interactive = True and plotly is installed
+            cr_rejected_stack = np.sum(cr_rejected_locs, axis=0) # stack all located crs on top of eachother
+            stacked_exposure_time = sum(exposure_times)
+            stack_plot(cr_rejected_stack, box_lower, box_upper, len(cr_rejected_locs), stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
+            split_plot(cr_rejected_locs, box_lower, box_upper, len(cr_rejected_locs), exposure_times, stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
+        
+        if verbose:
+            print(f"\nFor {obs_id}")
+            print(f"Average across all extraction boxes: {results['avg_extr_frac']:.1%}")
+            print(f"Average across all external regions: {results['avg_outside_frac']:.1%}")
+            print(f"Average ratio between the two: {results['avg_ratio']:.2f}")
+        
+        result_list.append(results)
     
-    elif plot and interactive and HAS_PLOTLY: # case with interactive = True and plotly is installed
-        cr_rejected_stack = np.sum(cr_rejected_locs, axis=0) # stack all located crs on top of eachother
-        stacked_exposure_time = sum(exposure_times)
-        stack_plot(cr_rejected_stack, box_lower, box_upper, len(cr_rejected_locs), stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
-        split_plot(cr_rejected_locs, box_lower, box_upper, len(cr_rejected_locs), exposure_times, stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
-    
-    elif plot and interactive and not USER_WARNED: # case with interactive = True and plotly is not installed
-        warnings.warn('Plotly required for intercative plotting')
-        USER_WARNED = True
-
-    return results
+    return result_list
 
 # Plotting specific functions:
-def gen_color(cmap, n):
+def _gen_color(cmap, n):
     """Generates n distinct colors from a given colormap. 
     
     Based on mycolorpy's gen_color() from https://github.com/binodbhttr/mycolorpy"""
@@ -224,7 +236,7 @@ def gen_color(cmap, n):
         
     return colorlist
 
-def discrete_colorscale(bvals, colors):
+def _discrete_colorscale(bvals, colors):
     """Takes desired boundary values and colors from a matplotlib colorplot and makes a plotly colorscale.
     
     Based on discrete_colorscale() from https://community.plot.ly/t/colors-for-discrete-ranges-in-heatmaps/7780"""
@@ -256,19 +268,19 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
     Parameters
     ----------
     stack_image : array
-        2d array to plot.
+        2d array to plot
 
     box_lower : array
-        1d array of ints of the bottom of the extraction box 0 indexed. 
+        1d array of ints of the bottom of the extraction box 0 indexed
 
     box_upper : array
-        1d array of ints of the top of the extraction box 0 indexed.
+        1d array of ints of the top of the extraction box 0 indexed
 
     split_num : int
-        Number of splits in the stack.
+        Number of splits in the stack
 
     texpt : float
-        Value of total exposure time.
+        Value of total exposure time
 
     obs_id : str
         ipppssoot of observation
@@ -277,7 +289,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         proposal id of observation
 
     plot_dir : str
-        Directory to save plot in. Requires trailing /
+        Directory to save plot in
 
     interactive : bool 
         If True, uses plotly to create an interactive zoomable html plot
@@ -293,7 +305,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
     # hardcoded to 32 values, this should cover all cr split numbers
     
     custom_cmap = colors.ListedColormap(color_list)
-    cmap = colors.ListedColormap(gen_color(custom_cmap, max_stack_value+1))
+    cmap = colors.ListedColormap(_gen_color(custom_cmap, max_stack_value+1))
     bounds = np.arange(max_stack_value+2)
     norm = colors.BoundaryNorm(bounds, cmap.N)
     
@@ -324,7 +336,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         fig.tight_layout()
 
         plot_name = obs_id + '_stacked.png'
-        file_path = str(plot_dir) + plot_name
+        file_path = os.path.join(plot_dir, plot_name)
         plt.savefig(file_path, dpi=150, bbox_inches='tight')
         plt.close()
     
@@ -336,14 +348,14 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         x = np.arange(start=0, stop=stack_shape[1]+1, step=1)
         y = np.arange(start=0, stop=stack_shape[0]+1, step=1)
 
-        dcolorsc = discrete_colorscale(bvals=list(bounds), colors=cmap.colors)
+        dcolorsc = _discrete_colorscale(bvals=list(bounds), colors=cmap.colors)
 
         ticktext = [str(x) for x in list(bounds)[:len(list(bounds))-1]]
         tickvals = generate_intervals(len(ticktext)-1, len(ticktext))
 
         title_text = 'CR flagged pixels in stacked image: '+obs_id+'<br>'+'Proposal '+str(propid)+', exposure time '+f'{texpt:.2f}'+', '+str(split_num)+' subexposures'
         plot_name = obs_id + '_stacked.html'
-        file_path = str(plot_dir) + plot_name
+        file_path = os.path.join(plot_dir, plot_name)
 
         # add image of detector
         fig.add_trace(go.Heatmap(z=stack_image, colorscale=dcolorsc, x=x, y=y, hoverinfo='text', colorbar={'tickvals':tickvals, 'ticktext':ticktext, 'title':{'text':'# times flagged as cr', 'side':'right', 'font':{'size':18}}}, name=''))
@@ -387,13 +399,13 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
         list of cr placements in each subexposure (ie the cr_rejected_locs output of ocrreject_exam)
 
     box_lower : array
-        1d array of ints of the bottom of the extraction box 0 indexed. 
+        1d array of ints of the bottom of the extraction box 0 indexed
 
     box_upper : array
-        1d array of ints of the top of the extraction box 0 indexed.
+        1d array of ints of the top of the extraction box 0 indexed
 
     split_num : int
-        Number of splits in the stack, (ie len(cr_rejected_locs)).
+        Number of splits in the stack, (ie len(cr_rejected_locs))
 
     individual_exposure_times: list
         List of exposure times for each subexposure
@@ -408,14 +420,14 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
         proposal id of observation
 
     plot_dir : str
-        Directory to save plot in. Requires trailing /
+        Directory to save plot in
 
     interactive : bool 
         If True, uses plotly to create an interactive zoomable html plot
     """
 
     custom_cmap = colors.ListedColormap(['k', 'tab:orange', 'tab:blue', 'tab:green', 'tab:red', 'tab:cyan', 'tab:olive', 'tab:purple', 'tab:pink', 'tab:brown', 'tab:grey'])
-    cmap = colors.ListedColormap(gen_color(custom_cmap, 3))
+    cmap = colors.ListedColormap(_gen_color(custom_cmap, 3))
 
     bounds = np.arange(4)
     norm = colors.BoundaryNorm(bounds, cmap.N)
@@ -455,7 +467,7 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
         fig.tight_layout()
 
         plot_name = obs_id + '_splits.png'
-        file_path = str(plot_dir) + plot_name
+        file_path = os.path.join(plot_dir, plot_name)
         plt.savefig(file_path, dpi=150, bbox_inches='tight')
         plt.close()
     
@@ -464,13 +476,13 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
 
         title_text = 'CR flagged pixels in individual splits for: '+obs_id+ '<br>'+'Proposal '+str(propid)+', total exposure time '+f'{texpt:.2f}'+', '+str(split_num)+' subexposures'
         plot_name = obs_id + '_splits.html'
-        file_path = str(plot_dir) + plot_name
+        file_path = os.path.join(plot_dir, plot_name)
 
         # Make plotly figure
         fig = make_subplots(row_value, 2, horizontal_spacing=0.15, subplot_titles=subplot_titles)
 
         # Set up discrete color values
-        dcolorsc = discrete_colorscale(bvals=list(bounds[:-1]), colors=cmap.colors[:-1])
+        dcolorsc = _discrete_colorscale(bvals=list(bounds[:-1]), colors=cmap.colors[:-1])
 
         # Add plots in each subplot
         row_iterator = 1
@@ -514,41 +526,16 @@ def call_ocrreject_exam():
     parser = argparse.ArgumentParser(description='Calculate fractions of cosmic ray rejected pixels inside and outside of an extraction box to test for cr algorithm failures.',
         epilog=f'v{__version__};  Written by {__author__}')
 
-    parser.add_argument('--obs', dest='obs_ids', nargs='*', default=None, help='observation ids in ipppssoots format')
-    parser.add_argument('--flt', dest='flt', default=None, help='path to flt file')
-    parser.add_argument('--sx1', dest='sx1', default=None, help='path to sx1 file')
-    parser.add_argument('--d', dest='data_dir', default=None, help="directory containing observation flt and sx1 files. Defaults to pwd and requires trailing /")
+    parser.add_argument(dest='obs_ids', metavar='obs_id', type=str, nargs='+', help='observation id(s) in ipppssoot format')
+    parser.add_argument('-d', dest='data_dir', type=str, default=None, help="directory containing observation flt and sx1/x1d files. Defaults to current working directory.")
     parser.add_argument('-p', dest='plot', help="option to create diagnostic plots", action='store_true')
-    parser.add_argument('--pd', dest='plot_dir', default=None, help="directory to store diagnostic plots if plot=True. Defaults to data_dir argument and requires trailing /")
-    parser.add_argument('-i', dest='interactive', default=False, help="option to create zoomable html plots instead of static pngs. Defaults to False and requires plotly if True")
+    parser.add_argument('-o', dest='plot_dir', type=str, default=None, help="output directory to store diagnostic plots if plot=True. Defaults to data_dir.")
+    parser.add_argument('-i', dest='interactive', help="option to create zoomable html plots instead of static pngs. Defaults to False and requires plotly if True", action='store_true')
 
-    args = parser.parse_args()
-    
-    if args.obs_ids is not None:
-        if args.flt is not None or args.sx1 is not None:
-            raise ValueError("If 'obs_id' is provided, both 'flt' and 'sx1' must not be provided.")
-        else:
-            for obsid in args.obs_ids:    
-                print(f'\nAnalyzing {obsid}:')
-                result = ocrreject_exam(obsid=args.obs_ids, data_dir=args.data_dir, flt=args.flt, sx1=args.sx1, plot=args.plot, plot_dir=args.plot_dir, interactive=args.interactive)
-                
-                print('Fraction of Pixels Rejected as CRs')
-                print(f"  Average across all extraction boxes: {result['avg_extr_frac']:.1%}")
-                print(f"  Average across all external regions: {result['avg_outside_frac']:.1%}")
-                print(f"  Average ratio between the two: {result['avg_ratio']:.2f}")
-
-    elif args.flt is None or args.flt is None:
-        raise ValueError("If 'obs_id' is not provided, both 'flt' and 'sx1' must be specified.")
-
-    else:
-        result = ocrreject_exam(obs_id=args.obs_ids, data_dir=args.data_dir, flt=args.flt, sx1=args.sx1, plot=args.plot, plot_dir=args.plot_dir, interactive=args.interactive)
-            
-        print('Fraction of Pixels Rejected as CRs')
-        print(f"  Average across all extraction boxes: {result['avg_extr_frac']:.1%}")
-        print(f"  Average across all external regions: {result['avg_outside_frac']:.1%}")
-        print(f"  Average ratio between the two: {result['avg_ratio']:.2f}")
-
-    
+    kwargs = vars(parser.parse_args())
+    kwargs['verbose']=True
+    print(kwargs)
+    ocrreject_exam(**kwargs)
 
 
 if __name__ == '__main__':

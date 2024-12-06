@@ -20,6 +20,7 @@ dependencies = [
     "stsci.tools",
     "pysiaf",
     "astroquery",
+    "matplotlib",
 ]
 dynamic = [
     "version",
@@ -48,6 +49,7 @@ docs = [
 
 [project.scripts]
 add_stis_s_region = "stistools.add_stis_s_region:call_main"
+ocrreject_exam = "stistools.ocrreject_exam:call_ocrreject_exam"
 
 [build-system]
 requires = [
