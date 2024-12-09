@@ -526,7 +526,7 @@ def call_ocrreject_exam():
         epilog=f'v{__version__};  Written by {__author__}')
 
     parser.add_argument(dest='obs_ids', metavar='obs_id', type=str, nargs='+', help='observation id(s) in ipppssoot format')
-    parser.add_argument('-d', dest='data_dir', type=str, default=None, help="directory containing observation flt and sx1/x1d files. Defaults to current working directory.")
+    parser.add_argument('-d', dest='data_dir', type=str, default='.', help="directory containing observation flt and sx1/x1d files. Defaults to current working directory.")
     parser.add_argument('-p', dest='plot', help="option to create diagnostic plots", action='store_true')
     parser.add_argument('-o', dest='plot_dir', type=str, default=None, help="output directory to store diagnostic plots if plot=True. Defaults to data_dir.")
     parser.add_argument('-i', dest='interactive', help="option to create zoomable html plots instead of static pngs. Defaults to False and requires plotly if True", action='store_true')
