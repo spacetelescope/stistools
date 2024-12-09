@@ -24,20 +24,51 @@ Checks STIS CCD 1D spectroscpopic data for cosmic ray overflagging.
 Examples
 --------
 
-In Python without TEAL:
+In Python:
 
 >>> import stistools
->>> stistools.ocrreject_exam.ocrreject_exam("odvkl1040")
+>>> stistools.ocrreject_exam.ocrreject_exam("odvkl1040", plot=True)
 
-In Python with TEAL:
+.. code-block:: python
 
->>> from stistools import ocrreject_exam
->>> from stsci.tools import teal
->>> teal.teal("ocrreject_exam")
+   [{'rootname': 'odvkl1040',
+   'extr_fracs': array([0.31530762, 0.32006836]),
+   'outside_fracs': array([0.00884673, 0.00810278]),
+   'ratios': array([35.64113429, 39.50106762]),
+   'avg_extr_frac': 0.31768798828125,
+   'avg_outside_frac': 0.008474755474901575,
+   'avg_ratio': 37.486389928547126}]
 
-From command line::
+.. image:: odvkl1040_stacked.png
+  :width: 600
+  :alt: Stacked example ocrreject_exam plot output
 
-% ocrreject_exam -p odvkl1040
+| 
+
+.. image:: odvkl1040_splits.png
+  :width: 600
+  :alt: Split example ocrreject_exam plot output
+
+From command line:
+
+.. code-block:: none
+
+   ocrreject_exam -h
+   usage: ocrreject_exam [-h] [-d DATA_DIR] [-p] [-o PLOT_DIR] [-i] obs_id [obs_id ...]
+
+   Calculate fractions of cosmic ray rejected pixels inside and outside of an extraction box to test for CR algorithm failures.
+
+   positional arguments:
+   obs_id       observation id(s) in ipppssoot format
+
+   options:
+   -h, --help   show this help message and exit
+   -d DATA_DIR  directory containing observation flt and sx1/x1d files. Defaults to current working directory.
+   -p           option to create diagnostic plots
+   -o PLOT_DIR  output directory to store diagnostic plots if plot=True. Defaults to data_dir.
+   -i           option to create zoomable html plots instead of static pngs. Defaults to False and requires plotly if True
+
+   v1.0; Written by Matt Dallas, Joleen Carlberg, Sean Lockwood, STScI, December 2024.
 """
 
 __taskname__ = "ocrreject_exam"
@@ -52,45 +83,46 @@ class BoxExtended(Exception):
 
 def ocrreject_exam(obs_ids, data_dir='.', plot=False, plot_dir=None, interactive=False, verbose=False):
     """Compares the rate of cosmic rays in the extraction box and everywhere else 
-    in a CCD spectroscopic image. Based on crrej_exam from STIS ISR 2019-02.
+    in a CCD spectroscopic image. Based on crrej_exam from `STIS ISR 2019-02 
+    <https://www.stsci.edu/files/live/sites/www/files/home/hst/instrumentation/stis/documentation/instrument-science-reports/_documents/201902.pdf>`_.
 
     Higher ratios of cosmic ray rates in the extraction box to the rest of the image
     may indicate the need to rerun stistools.ocrreject() with different parameters.
 
     Parameters
     ----------
-    obs_ids : iter of str or str
-        One of more STIS observation ID rootnames in ipppssoot format (ie odvkl1040). 
+    obs_ids: iter of str or str
+        One of more STIS observation ID rootnames in ipppssoot format (e.g. odvkl1040). 
 
-    data_dir : str
+    data_dir: str
         Directory containing both the flat fielded (_flt.fits) and extracted 
         spectrum (_sx1.fits or _x1d.fits) files of the observation if using obs_ids argument. 
         Defaults to current working directory.
 
-    plot : bool
+    plot: bool
         Option to generate diagnostic plots, default=False
 
-    plot_dir : str or None
+    plot_dir: str or None
         Directory to save diagnostic plots in if plot=True. 
         Defaults to data_dir parameter
 
-    interactive : bool
+    interactive: bool
         Option to generate zoomable html plots using plotly, default=False
 
-    verbose : bool
+    verbose: bool
         Option to print some results
 
     Returns
     -------
-    results : list of dict
-        Dictionary containing 
-            rootname : obs_id
-            extr_fracs : cr rejection rates in the extraction boxes for each crsplit
-            outside_fracs : cr rejection rates outside the extraction boxes for each crsplit
-            ratios : extr_fracs/outside_fracs
-            avg_extr_frac : The average of extr_fracs
-            avg_outside_frac : The average of outside_fracs
-            avg_ratio : avg_extr_frac/avg_outside_frac
+    results: list of dict
+
+        - ``rootname``: obs_id
+        - ``extr_fracs``: cosmic ray rejection rates in the extraction boxes for each CR-SPLIT
+        - ``outside_fracs``: cosmic ray rejection rates outside the extraction boxes for each CR-SPLIT
+        - ``ratios``: ``extr_fracs``/``outside_fracs``
+        - ``avg_extr_frac``: The average of ``extr_fracs``
+        - ``avg_outside_frac``: The average of ``outside_fracs``
+        - ``avg_ratio``: ``avg_extr_frac``/``avg_outside_frac``
         
     If called from the command line, prints the avg extraction, outside, and ratio values for quick verification.
 
@@ -150,7 +182,7 @@ def ocrreject_exam(obs_ids, data_dir='.', plot=False, plot_dir=None, interactive
             
             # Check that the extraction box doesn't extend beyond the image: this breaks the method
             if np.any(box_lower < 0) or np.any(box_upper-1 > flt_shape[0]): # Subtract 1 because the box extends to the value of the pixel before
-                raise BoxExtended(f"Extraction box coords extend above or below the cr subexposures for {propid}")
+                raise BoxExtended(f"Extraction box coords extend above or below the cosmic ray subexposures for {propid}")
 
             extr_mask = np.zeros(flt_shape)
             outside_mask = np.ones(flt_shape)
@@ -251,7 +283,7 @@ def _discrete_colorscale(bvals, colors):
         
     return dcolorscale    
 
-def generate_intervals(n, divisions):
+def _generate_intervals(n, divisions):
     """Creates a list of strings that are the positions requred for centering an evenly spaced colorbar in plotly"""
 
     result = np.linspace(0, n, divisions, endpoint=False)
@@ -262,35 +294,35 @@ def generate_intervals(n, divisions):
     return result
 
 def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, propid, plot_dir, interactive):
-    """Creates a visualization of where cr pixels are in a stacked image  
+    """Creates a visualization of where CR pixels are in a stacked image  
 
     Parameters
     ----------
-    stack_image : array
+    stack_image: array
         2d array to plot
 
-    box_lower : array
-        1d array of ints of the bottom of the extraction box 0 indexed
+    box_lower: array
+        1d array of ints of the bottom of the extraction box (0 indexed)
 
-    box_upper : array
-        1d array of ints of the top of the extraction box 0 indexed
+    box_upper: array
+        1d array of ints of the top of the extraction box (0 indexed)
 
-    split_num : int
+    split_num: int
         Number of splits in the stack
 
-    texpt : float
+    texpt: float
         Value of total exposure time
 
-    obs_id : str
+    obs_id: str
         ipppssoot of observation
 
-    propid : int
+    propid: int
         proposal id of observation
 
-    plot_dir : str
+    plot_dir: str
         Directory to save plot in
 
-    interactive : bool 
+    interactive: bool 
         If True, uses plotly to create an interactive zoomable html plot
     """
     
@@ -328,7 +360,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         else:
             ax2.set_title('full image already 20 pixels above/below extraction box')
 
-        cb = fig.colorbar(colormap.ScalarMappable(norm=norm, cmap=cmap), cax=ax3, label='# times flagged as cr', ticks=np.arange(max_stack_value, max_stack_value+2)-0.5)
+        cb = fig.colorbar(colormap.ScalarMappable(norm=norm, cmap=cmap), cax=ax3, label='# times flagged as CR', ticks=np.arange(max_stack_value, max_stack_value+2)-0.5)
         cb.set_ticklabels(np.arange(max_stack_value, max_stack_value+2)-1)
 
         fig.suptitle('CR flagged pixels in stacked image: '+obs_id+'\n Proposal '+str(propid)+', exposure time '+f'{texpt:.2f}'+', '+str(split_num)+' subexposures')
@@ -350,14 +382,14 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         dcolorsc = _discrete_colorscale(bvals=list(bounds), colors=cmap.colors)
 
         ticktext = [str(x) for x in list(bounds)[:len(list(bounds))-1]]
-        tickvals = generate_intervals(len(ticktext)-1, len(ticktext))
+        tickvals = _generate_intervals(len(ticktext)-1, len(ticktext))
 
         title_text = 'CR flagged pixels in stacked image: '+obs_id+'<br>'+'Proposal '+str(propid)+', exposure time '+f'{texpt:.2f}'+', '+str(split_num)+' subexposures'
         plot_name = obs_id + '_stacked.html'
         file_path = os.path.join(plot_dir, plot_name)
 
         # add image of detector
-        fig.add_trace(go.Heatmap(z=stack_image, colorscale=dcolorsc, x=x, y=y, hoverinfo='text', colorbar={'tickvals':tickvals, 'ticktext':ticktext, 'title':{'text':'# times flagged as cr', 'side':'right', 'font':{'size':18}}}, name=''))
+        fig.add_trace(go.Heatmap(z=stack_image, colorscale=dcolorsc, x=x, y=y, hoverinfo='text', colorbar={'tickvals':tickvals, 'ticktext':ticktext, 'title':{'text':'# times flagged as CR', 'side':'right', 'font':{'size':18}}}, name=''))
 
         # add extraction box
         fig.add_trace(go.Scatter(x=np.arange(len(box_upper)),y=box_upper,mode="lines",line=go.scatter.Line(color='#222222', dash='dash'),showlegend=False, opacity=0.7, line_shape='hv', name='extraction box'))
@@ -390,38 +422,38 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         fig.write_html(file_path)
 
 def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_times, texpt, obs_id, propid, plot_dir, interactive):
-    """Creates a visualization of where cr pixels are in each subexposure  
+    """Creates a visualization of where CR pixels are in each subexposure  
 
     Parameters
     ----------
-    splits : list
-        list of cr placements in each subexposure (ie the cr_rejected_locs output of ocrreject_exam)
+    splits: list
+        list of CR flagged pixels in each subexposure
 
-    box_lower : array
-        1d array of ints of the bottom of the extraction box 0 indexed
+    box_lower: array
+        1d array of ints of the bottom of the extraction box (0 indexed)
 
-    box_upper : array
-        1d array of ints of the top of the extraction box 0 indexed
+    box_upper: array
+        1d array of ints of the top of the extraction box (0 indexed)
 
-    split_num : int
-        Number of splits in the stack, (ie len(cr_rejected_locs))
+    split_num: int
+        Number of splits in the stack
 
     individual_exposure_times: list
         List of exposure times for each subexposure
 
-    texpt : float
+    texpt: float
         Value of total exposure time
 
-    obs_id : str
+    obs_id: str
         ipppssoot of observation
 
-    propid : int
+    propid: int
         proposal id of observation
 
-    plot_dir : str
+    plot_dir: str
         Directory to save plot in
 
-    interactive : bool 
+    interactive: bool 
         If True, uses plotly to create an interactive zoomable html plot
     """
 
@@ -443,7 +475,7 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
         fig, ax = plt.subplots(nrows=row_value, ncols=2, figsize=(9, nrows*2))
         ax = ax.flatten()
 
-        # Plot each subexposure with cr pixels a different color
+        # Plot each subexposure with CR pixels a different color
         for num, axis in enumerate(ax):
             if num<len(splits):
                 axis.imshow(splits[num], interpolation='none', origin='lower', 
@@ -522,7 +554,7 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
 def call_ocrreject_exam():
     """Command line usage of ocrreject_exam"""
     
-    parser = argparse.ArgumentParser(description='Calculate fractions of cosmic ray rejected pixels inside and outside of an extraction box to test for cr algorithm failures.',
+    parser = argparse.ArgumentParser(description='Calculate fractions of cosmic ray rejected pixels inside and outside of an extraction box to test for CR algorithm failures.',
         epilog=f'v{__version__};  Written by {__author__}')
 
     parser.add_argument(dest='obs_ids', metavar='obs_id', type=str, nargs='+', help='observation id(s) in ipppssoot format')
