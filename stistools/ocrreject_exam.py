@@ -37,13 +37,12 @@ In Python with TEAL:
 
 From command line::
 
-% ./basic2d.py -v -s odvkl1040_flt.fits odvkl1040_flt.fits
-% ./basic2d.py -r
+% ocrreject_exam -p odvkl1040
 """
 
 __taskname__ = "ocrreject_exam"
 __version__ = "1.0"
-__vdate__ = "06-December-2024"
+__vdate__ = "09-December-2024"
 __author__ = "Matt Dallas, Joleen Carlberg, Sean Lockwood, STScI, December 2024."
 
 class BoxExtended(Exception):
@@ -83,7 +82,7 @@ def ocrreject_exam(obs_ids, data_dir='.', plot=False, plot_dir=None, interactive
 
     Returns
     -------
-    results : dict
+    results : list of dict
         Dictionary containing 
             rootname : obs_id
             extr_fracs : cr rejection rates in the extraction boxes for each crsplit
@@ -534,7 +533,6 @@ def call_ocrreject_exam():
 
     kwargs = vars(parser.parse_args())
     kwargs['verbose']=True
-    print(kwargs)
     ocrreject_exam(**kwargs)
 
 
