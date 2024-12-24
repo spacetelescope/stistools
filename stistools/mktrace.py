@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import numpy as np
 from astropy.io import fits
+import os
 import os.path
+import stat
 from scipy import signal
 from scipy import ndimage as ni
 
@@ -288,6 +290,8 @@ class Trace:
 
         # refine all traces for this CENWAVE, OPT_ELEM
         fu.copyFile(fpath, newname)
+        # Add owner write permissions to local file:
+        os.chmod(newname, os.stat(newname).st_mode | stat.S_IWUSR)
         hdulist = fits.open(newname, mode='update')
         tab = hdulist[1].data
         ind = np.nonzero(a2disp_ind)[0]
