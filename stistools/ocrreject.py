@@ -34,8 +34,8 @@ From command line::
 """
 
 __taskname__ = "ocrreject"
-__version__ = "3.4"
-__vdate__ = "13-November-2013"
+__version__ = "3.5"
+__vdate__ = "31-May-2024"
 __author__ = "Phil Hodge, STScI, November 2013."
 
 
@@ -268,10 +268,10 @@ def ocrreject(input, output,
     if crradius:
         optional_args.append("-radius")
         optional_args.append("%.10g" % crradius)
-    if crthresh:
+    if crthresh is not None:
         optional_args.append("-thresh")
         optional_args.append("%.10g" % crthresh)
-    if badinpdq:
+    if badinpdq is not None:
         optional_args.append("-pdq")
         optional_args.append("%d" % badinpdq)
     if crmask:
