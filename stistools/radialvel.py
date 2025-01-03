@@ -18,17 +18,17 @@ def radialVel(ra_targ, dec_targ, mjd):
     in the direction toward the target.
 
     Parameters
-    -----------
-    ra_targ : float
+    ----------
+    ra_targ: float
         right ascension of the target (degrees)
-    dec_targ : float
+    dec_targ: float
         declination of the target (degrees)
-    mjd : float
+    mjd: float
         Modified Julian Date at the time of observation
 
     Returns
-    --------
-    radial_vel : float
+    -------
+    radial_vel: float
         the radial velocity in km/s
     """
 
@@ -96,12 +96,12 @@ def earthVel(mjd):
 
     Parameters
     ----------
-    mjd : float
+    mjd: float
         time, Modified Julian Date
 
     Returns
     -------
-    vel :  ndarray
+    vel: ndarray
         the velocity vector of the Earth around the Sun, in
         celestial coordinates (shape=(3,),ndtype=float64)
     """
@@ -173,15 +173,15 @@ def precess(mjd, target):
     .. [2] J.H. Lieske, 1979, Astron & Astrophys vol 73, 282-284.
 
     Parameters
-    -----------
-    mjd : float
+    ----------
+    mjd: float
         time, Modified Julian Date
-    target : array_like object
+    target: array_like object
         unit vector pointing toward the target, J2000 coordinates
 
     Returns
     -------
-    vector : ndarray
+    vector: ndarray
         the target vector (or matrix) precessed to mjd as an
         array object of type float64 and the same shape as target,
         i.e. either (3,) or (n,3)

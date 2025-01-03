@@ -14,13 +14,13 @@ def expandFileName(filename):
     path name for the file.
 
     Parameters
-    -----------
-    filename : str
+    ----------
+    filename: str
         A file name, possibly including an environment variable.
 
     Returns
-    --------
-    fullname : str
+    -------
+    fullname: str
         The file name with environment variable expanded.
     """
 
@@ -48,17 +48,17 @@ def interpolate(x, values, xp):
     value in values will be returned.
 
     Parameters
-    -----------
-    x : a sequence object, e.g. an array, int or float
+    ----------
+    x: a sequence object, e.g. an array, int or float
         Array of independent variable values.
-    values :  a sequence object, e.g. an array (not character)
+    values:  a sequence object, e.g. an array (not character)
         Array of dependent variable values.
-    xp : int or float
+    xp: int or float
         Independent variable value at which to interpolate.
 
     Returns
     -------
-    interp_vals : the same type as one element of values
+    interp_vals: the same type as one element of values
         Linearly interpolated value.
 
     """

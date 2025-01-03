@@ -25,13 +25,15 @@ import stsci_rtd_theme
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0,os.path.abspath('.'))
 
+autodoc_mock_imports = ['astropy', 'scipy', 'astroquery', 'pysiaf', 'stsci']
+
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.imgmath','numpydoc',
                 'sphinx.ext.intersphinx', 'sphinx.ext.coverage',
-                'sphinx.ext.autosummary',
+                'sphinx.ext.autosummary', 'sphinxcontrib.jquery',
                 'sphinx.ext.doctest']
 #extensions += ['parameter_anchor']
 

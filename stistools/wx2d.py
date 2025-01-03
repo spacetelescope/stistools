@@ -24,32 +24,32 @@ def wx2d(input, output, wavelengths=None, helcorr="",
 
     Parameters
     ----------
-    input : string
+    input: str
         name of input file containing an image set
-    output : string
+    output: str
         name of the output file
-    wavelengths : string, optional [Default: None]
+    wavelengths: str, optional [Default: None]
         name of the output file for wavelengths
-    helcorr : string
+    helcorr: str
         specify "perform" or "omit" to override header keyword
-    algorithm : {'wavelet', 'kd'}
+    algorithm: {'wavelet', 'kd'}
         algorithm to use in resampling the input
-    trace : string or array, or None
+    trace: str or array or None
         trace array, or name of FITS table containing trace(s)
-    order : int [Default: 7]
+    order: int [Default: 7]
         polynomial order (an odd number, e.g. 5 or 7)
-    subdiv : int [Default: 8]
+    subdiv: int [Default: 8]
         number of subpixels (a power of 2, e.g. 8 or 16)
-    psf_width : float [Default: 0.]
+    psf_width: float [Default: 0.]
         width of PSF for convolution (e.g. 1.3);
         0 means no convolution
-    rows : tuple, optional [Default: None]
+    rows: tuple, optional [Default: None]
         a tuple giving the slice of rows to process; output values
         in all other rows will be set to zero.
         The default of None means all rows, same as (0, 1024)
-    subsampled : string, optional [Default: None]
+    subsampled: str, optional [Default: None]
         name of the output file with the subsampled image
-    convolved : string, optional [Default: None]
+    convolved: str, optional [Default: None]
         name of the output file with the convolved image
 
     """
@@ -123,32 +123,32 @@ def wx2d_imset(ft, imset, output, wavelengths, helcorr,
 
     Parameters
     ----------
-    ft : HDUList
-        Fits HDUList object for the input file.
+    ft: HDUList
+        FITS HDUList object for the input file.
 
-    imset  :  int
+    imset: int
         one-indexed image set number
-    output  :  string
+    output: str
         name of the output file
-    wavelengths :  string or None
+    wavelengths: str or None
         name of the output file for wavelengths
-    helcorr :  {'perform', 'omit'}
+    helcorr: str, {'perform', 'omit'}
         specify "perform" or "omit" to override header keyword
-    algorithm : {"wavelet","kd"}
+    algorithm: str, {'wavelet', 'kd'}
         algorithm to use to process input
-    tracefile :  string or array
+    tracefile: str or array
         trace array, or name of FITS table containing trace(s)
-    order :  int
+    order: int
         polynomial order
-    subdiv :  int
+    subdiv: int
         number of subpixels
-    psf_width :  float
+    psf_width: float
         width of PSF for convolution
-    rows :  tuple
+    rows: tuple
         a tuple giving the slice of rows to process
-    subsampled :  string, or None
+    subsampled: str or None
         name of the output file with the subsampled image
-    convolved :  string, or None
+    convolved: str or None
         name of the output file with the convolved image
 
     """
@@ -251,45 +251,45 @@ def wavelet_resampling(hdu, img, errimg,
 
     Parameters
     ----------
-    hdu : fits header/data unit object
+    hdu: FITS header/data unit object
         header/data unit for a SCI extension
-    img : ndarray
+    img: ndarray
         SCI image array (could be a subset of full image)
-    errimg : ndarray
+    errimg: ndarray
         ERR image array (could be a subset of full image)
-    original_nrows : int
+    original_nrows: int
         number of image lines (NAXIS2) in input image
-    nrows : int
+    nrows: int
         number of image lines in subset
-    ncols : int
+    ncols: int
         number of image columns (NAXIS1)
-    rows : tuple
+    rows: tuple
         tuple giving the slice of rows to process
-    a2center : ndarray
+    a2center: ndarray
         1-D array of Y locations
-    a2displ : ndarray
+    a2displ: ndarray
         array of traces, one for each a2center; the length of each
         trace must be the same as the number of columns in the input image
-    offset : float
+    offset: float
         offset of the first row in 'image' from the beginning of
         the data block in the original file, needed for trace
-    shifta2 : float
+    shifta2: float
         offset of the row from nominal (from shifta2 keyword)
-    imset : int
+    imset: int
         number of the current image set (keyword EXTVER)
-    order : int
+    order: int
         polynomial order
-    subdiv : int
+    subdiv: int
         number of subpixels per input pixel
-    psf_width : float
+    psf_width: float
         width of PSF for convolution (e.g. 1.3);
-    subsampled : string or None
+    subsampled: str or None
         name of the output file with the subsampled image
-    convolved : string or None
+    convolved: str or None
         name of the output file with the convolved image
 
     Returns
-    --------
+    -------
     img_arr: tuple of ndarrays
         the image and error arrays (to replace the input img and errimg)
 
@@ -387,32 +387,32 @@ def kd_resampling(img, errimg,
 
     Parameters
     ----------
-    img :  ndarray
+    img: ndarray
         SCI image array (could be a subset of full image)
-    errimg :  ndarray
+    errimg: ndarray
         ERR image array (could be a subset of full image)
-    original_nrows :  int
+    original_nrows: int
         number of image lines (NAXIS2) in input image
-    nrows :  int
+    nrows: int
         number of image lines in subset
-    ncols :  int
+    ncols: int
         number of image columns (NAXIS1)
-    rows :  tuple
+    rows: tuple
         tuple giving the slice of rows to process
-    a2center : ndarray
+    a2center: ndarray
         1-D array of Y locations
-    a2displ :  ndarray
+    a2displ: ndarray
         array of traces, one for each a2center; the length of each
         trace must be the same as the number of columns in the input image
-    offset : float
+    offset: float
         offset of the first row in 'image' from the beginning of
         the data block in the original file, needed for trace
-    shifta2 : float
+    shifta2: float
         offset of the row from nominal (from shifta2 keyword)
 
     Returns
     -------
-    img_arr : tuple
+    img_arr: tuple
         the image and error arrays (to replace the input img and errimg)
 
     """
@@ -443,22 +443,22 @@ def kd_apply_trace(image, a2center, a2displ, offset=0., shifta2=0.):
 
     Parameters
     ----------
-    image :  ndarray
+    image: ndarray
         input 2-D image array
-    a2center : ndarray
+    a2center: ndarray
         array of Y locations
-    a2displ : ndarray
+    a2displ: ndarray
         array of traces, one for each a2center; the length of
         each trace must be the same as the number of columns in 'image'
-    offset : float
+    offset: float
         offset of the first row in 'image' from the beginning
         of the data block in the original file, needed for trace
-    shifta2 : float
+    shifta2: float
         offset of the row from nominal (from shifta2 keyword)
 
     Returns
     -------
-    x2d : ndarray
+    x2d: ndarray
         2-D array containing the resampled image
 
     """
@@ -518,14 +518,14 @@ def stis_psf(x, a):
 
     Parameters
     ----------
-    x : float
+    x: float
         offset in pixels from the center of the profile
-    a : float
+    a: float
         a measure of the width of the PSF
 
     Returns
     -------
-    val : float
+    val: float
         the PSF evaluated at x
 
     """
@@ -539,30 +539,30 @@ def apply_trace(image, a2center, a2displ, subdiv,
 
     Parameters
     ----------
-    image :  ndarray
+    image: ndarray
         input 2-D image array, oversampled by 'subdiv' in axis 0
-    a2center : ndarray
+    a2center: ndarray
         1-D array of Y locations
-    a2displ : ndarray
+    a2displ: ndarray
         array of traces, one for each a2center; the length of each
         trace must be the same as the number of columns in the input image
-    subdiv :  int
+    subdiv: int
         number of rows to add together
-    offset :  float
+    offset: float
         offset of the first row in 'image' from the beginning of
         the data block in the original file, needed for trace
-    shifta2 :  float
+    shifta2: float
         offset of the row from nominal (from shifta2 keyword)
-    extname :  string
+    extname: str
         which type of extension (SCI, ERR, DQ)?
 
     Returns
-    ---------
-    x2d : ndarray
+    -------
+    x2d: ndarray
         resampled 2-D image array
 
     Notes
-    -------
+    -----
     The function value is a 2-D array containing the resampled image.
     This is binned by subdiv in Y (axis 0), after shifting by trace
     (multiplied by subdiv).
@@ -614,18 +614,18 @@ def extract(image, locn, subdiv):
 
     Parameters
     ----------
-    image : ndarray
+    image: ndarray
         input array, oversampled by 'subdiv' in axis 0
-    locn : ndarray
+    locn: ndarray
         a 1-D array giving the location at which to extract; an
         integer value corresponds to the center of the pixel.  The length
         must be the same as the number of columns in the input image.
-    subdiv : int
+    subdiv: int
         number of rows to add together
 
     Returns
-    --------
-    spec : ndarray
+    -------
+    spec: ndarray
         a 1-D array containing the extracted row
 
     """
@@ -665,21 +665,21 @@ def extract_err(image, locn, subdiv):
 
     Parameters
     ----------
-    image : ndarray
+    image: ndarray
         input array, oversampled by 'subdiv' in axis 0
-    locn : ndarray
+    locn: ndarray
         a 1-D array giving the location at which to extract; an
         integer value corresponds to the center of the pixel
-    subdiv : int
+    subdiv: int
         number of rows to add together
 
     Returns
     -------
-    spec : ndarray
+    spec: ndarray
         a 1-D array containing the extracted row
 
     Notes
-    -------
+    -----
     This takes the square root of the average of the squares, intended to be
     used for interpolating the ERR array.  Fractions of pixels at the upper
     and lower edges are excluded.
@@ -720,17 +720,17 @@ def extract_i16(image, locn, subdiv):
 
     Parameters
     ----------
-    image : ndarray
+    image: ndarray
         input array, oversampled by 'subdiv' in axis 0
-    locn : ndarray
+    locn: ndarray
         a 1-D array giving the location at which to extract; an
         integer value corresponds to the center of the pixel
-    subdiv : int
+    subdiv: int
         number of rows to add together
 
     Returns
-    --------
-    spec : ndarray
+    -------
+    spec: ndarray
         a 1-D array containing the extracted row
 
     """
@@ -768,13 +768,13 @@ def interpolate_trace(a2center, a2displ, y, length):
 
     Parameters
     ----------
-    a2center : ndarray
+    a2center: ndarray
         array of Y locations
-    a2displ : ndarray
+    a2displ: ndarray
         array of traces, one trace for each element of a2center
-    y : float
+    y: float
         Y location on the detector
-    length : int
+    length: int
         length of a trace; needed only if traces is empty
 
     """
@@ -792,18 +792,18 @@ def trace_name(trace, phdr):
     """Return the 1dt table name or array.
 
     Parameters
-    -----------
-    trace : string or array or None
+    ----------
+    trace: str or array or None
         if trace is None the header keyword SPTRCTAB will be
-        gotten from phdr; else if this is a string it should be the name
+        gotten from phdr; else if this is a str it should be the name
         of a trace file (possibly using an environment variable); otherwise,
         it should be a trace, in which case it will be returned unchanged
-    phdr : fits Header object
+    phdr: FITS Header object
         primary header, used only if trace is None
 
     Returns
-    --------
-    tracefile : string or array
+    -------
+    tracefile: str or array
         name of a trace file (with environment variable expanded),
         or an actual trace array
 
@@ -829,17 +829,17 @@ def get_trace(tracefile, phdr, hdr):
 
     Parameters
     ----------
-    tracefile : string or array
+    tracefile: str or array
         either a trace array or the name of a FITS 1dt table
-    phdr : fits Header object
+    phdr: FITS Header object
         primary header of input file
-    hdr : fits Header object
+    hdr: FITS Header object
         extension header of input image (for binning info and
         time of exposure)
 
     Returns
-    --------
-    trace_arrays : tuple of 2 arrays
+    -------
+    trace_arrays: tuple of 2 arrays
         a pair of arrays, one is the Y location at the middle column,
         and the other is an array of trace arrays
 
@@ -893,16 +893,16 @@ def bin_traces(a2displ, binaxis1, ltv):
 
     Parameters
     ----------
-    a2displ : ndarray
+    a2displ: ndarray
         an array of one or more arrays of Y displacements (traces)
-    binaxis1 : int
+    binaxis1: int
         binning factor in the dispersion axis
-    ltv : float
+    ltv: float
         offset in the dispersion axis (one indexing)
 
     Returns
     -------
-    a2displ : ndarray
+    a2displ: ndarray
         an array of traces (a2displ), but with the trace arrays binned
         and shorter by the factor binaxis1
 
@@ -972,13 +972,13 @@ def polynomial(x, y, z, n):
 
     Parameters
     ----------
-    x : ndarray
+    x: ndarray
         the integer values from 0 through n-1 inclusive (but float64)
-    y : ndarray
+    y: ndarray
         a 2-D array, axis 0 of length n
-    z : float
+    z: float
         n / 2.
-    n : int
+    n: int
         1 + order of polynomial fit
     """
 
