@@ -94,48 +94,48 @@ def ctestis(ycol, net, sky, stisimage=None, mjd=None, nread=None,
 
     Parameters
     ----------
-    ycol : arr
+    ycol: arr
         Y-column # of object
-    net : arr
+    net: arr
         Net photometric counts (background subtracted) measured from science image
         and scaled to cosmic-ray split exposure time (from which sky is measured)
-    sky : arr
+    sky: arr
         Single-pixel sky-background estimate measured from individual cosmic-ray
         split, bias- and dark-subtracted, flat-fielded images (flt.fits) with no 
         sky subtraction
-    stisimage : str, optional
+    stisimage: str or None, optional
         The name of the SX2 file from which to pull the header keywords.
-    mjd : float, optional
+    mjd: float or None, optional
         Modified julian date corresponding to the start time of the 1st
         exposure, corresponds to the TEXPSTRT keyword. If stisimage file is
         defined TEXPSTRT keyword will overwrite any provided mjd value.
-    nread : int, optional
+    nread: int or None, optional
         Number of image sets combined during CR rejection, corresponds to the
         NCOMBINE keyword. If stisimage file is defined NCOMBINE keyword will
         overwrite any provided nread value.
-    ybin : int , optional
+    ybin: int or None, optional
         Axis2 data bin size in unbinned detector pixels, corresponds to the
         BINAXIS2 keyword. If stisimage file is defined BINAXIS2 keyword will
         overwrite any provided ybin value.
-    gain : float, optional
+    gain: float or None, optional
         The image gain, corresponds to the CCDGAIN keyword.  If stisimage file
         is defined the CCDGAIN keyword will overwrite any provided gain value.
         If the gain is 4.0, it will be upated to 4.08.
-    amp : str, optional
+    amp: str, optional [Default: 'D']
         The amplifier used for the observation (default 'D').  Ignored if
         stisimage is provided.
-    sx2 : bool, optional
+    sx2: bool, optional [Default: False]
         Force the procedure to remove the top/bottom 38 rows. This is
         automatically done if the file in stisname contains '_sx2'. Default
         values is False
 
     Returns
     -------
-    fluxc : arr
+    fluxc: arr
         The empirically-corrected flux (counts)
-    dmagc : arr
+    dmagc: arr
         The empirical photometric correction (delta mag)
-    dyc : arr
+    dyc: arr
         The empirical astrometric correction (delta pixels)
     """
 
