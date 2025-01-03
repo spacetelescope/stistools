@@ -3,11 +3,9 @@
 import glob
 import math
 import os
-import sys
 import argparse
 
 from astropy.io import fits
-from astropy.wcs import WCS
 import numpy as np
 import logging
 

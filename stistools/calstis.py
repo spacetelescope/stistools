@@ -6,8 +6,6 @@ import getopt
 import glob
 import subprocess
 
-from stsci.tools import parseinput, teal
-
 __doc__ = """
 Calibrate STIS data.
 

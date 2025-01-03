@@ -9,8 +9,6 @@ import subprocess
 import numpy.random as rn               # used by mkRandomName
 from astropy.io import fits
 
-from stsci.tools import parseinput, teal
-
 """
 Perform wavelength calibration of STIS data.
 

@@ -1,6 +1,4 @@
-import math
 import numpy as np
-from astropy.io import fits
 
 from ._fit1d import fit1d
 
