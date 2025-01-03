@@ -88,6 +88,8 @@ def interpolate(x, values, xp):
 
 
 def check_hstcal_status():
-    if not shutil.which('cs0.e'):
+    on_readthedocs = os.environ.get('READTHEDOCS', 'False') == 'True'
+
+    if not on_readthedocs and not shutil.which('cs0.e'):
         raise ImportError("The 'hstcal' package binaries were not found in $PATH.  "
                           "Please check that it is installed.")
