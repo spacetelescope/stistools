@@ -33,7 +33,7 @@ autodoc_mock_imports = ['astropy', 'scipy', 'astroquery', 'pysiaf', 'stsci']
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.imgmath','numpydoc',
                 'sphinx.ext.intersphinx', 'sphinx.ext.coverage',
-                'sphinx.ext.autosummary',
+                'sphinx.ext.autosummary', 'sphinxcontrib.jquery',
                 'sphinx.ext.doctest']
 #extensions += ['parameter_anchor']
 
