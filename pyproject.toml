@@ -43,6 +43,7 @@ docs = [
     "sphinx",
     "stsci_rtd_theme",
     "sphinx_automodapi",
+    "numpydoc",
 ]
 
 [project.scripts]
