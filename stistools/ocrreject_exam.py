@@ -150,8 +150,23 @@ def ocrreject_exam(obs_ids, data_dir='.', plot=False, plot_dir=None, interactive
         if plot and plot_dir is None:
             plot_dir = data_dir
         
-        # Check that the number of sci extensions matches the number of crsplits
         with fits.open(flt_file) as flt_hdul:
+            # When first opening the flt file check that it is even of a CCD exposure
+            try:
+                instrument = flt_hdul[0].header['INSTRUME']
+                detector   = flt_hdul[0].header['DETECTOR']
+                obsmode    = flt_hdul[0].header['OBSMODE']
+                nextend    = flt_hdul[0].header['NEXTEND']
+
+                if (instrument.strip() != 'STIS') or \
+                (detector.strip() != 'CCD')    or \
+                (obsmode.strip() != 'ACCUM')   or \
+                (nextend < 6):
+                    raise ValueError
+            except (KeyError, ValueError,):
+                raise ValueError(f"{flt_file}: Not a STIS/CCD/ACCUM file with ≥2 SCI extensions.")
+
+            # If it is, proceed to check that the number of sci extensions matches the number of crsplits
             propid = flt_hdul[0].header['PROPOSID']
             rootname = flt_hdul[0].header['ROOTNAME']
             nrptexp_num = flt_hdul[0].header['NRPTEXP']
@@ -161,7 +176,7 @@ def ocrreject_exam(obs_ids, data_dir='.', plot=False, plot_dir=None, interactive
         if ((crsplit_num)*(nrptexp_num))-(sci_num)!= 0:
             raise ValueError(f"cr-split or nrptexp value in flt header does not match the number of sci extentsions for {obs_id}")
 
-        # Calculate cr fraction in and out of extraction box
+        # If all checks above passed, calculate cr fraction in and out of the extraction box
         with fits.open(sx1_file) as sx1_hdul:
             spec = sx1_hdul[1].data[0]
             shdr = sx1_hdul[0].header
