@@ -218,9 +218,9 @@ def ocrreject_exam(obs_ids, data_dir='.', plot=False, plot_dir=None, interactive
         outside_fracs = np.asarray(outside_fracs)
         ratios = extr_fracs/outside_fracs # ratio of extraction to outside the box in each image
 
-        avg_extr_frac = (np.sum(extr_fracs))/(len(extr_fracs)) # Average fraction of crs inside extraction box
-        avg_outside_frac = (np.sum(outside_fracs))/(len(outside_fracs)) # Average fraction of crs outside extraction box
-        avg_ratio = avg_extr_frac/avg_outside_frac # Average ratio of the stack
+        avg_extr_frac = float((np.sum(extr_fracs))/(len(extr_fracs))) # Average fraction of crs inside extraction box
+        avg_outside_frac = float((np.sum(outside_fracs))/(len(outside_fracs))) # Average fraction of crs outside extraction box
+        avg_ratio = float(avg_extr_frac/avg_outside_frac) # Average ratio of the stack
 
         results ={'rootname':obs_id, 'extr_fracs':extr_fracs, 'outside_fracs':outside_fracs, 'ratios':ratios, 'avg_extr_frac':avg_extr_frac, 'avg_outside_frac':avg_outside_frac, 'avg_ratio':avg_ratio}
 
