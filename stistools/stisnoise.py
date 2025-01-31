@@ -107,7 +107,7 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
 def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
               boxcar=0, wipe=None, window=None):
 
-    """ Computes an FFT on STIS CCD frames to evaluate fixed pattern noise.
+    """Computes an FFT on STIS CCD frames to evaluate fixed pattern noise.
 
     Fixed pattern noise is most obvious in a FFT of bias
     frames.  Optional filtering to correct the fixed pattern noise is
@@ -115,19 +115,19 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     can be saved as an output file.
 
     Parameters
-    -----------
-    infile : string
+    ----------
+    infile: str
         STIS FITS file
-    exten : int, optional
+    exten: int, optional [Default: 1]
         fits extension to be read
-    dc : int, optional
+    dc: int, optional [Default: 1]
         the power in the first freq bin is set to zero for better
         plotting of the power spectrum.
-    verbose : int, optional [Default: 1]
+    verbose: int, optional [Default: 1]
         set to 0 if you do not want brief information about each image.
-    boxcar : int
+    boxcar: int [default: 0]
         width of boxcar smoothing to be applied.
-    wipe : ndarray
+    wipe: ndarray or None
         a 3-element array, specifying how to modify the data in
         frequency space. If set, the image is converted to a 1-D time
         series, fourier transformed to frequency space, modified, inverse
@@ -135,7 +135,7 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
         The first and second elements specify the range in frequencies to
         be scaled (in hz), and the third element specifies the scaling
         factor (should be 0-1).
-    window : ndarray
+    window: ndarray or None
         a 3 element array, specifying how to modify the data in
         frequency space.  The first element is the center of the window
         (in hz). The second element is the width of the window (in hz).
@@ -143,19 +143,19 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
         scale (in hz) of the tapering width.  Specifically, a square
         bandstop is convolved with a gaussian having the FWHM given by the
         third parameter.
-    outfile : string,optional
+    outfile: str or None, optional
         name of filtered image file
 
     Returns
     -------
-    noise_terms : tuple of arrays
+    noise_terms: tuple of arrays
         A tuple containing the arrays; namely, the arrays::
 
             freq  = frequency in power spectrum (hz)
             magn  = magnitude in power spectrum
 
     Notes
-    ---------
+    -----
     Authors:
       - Original algorithm: Thomas M. Brown (STScI)
       - Python version: Paul Barrett (STScI)

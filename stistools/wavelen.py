@@ -15,18 +15,18 @@ def compute_wavelengths(shape, phdr, hdr, helcorr):
 
     Parameters
     ----------
-    shape : tuple of two ints
+    shape: tuple of two ints
         the number of rows and columns in the output image
-    phdr :  fits Header object
+    phdr:  FITS Header object
         primary header
-    hdr : fits Header object
+    hdr: FITS Header object
         extension header
-    helcorr : string
+    helcorr: str
         "PERFORM" if heliocentric correction should be done
 
     Returns
     -------
-    wavelengths : ndarray of float64
+    wavelengths: ndarray of float64
         an array of wavelengths, of the same shape (nrows, ncols) as
         the output image
 
@@ -140,17 +140,17 @@ def get_delta_offset1(apdestab, aperture, ref_aper):
 
     Parameters
     ----------
-    apdestab : string
+    apdestab: str
         name of the aperture description table
-    aperture : string
+    aperture: str
         aperture (slit) name
-    ref_aper : string
+    ref_aper: str
         name of the reference aperture, the one that was
         used to calculate the dispersion relation
 
     Returns
     -------
-    angle : float
+    angle: float
         incidence angle offset in degrees
 
     """
@@ -179,21 +179,21 @@ def adjust_disp(ncoeff, coeff, delta_offset1, shifta1, inang_info,
 
     Parameters
     ----------
-    ncoeff : int
+    ncoeff: int
         number of dispersion coefficients
-    coeff : ndarray of float64
+    coeff: ndarray of float64
         array of dispersion coefficients, modified in-place
-    delta_offset1 : float
+    delta_offset1: float
         incidence angle offset in degrees
-    shifta1 : float
+    shifta1: float
         MSM offset (ref. pixels) in the dispersion direction
-    delta_tan : float
+    delta_tan: float
         difference in tangents of slit angle and ref angle
-    delta_row : float
+    delta_row: float
         difference between current row number and CRPIX2
-    binaxis1 : float
+    binaxis1: float
         binning factor in dispersion direction
-    inang_info : rec_array
+    inang_info: rec_array
         rows from the incidence-angle table
 
     """

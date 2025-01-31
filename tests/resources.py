@@ -16,11 +16,13 @@ from astropy.io.fits import FITSDiff
 from astropy.table import Table
 from astropy.utils.data import conf
 
+os.environ['TEST_BIGDATA'] = os.environ.get('TEST_BIGDATA', 'https://bytesalad.stsci.edu/artifactory/datb-stistools')
+from ci_watson.artifactory_helpers import get_bigdata
+from ci_watson.hst_helpers import download_crds
 
-from .helpers.io import get_bigdata, upload_results
+from .helpers.io import upload_results
 
-__all__ = ['download_crds',
-           'ref_from_image', 'raw_from_asn', 'BaseACS',
+__all__ = ['ref_from_image', 'raw_from_asn', 'BaseACS',
            'BaseSTIS', 'BaseWFC3IR', 'BaseWFC3UVIS', 'BaseWFPC2']
 
 
@@ -34,22 +36,6 @@ def _download_file(url, filename, filemode='wb', timeout=None):
         urllib.request.urlretrieve(url, filename=filename)
     else:  # pragma: no cover
         raise ValueError('Unsupported protocol for {}'.format(url))
-
-
-def download_crds(refdir, refname, timeout=None):
-    """Download a CRDS file from HTTP or FTP to current directory."""
-    # CRDS file for given name never changes, so no need to re-download.
-    if os.path.exists(refname):
-        return
-
-    try:
-        url = 'http://ssb.stsci.edu/cdbs/{}/{}'.format(refdir, refname)
-        local_file = os.path.abspath(refname)
-        print("Downloading CRDS file: {}".format(local_file))
-        _download_file(url, refname, timeout=timeout)
-    except Exception:  # Fall back to FTP
-        url = 'ftp://ftp.stsci.edu/cdbs/{}/{}'.format(refdir, refname)
-        _download_file(url, refname, timeout=timeout)
 
 
 def _get_reffile(hdr, key):
@@ -195,12 +181,8 @@ class BaseCal(object):
                 continue
             if refsep not in ref_file:  # Local file
                 refname = self.get_data('customRef', ref_file)
-            else:  # Download from FTP, if applicable
-                s = ref_file.split(refsep)
-                refdir = s[0]
-                refname = s[1]
-                if self.use_ftp_crds:
-                    download_crds(refdir, refname, timeout=self.timeout)
+            else:  # Download with CRDS package, if applicable
+                download_crds(ref_file)  #refdir, refname, timeout=self.timeout)
         return filename
 
     def compare_outputs(self, outputs, raise_error=True, delete_history=False):
