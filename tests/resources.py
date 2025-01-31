@@ -3,7 +3,6 @@ from six.moves import urllib
 import getpass
 import os
 import sys
-import math
 from io import StringIO
 import shutil
 import datetime
