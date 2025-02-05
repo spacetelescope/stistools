@@ -142,11 +142,9 @@ def read_spectrum(x1d_input, truncate_edge_left=None, truncate_edge_right=None):
     if truncate_edge_right is not None:
         for sk in spectrum:
             sk['data_quality'][-truncate_edge_right:] = 4096
-    elif truncate_edge_left is not None:
+    if truncate_edge_left is not None:
         for sk in spectrum:
             sk['data_quality'][:truncate_edge_left] = 4096
-    else:
-        pass
 
     return spectrum
 
@@ -600,7 +598,7 @@ def merge_overlap(overlap_sections,
     # We interpolate the lower-SNR spectra to the wavelength bins of the higher
     # SNR spectrum.
     max_sens_idx = np.where(avg_sensitivity == np.nanmax(avg_sensitivity))[0][0]
-    overlap_ref = overlap_sections.pop(max_sens_idx)
+    overlap_ref = overlap_sections.pop(np.copy(max_sens_idx))
 
     f_interp = []
     err_interp = []
@@ -847,7 +845,7 @@ def splice(x1d_input, update_fits=False, output_file=None, weight='sensitivity',
 
     # Merge the overlapping spectral sections
     merged_pairs = [
-        merge_overlap(overlap_pair_sections[k], acceptable_dq_flags)
+        merge_overlap(overlap_pair_sections[k], acceptable_dq_flags, weight)
         for k in range(len(overlap_pair_sections))
     ]
 
