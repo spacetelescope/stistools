@@ -1,13 +1,18 @@
 #!/usr/bin/env python
+import os
+import stat
+import warnings
+from collections import Counter
 import numpy as np
 from astropy.io import fits
-import os
-import os.path
-import stat
-from scipy import signal
+from astropy.modeling import models, fitting
 from scipy import ndimage as ni
+try:
+    from scipy.signal import boxcar
+except ImportError:
+    from scipy.signal.windows import boxcar
 
-from stsci.tools import gfit, linefit
+from stsci.tools import linefit
 from stsci.tools import fileutil as fu
 
 __doc__ = """
@@ -39,9 +44,9 @@ Simple example of running mktrace on a STIS file named 'file.fits':
 - Python version: Nadia Dencheva
 
 """
+__version__ = '3.0.0'
+__vdate__ = '2025-01-28'
 
-__version__ = '2.0.0'
-__vdate__ = '2017-03-20'
 
 
 def mktrace(fname, tracecen=0.0, weights=None):
@@ -99,7 +104,7 @@ def mktrace(fname, tracecen=0.0, weights=None):
     w = np.zeros(1024)
     w[ind] = 1
 
-    X = np.arange(1024).astype(np.float64)
+    X = np.arange(1024, dtype=float)
     sparams = linefit.linefit(X, trace1024, weights=w)
     rparams = linefit.linefit(X, interp_trace, weights=w)
     sciline = sparams[0] + sparams[1] * X
@@ -119,10 +124,9 @@ def mktrace(fname, tracecen=0.0, weights=None):
     tr.writeTrace(fname, sciline, refline, interp_trace,
                   trace1024, tr_ind, a2disp_ind)
 
-    #print 'time', time.time()-start
     #the minus sign is for consistency withthe way x2d reports the rotation
-    print("Traces were rotated by {:.10f} degrees \n".format((-(sparams[1]-rparams[1])*180 / np.pi)))
-    print('trace is centered on row {:.10f}'.format(tr._a2center))
+    print("Traces were rotated by {:.10f} degrees \n".format(-(sparams[1] - rparams[1]) * 180 / np.pi))
+    print('Trace is centered on row {:.10f}'.format(tr._a2center))
     return tr
 
 
@@ -140,10 +144,10 @@ def interp(y, n):
     """
     m = float(len(y))
     x = np.arange(m)
-    i = np.arange(n,dtype=np.float64)
-    xx = i * (m-1)/n
-    xind = np.searchsorted(x, xx)-1
-    yy = y[xind]+(xx-x[xind])*(y[xind+1]-y[xind])/(x[xind+1]-x[xind])
+    i = np.arange(n, dtype=float)
+    xx = i * (m - 1) / n
+    xind = np.searchsorted(x, xx) - 1
+    yy = y[xind] + (xx - x[xind]) * (y[xind + 1] - y[xind]) / (x[xind + 1] - x[xind])
 
     return yy
 
@@ -266,8 +270,7 @@ class Trace:
 
         return tr
 
-    def writeTrace(self, fname, sciline, refline, interp_trace, trace1024,
-                   tr_ind, a2disp_ind):
+    def writeTrace(self, fname, sciline, refline, interp_trace, trace1024, tr_ind, a2disp_ind):
 
         """
         The 'writeTrace' method performs the following steps:
@@ -357,13 +360,13 @@ class Trace:
 
         sizex, sizey = data.shape
         subim_size = 40
-        y1 = int(_tracecen - subim_size/2.)
-        y2 = int(_tracecen + subim_size/2.)
+        y1 = int(_tracecen - subim_size / 2.)
+        y2 = int(_tracecen + subim_size / 2.)
         if y1 < 0:
             y1 = 0
-        if y2 > (sizex -1):
+        if y2 > (sizex - 1):
             y2 = sizex - 1
-        specimage = data[y1:y2+1, :]
+        specimage = data[y1:y2 + 1, :]
         smoytrace = self.gFitTrace(specimage, y1, y2)
         yshift = int(np.median(smoytrace) - 20)
         y1 = y1 + yshift
@@ -372,9 +375,9 @@ class Trace:
             y1 = 0
         if y2 > sizex:
             y2 = sizex
-        specimage = data[y1:y2+1, :]
+        specimage = data[y1:y2 + 1, :]
         smoytrace = self.gFitTrace(specimage, y1, y2)
-        med11smoytrace = ni.median_filter(smoytrace, 11)
+        med11smoytrace = ni.median_filter(smoytrace, 11, output=float)
         med11smoytrace[0] = med11smoytrace[2]
         diffmed = abs(smoytrace - med11smoytrace)
         tolerence = 3 * np.median(abs(smoytrace[wind] - med11smoytrace[wind]))
@@ -387,7 +390,7 @@ class Trace:
         # Convolve with a gaussian to smooth it.
         fwhm = 10.
         sigma = fwhm / 2.355
-        gaussconvxsmoytrace = ni.gaussian_filter1d(smoytrace, sigma)
+        gaussconvxsmoytrace = ni.gaussian_filter1d(smoytrace, sigma, output=float)
 
         # Compute the trace center as the median of the pixels
         # with nonzero weights.
@@ -406,14 +409,27 @@ class Trace:
         """
 
         sizex, sizey = specimage.shape
-        smoytrace = np.zeros(sizey).astype(np.float64)
-        boxcar_kernel = signal.boxcar(3) / 3.0
+        smoytrace = np.zeros(sizey, dtype=float)
+        boxcar_kernel = boxcar(3) / 3.0
+        fitter = fitting.LevMarLSQFitter()
 
-        for c in np.arange(sizey):
+        fit_info = []
+        for c in range(sizey):
             col = specimage[:, c]
             col = col - np.median(col)
-            smcol = ni.convolve(col, boxcar_kernel).astype(np.float64)
-            fit = gfit.gfit1d(smcol, quiet=1, maxiter=15)
-            smoytrace[c] = fit.params[1]
+            smcol = ni.convolve(col, boxcar_kernel, output=float)
+            x = np.arange(len(smcol), dtype=float)
+            gauss = models.Gaussian1D(amplitude=smcol.max(), mean=x[smcol.argmax()])
+            with warnings.catch_warnings(record=True) as w:
+                fit = fitter(gauss, x, smcol, maxiter=150)
+            if fitter.fit_info['ierr'] > 4:
+                fit_info.append(fitter.fit_info['message'])
+            smoytrace[c] = fit.mean.value
+
+        if len(fit_info) > 0:
+            # Aggregate all fit_info['message'] into a single warning:
+            fit_info = sorted(Counter(fit_info).most_common(1024), key=lambda x: -x[1])
+            fit_info = [f'{y[1]} x "{y[0]}"' for y in fit_info]
+            warnings.warn('Astropy fitting caused some warnings. Associated fit_info:\n' + '\n'.join(fit_info))
 
         return np.array(smoytrace)
