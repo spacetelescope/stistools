@@ -50,6 +50,7 @@ for getting started.
    mktrace
    ocrreject
    ocrreject_exam
+   poisson_err
    radialvel
    r_util
    sshift

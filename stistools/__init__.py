@@ -17,6 +17,7 @@ from . import tastis
 from . import ctestis
 from . import defringe
 from . import ocrreject_exam
+from . import poisson_err
 
 # These lines allow TEAL to print out the names of TEAL-enabled tasks
 # upon importing this package.
