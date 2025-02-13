@@ -33,15 +33,15 @@ def make_mock_crr(filename):
     '''
     crr_values = {
         'CRSPLIT':  2,
-        'MEANEXP' : 4.4,
+        'MEANEXP':  4.4,
         'SCALENSE': 0.,
         'INITGUES': 'minimum',
-        'SKYSUB'  : 'mode',
+        'SKYSUB':   'mode',
         'CRSIGMAS': '5.0',
         'CRRADIUS': 1.5,
         'CRTHRESH': 0.8,
         'BADINPDQ': 0,
-        'CRMASK'  : True, }
+        'CRMASK':   True, }
 
     new_crr = create_new_crr(crr_values)
     new_crr.write(filename)
@@ -70,14 +70,6 @@ class Test_crrej_from_raw:
     def teardown_method(self, method):
         self.directory.cleanup()
         os.chdir(self.cwd)
-
-    def test_user_crrejtab(self):
-        crr = 'local_crr.fits'
-        make_mock_crr(crr)
-        with fits.open(crr, 'update') as f:
-            f[1].data['CRSIGMAS'][0] = '3.5'
-        assert crrej_from_raw(self.filename, crrejtab=crr) == 0
-        # Do something here to check selected CRSIGMAS value.
 
     def test_user_crrejtab(self):
         '''Checks that the user-specified CRREJTAB overrides the one found in the FITS
@@ -109,7 +101,7 @@ class Test_crrej_from_raw:
     def test_scalense(self):
         crrej_from_raw(self.filename, scalense='2.1')
         crrej_from_raw(self.filename, scalense=2.2)
-        
+
     @pytest.mark.parametrize('initgues', ['minimum', 'median'])
     def test_initgues(self, initgues):
         assert crrej_from_raw(self.filename, initgues=initgues) == 0
@@ -131,12 +123,13 @@ class Test_crrej_from_raw:
         crrej_from_raw(self.filename, crsigmas=crsigmas)
 
     def test_crradius(self):
-        '''Checks a user-specified `crradius` value and checks that the input FITS file
-        header is returned to its original form.
+        '''Checks a user-specified `crradius` value and checks that the
+        input FITS file header is returned to its original form.
         '''
         assert crrej_from_raw(self.filename, crradius=2., verbose=True) == 0
         # Check header keywords in input file:
-        assert fits.getval(self.filename, ext=0, keyword='CRREJTAB') == f"${ENVIRON_VAR}/{CRDS_REF_FILE}"
+        assert fits.getval(self.filename, ext=0, keyword='CRREJTAB') == \
+            f"${ENVIRON_VAR}/{CRDS_REF_FILE}"
         with pytest.raises(KeyError):
             fits.getval(self.filename, ext=0, keyword='PREV_CRR')
         # Check for erroneous presense of HISTORY line in the RAW file:
@@ -171,4 +164,3 @@ class Test_versions:
             crrej_from_raw(None, print_revision=True)
         assert pytest_wrapped_e.type == SystemExit
         assert pytest_wrapped_e.value.code == 0
-

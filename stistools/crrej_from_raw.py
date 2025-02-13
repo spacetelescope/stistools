@@ -23,9 +23,9 @@ ENV_VAR = 'TEMPCRR'
 
 
 def crrej_from_raw(input, wavecal='', outroot='', savetmp=False, verbose=False,
-    timestamps=False, trailer='', print_version=False, print_revision=False,
-    crrejtab='', scalense=None, initgues=None, skysub=None, crsigmas=None,
-    crradius=None, crthresh=None, badinpdq=None, crmask=None):
+                   timestamps=False, trailer='', print_version=False, print_revision=False,
+                   crrejtab='', scalense=None, initgues=None, skysub=None, crsigmas=None,
+                   crradius=None, crthresh=None, badinpdq=None, crmask=None):
     '''Calibrate STIS data (calstis) with modified cosmic ray rejection parameters.
 
     A temporary CRREJTAB is created, with values derived from user-supplied inputs and
@@ -35,7 +35,7 @@ def crrej_from_raw(input, wavecal='', outroot='', savetmp=False, verbose=False,
     This routine should be used instead of `stistools.ocrreject.ocrreject()` when the
     order of operation is of concern.
 
-    **Note:**  
+    **Note:**
     This routine does not replace `ocrreject`'s functionality for combining multiple
     CCD datasets together into one CRJ file (i.e. the "all" parameter).
 
@@ -84,21 +84,21 @@ def crrej_from_raw(input, wavecal='', outroot='', savetmp=False, verbose=False,
         default CR-rejection parameters below.
 
     scalense: str, default=''
-        Multiplicative scale factor applied to noise.  
+        Multiplicative scale factor applied to noise.
         If specified, this overrides SCALENSE in the CRREJTAB.
 
     initgues: str, default=''
-        Initial guess method.  
+        Initial guess method.
         If specified, this overrides INITGUES in the CRREJTAB.
         The allowed values are 'minimum' and 'median' and ''.
 
     skysub: str, default=''
-        Sky value subtracted.  
+        Sky value subtracted.
         If specified, this overrides SKYSUB in the CRREJTAB.
         The allowed values are 'none', 'mode' and ''.
 
     crsigmas: str, default=''
-        Statistical rejection criteria.  
+        Statistical rejection criteria.
         If specified, this overrides CRSIGMAS in the CRREJTAB.  The
         value should be a comma-separated string of one or more
         integer or float values.  For each such value, calstis will
@@ -138,7 +138,7 @@ def crrej_from_raw(input, wavecal='', outroot='', savetmp=False, verbose=False,
         1 is returned if cs0.e (the calstis host executable) returned a
         non-zero status.  If verbose is True, the value returned by cs0.e
         will be printed.
-        2 is returned if the specified input file or files were not found.    
+        2 is returned if the specified input file or files were not found.
     '''
     global VERBOSE
     VERBOSE = verbose
@@ -171,25 +171,27 @@ def crrej_from_raw(input, wavecal='', outroot='', savetmp=False, verbose=False,
 
     # Determine either user-specified values or defaults from CRR file:
     # Checking for Number type allows user to specify 0 or 0.0.
-    crr_par['scalense'] = str(scalense if isinstance(scalense, Number) \
-                                       else (scalense or crr['SCALENSE'])).strip()
+    crr_par['scalense'] = str(scalense if isinstance(scalense, Number)
+                              else (scalense or crr['SCALENSE'])).strip()
     crr_par['initgues'] = str(initgues or crr['INITGUES']).lower().strip()
     crr_par['skysub'] = str(skysub or crr['SKYSUB']).lower().strip()
-    crr_par['crsigmas'] = str(float(crsigmas) if isinstance(crsigmas, Number) \
-                                              else (crsigmas or crr['CRSIGMAS'])).strip()
-    crr_par['crradius'] = float(crradius if isinstance(crradius, Number) \
-                                         else (crradius or crr['CRRADIUS']))
-    crr_par['crthresh'] = float(crthresh if isinstance(crthresh, Number) \
-                                         else (crthresh or crr['CRTHRESH']))
-    crr_par['badinpdq'] = int(badinpdq if isinstance(badinpdq, Number) \
-                                       else (badinpdq or crr['BADINPDQ']))
+    crr_par['crsigmas'] = str(float(crsigmas) if isinstance(crsigmas, Number)
+                              else (crsigmas or crr['CRSIGMAS'])).strip()
+    crr_par['crradius'] = float(crradius if isinstance(crradius, Number)
+                                else (crradius or crr['CRRADIUS']))
+    crr_par['crthresh'] = float(crthresh if isinstance(crthresh, Number)
+                                else (crthresh or crr['CRTHRESH']))
+    crr_par['badinpdq'] = int(badinpdq if isinstance(badinpdq, Number)
+                              else (badinpdq or crr['BADINPDQ']))
     crr_par['crmask'] = bool(crmask if (crmask is not None) else crr['CRMASK'])
 
     # Check some input constraints:
     if crr_par['initgues'] not in {'minimum', 'median'}:
-        raise ValueError(f'INITGUES="{crr_par["initgues"]}" not a permitted value of "minimum" or "median".')
+        raise ValueError(f'INITGUES="{crr_par["initgues"]}" not a permitted '
+                         'value of "minimum" or "median".')
     if crr_par['skysub'] not in {'mode', 'none'}:
-        raise ValueError(f'SKYSUB="{crr_par["skysub"]}" not a permitted value of "mode" or "none".')
+        raise ValueError(f'SKYSUB="{crr_par["skysub"]}" not a permitted '
+                         'value of "mode" or "none".')
 
     # Convert dict to Astropy Table:
     new_crr = create_new_crr(crr_par)
@@ -205,7 +207,8 @@ def crrej_from_raw(input, wavecal='', outroot='', savetmp=False, verbose=False,
         os.environ[ENV_VAR] = directory  # + os.path.sep
         with fits.open(input, 'update') as f:
             if not f[0].header.get('CRREJTAB', 'N/A').startswith('$' + ENV_VAR):
-                f[0].header.set('PREV_CRR', after='CRREJTAB', value=f[0].header['CRREJTAB'],
+                f[0].header.set('PREV_CRR', after='CRREJTAB',
+                                value=f[0].header['CRREJTAB'],
                                 comment='previous CRREJTAB')
             f[0].header['CRREJTAB'] = f'${ENV_VAR}/{new_crr_name}'
 
@@ -223,7 +226,8 @@ def crrej_from_raw(input, wavecal='', outroot='', savetmp=False, verbose=False,
                 # Revert HISTORY in RAW file:
                 try:
                     # Find last instance of HIST_LINE in the HISTORY:
-                    r = [i for i, x in enumerate(f[0].header['HISTORY']) if x.strip() == HIST_LINE][-1]
+                    r = [i for i, x in enumerate(f[0].header['HISTORY'])
+                         if x.strip() == HIST_LINE][-1]
                     del f[0].header['HISTORY', r]
                 except (IndexError, KeyError):
                     pass
@@ -274,7 +278,7 @@ def determine_crrejtab(input, crrejtab=None):
         raise ValueError('CRREJTAB not specified.')
     if not os.access(crrejtab, os.F_OK):
         raise FileNotFoundError(f'CRREJTAB ({crrejtab}) not found.')
-    with warnings.catch_warnings(record=True) as w:
+    with warnings.catch_warnings(record=True) as _:
         # Silence warnings related to malformed FITS keywords in the CRDS CRREJTAB.
         crr = Table.read(crrejtab, hdu=1)
 
@@ -294,10 +298,10 @@ def create_new_crr(crr_par):
     Astropy Table of CRREJECTAB contents
     '''
     # Convert to an Astropy table:
-    type_map = {'CRSPLIT':'i2', 'MEANEXP':'f', 'SCALENSE':'a8', 'INITGUES':'a8',
-                'SKYSUB':'a4', 'CRSIGMAS':'a20', 'CRRADIUS':'f', 'CRTHRESH':'f',
-                'BADINPDQ':'l', 'CRMASK':bool,}
-    
+    type_map = {'CRSPLIT': 'i2', 'MEANEXP': 'f', 'SCALENSE': 'a8', 'INITGUES': 'a8',
+                'SKYSUB': 'a4', 'CRSIGMAS': 'a20', 'CRRADIUS': 'f', 'CRTHRESH': 'f',
+                'BADINPDQ': 'l', 'CRMASK': bool, }
+
     if {x.upper() for x in crr_par} != {y.upper() for y in type_map}:
         raise ValueError('New CRREJTAB not specified correctly.')
 
