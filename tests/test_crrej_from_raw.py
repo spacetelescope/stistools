@@ -1,5 +1,6 @@
 import pytest
 import os
+import shutil
 from tempfile import TemporaryDirectory
 from astropy.io import fits
 import warnings
@@ -150,6 +151,14 @@ class Test_crrej_from_raw:
     @pytest.mark.parametrize('crmask', [True, False, None, 1, 0])
     def test_crmask(self, crmask):
         assert crrej_from_raw(self.filename, crmask=crmask) == 0
+
+    def test_input_file_unchanged(self):
+        original_file = 'orig_test.fits'
+        shutil.copy(self.filename, original_file)
+        crrej_from_raw(self.filename, crsigmas='3')
+        diff = fits.FITSDiff(original_file, self.filename).report().split('\n')
+        assert [x for x in diff if x.strip()][-1] == 'No differences found.', \
+            'Input file modified'
 
 
 class Test_versions:
