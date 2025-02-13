@@ -20,6 +20,7 @@ dependencies = [
     "stsci.tools",
     "pysiaf",
     "astroquery",
+    "matplotlib",
 ]
 dynamic = [
     "version",
@@ -36,16 +37,19 @@ content-type = "text/plain"
 [project.optional-dependencies]
 test = [
     "pytest",
+    "ci-watson>=0.8.0",
 ]
 docs = [
     "ipython",
     "sphinx",
     "stsci_rtd_theme",
     "sphinx_automodapi",
+    "numpydoc",
 ]
 
 [project.scripts]
 add_stis_s_region = "stistools.add_stis_s_region:call_main"
+ocrreject_exam = "stistools.ocrreject_exam:call_ocrreject_exam"
 
 [build-system]
 requires = [

@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 import numpy as np
 from astropy.io import fits
-import astropy.stats
 from astropy import units as u
 from astropy.time import Time
 from datetime import datetime as dt
@@ -52,8 +51,8 @@ Examples
 """
 
 __taskname__ = "inttag"
-__version__ = "1.0"
-__vdate__ = "13-November-2018"
+__version__ = "1.1"
+__vdate__ = "27-March-2024"
 __author__ = "Python: Doug Branton, C code: R. Katsanis, N. Zarate, Phil Hodge"
 
 
@@ -178,14 +177,9 @@ def inttag(tagfile, output, starttime=None, increment=None,
         # Convert events table to accum image
         accum = events_to_accum(good_events, siz_axx, siz_axy, highres)
 
-        # Calculate errors from accum image
-        # Note: C version takes the square root of the counts, inttag.py uses a more robust confidence interval
-        conf_int = astropy.stats.poisson_conf_interval(accum, interval='sherpagehrels', sigma=1)
-        err = conf_int[1] - accum  # error is the difference between upper confidence boundary and the data
-
         # Copy EVENTS extension header to SCI, ERR, DQ extensions
         sci_hdu = fits.ImageHDU(data=accum, header=tag_sci_hdr.copy(), name='SCI')
-        err_hdu = fits.ImageHDU(data=err, header=tag_sci_hdr.copy(), name='ERR')
+        err_hdu = fits.ImageHDU(header=tag_sci_hdr.copy(), name='ERR')
         dq_hdu = fits.ImageHDU(header=tag_sci_hdr.copy(), name='DQ')
 
         # Generate datetime for 'DATE' header keyword
@@ -244,8 +238,8 @@ def inttag(tagfile, output, starttime=None, increment=None,
                 hdu.header['CRPIX1'] = (hdu.header['CRPIX1'] + 0.5) / 2.
                 hdu.header['CRPIX2'] = (hdu.header['CRPIX2'] + 0.5) / 2.
 
-            # Populate DQ header with dq specific keywords
-            if idx == 2:
+            # Populate ERR & DQ header with ext-specific keywords
+            if idx in {1, 2}:
                 hdu.header['NPIX1'] = siz_axx
                 hdu.header['NPIX2'] = siz_axy
                 hdu.header['PIXVALUE'] = 0  # Fixes issue with calstis not running on raw output files

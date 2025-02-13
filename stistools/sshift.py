@@ -14,7 +14,6 @@ __version__ = '1.7 (2010-Apr-27)'
 
 
 def shiftimage(infile, outfile, shift=0):
-
     """
     Shift each image extension of an input file by N rows and write the
     new image extension to the output file.
@@ -44,38 +43,37 @@ def shiftimage(infile, outfile, shift=0):
 
 def sshift(input, output=None, shifts=None, platescale=None,
            tolerance=None):
+    """Align spectra from different images of an imset.
 
-    """ Align spectra from different images of an imset.
+    Parameters
+    ----------
+    input: list
+        A list of input filenames.  These must be STIS flat-
+        fielded (_flt) image FITS files.  This argument will accept a
+        single filename or a list of filenames.
+    shifts: list of int or None, optional
+        A list of integers indicating the number of rows to shift
+        each image of each file in the cross-dispersion (Y-) direction.
+    platescale: float or None, optional
+        The size of a pixel in arcseconds.  Used to convert
+        the value of the POSTARG2 keyword to pixels.
+    tolerance: float or None, optional
+        The allowed difference between calculated shifts and
+        integer pixel shifts (fraction of pixel).
 
-Parameters
-----------
-input : list
-    A list of input filenames.  These must be STIS flat-
-    fielded (_flt) image FITS files.  This argument will accept a
-    single filename or a list of filenames.
-shifts : list, optional
-    A list of integers indicating the number of rows to shift
-    each image of each file in the cross-dispersion (Y-) direction.
-platescale : float, optional
-    The size of a pixel in arcseconds.  Used to convert
-    the value of the POSTARG2 keyword to pixels.
-tolerance : float, optional
-    The allowed difference between calculated shifts and
-    integer pixel shifts (fraction of pixel).
+    Returns
+    -------
+    output: list, optional
+        A list of output filenames. The number of output
+        filenames must match the number of input filenames.  If no output
+        is given, then the _flt substring of the input file is replace by
+        the _sfl substring to create an output file.  This option will
+        accept a single filename or a list of filenames.
 
-Returns
--------
-output : list, optional
-    A list of output filenames. The number of output
-    filenames must match the number of input filenames.  If no output
-    is given, then the _flt substring of the input file is replace by
-    the _sfl substring to create an output file.  This option will
-    accept a single filename or a list of filenames.
-
-Notes
-------
-Author:
-  - Paul Barrett (STScI)
+    Notes
+    -----
+    Author:
+      - Paul Barrett (STScI)
 
     """
 

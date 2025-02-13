@@ -4,7 +4,7 @@ import requests
 from astropy.io import fits
 
 __all__ = ['cmp_fitshdr', 'cmp_gen_hdrkeywords',
-           'word_precision_check', 'abspath',
+           'word_precision_check',
            'download', 'check_url']
 
 RE_URL = re.compile('\w+://\S+')
@@ -150,11 +150,6 @@ def test_word_precision_check():
     assert word_precision_check(s1, s2, length=1)
     assert not word_precision_check(s2, s3)
     assert word_precision_check(s2, s4, length=2)
-
-
-def abspath(filepath):
-    """Get the absolute file path"""
-    return os.path.abspath(os.path.expanduser(os.path.expandvars(filepath)))
 
 
 def download(url, dest):
