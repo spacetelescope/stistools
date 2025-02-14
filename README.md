@@ -1,6 +1,6 @@
 # stistools
 
-[![Jenkins CI Status](https://ssbjenkins.stsci.edu/job/STScI/job/stistools/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/stistools/job/master/)
+[![Documentation Status](https://readthedocs.org/projects/stistools/badge/?version=latest)](https://stistools.readthedocs.io/en/latest/?badge=latest)
 
 Tools for HST/STIS.
 
