@@ -218,7 +218,7 @@ def sshift(input, output=None, shifts=None, platescale=None,
         #  Use default output file name.
         if outfile is None:
             import re
-            outfile = re.sub('flt\.', 'sfl.', infile, count=1)
+            outfile = re.sub(r'flt\.', 'sfl.', infile, count=1)
 
         if binaxis2 == 1:
             print('{:>18}: {:3}'.format(infile, npixel))
