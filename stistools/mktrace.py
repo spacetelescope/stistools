@@ -7,10 +7,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.modeling import models, fitting
 from scipy import ndimage as ni
-try:
-    from scipy.signal import boxcar
-except ImportError:
-    from scipy.signal.windows import boxcar
+from scipy.signal.windows import boxcar, hann
 
 from stsci.tools import linefit
 from stsci.tools import fileutil as fu
@@ -413,6 +410,10 @@ class Trace:
         boxcar_kernel = boxcar(3) / 3.0
         fitter = fitting.LevMarLSQFitter()
 
+        # Bias 1D Gaussian fit toward the center of the range:
+        window = hann(specimage.shape[0], sym=True)
+        window /= window.sum()
+
         fit_info = []
         for c in range(sizey):
             col = specimage[:, c]
@@ -421,7 +422,7 @@ class Trace:
             x = np.arange(len(smcol), dtype=float)
             gauss = models.Gaussian1D(amplitude=smcol.max(), mean=x[smcol.argmax()])
             with warnings.catch_warnings(record=True) as w:
-                fit = fitter(gauss, x, smcol, maxiter=150)
+                fit = fitter(gauss, x, smcol, weights=window, maxiter=250)
             if fitter.fit_info['ierr'] > 4:
                 fit_info.append(fitter.fit_info['message'])
             smoytrace[c] = fit.mean.value
@@ -430,6 +431,7 @@ class Trace:
             # Aggregate all fit_info['message'] into a single warning:
             fit_info = sorted(Counter(fit_info).most_common(1024), key=lambda x: -x[1])
             fit_info = [f'{y[1]} x "{y[0]}"' for y in fit_info]
-            warnings.warn('Astropy fitting caused some warnings. Associated fit_info:\n' + '\n'.join(fit_info))
+            warnings.warn('Astropy fitting caused some warnings. Associated fit_info:\n' + '\n'.join(fit_info),
+                stacklevel=2)
 
         return np.array(smoytrace)
