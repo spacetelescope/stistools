@@ -6,6 +6,7 @@ from collections import Counter
 import numpy as np
 from astropy.io import fits
 from astropy.modeling import models, fitting
+from astropy.stats import sigma_clip
 from scipy import ndimage as ni
 from scipy.signal.windows import boxcar, hann
 
@@ -410,8 +411,22 @@ class Trace:
         boxcar_kernel = boxcar(3) / 3.0
         fitter = fitting.LevMarLSQFitter()
 
+        linear_outlier_fitter = fitting.FittingWithOutlierRemoval(
+            fitting.LinearLSQFitter(),
+            sigma_clip,
+            sigma=3.,
+            niter=5)
+
+        # Some initial conditions common across all columns:
+        amplitude_guess = float(np.nanmedian(specimage.max(axis=0)))
+        mean_guess, _ = linear_outlier_fitter(
+            models.Linear1D(),
+            np.arange(specimage.shape[1], dtype=float),
+            specimage.argmax(axis=0))
+        mean_guess_scalar = float(np.nanmedian(specimage.argmax(axis=0)))
+
         # Bias 1D Gaussian fit toward the center of the range:
-        window = hann(specimage.shape[0], sym=True)
+        window = hann(specimage.shape[0] + 2, sym=True)[1:-1]  # Avoid zeros on edges
         window /= window.sum()
 
         fit_info = []
@@ -420,9 +435,14 @@ class Trace:
             col = col - np.median(col)
             smcol = ni.convolve(col, boxcar_kernel, output=float)
             x = np.arange(len(smcol), dtype=float)
-            gauss = models.Gaussian1D(amplitude=smcol.max(), mean=x[smcol.argmax()])
+            gauss = models.Gaussian1D(amplitude=amplitude_guess, mean=mean_guess(c), stddev=1.)
             with warnings.catch_warnings(record=True) as w:
-                fit = fitter(gauss, x, smcol, weights=window, maxiter=250)
+                try:
+                    fit = fitter(gauss, x, smcol, weights=window, maxiter=250)
+                except fitting.NonFiniteValueError:
+                    # Slightly different mean guess:
+                    gauss = models.Gaussian1D(amplitude=amplitude_guess, mean=mean_guess_scalar, stddev=1.)
+                    fit = fitter(gauss, x, smcol, weights=window, maxiter=250)
             if fitter.fit_info['ierr'] > 4:
                 fit_info.append(fitter.fit_info['message'])
             smoytrace[c] = fit.mean.value
