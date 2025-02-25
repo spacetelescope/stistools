@@ -36,7 +36,7 @@ class TestOcrreject(BaseSTIS):
 
         # Run ocrreject
         ocrreject(self.input_file_string, output="ocrreject_lev2_crj.fits",
-                  initgues="med", skysub="mode")
+                  initgues="med", skysub="mode", verbose=True)
 
         # Compare results
         outputs = [("ocrreject_lev2_crj.fits", "ocrreject_lev2_crj_ref.fits")]
