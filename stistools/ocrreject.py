@@ -318,15 +318,15 @@ def ocrreject(input, output,
                 arglist.append("-t")
             arglist.extend(optional_args)
 
-        if verbose:
-            print(f"Running ocrreject on {infile}")
-            print(f"  {arglist!s}")
-        status = subprocess.call(arglist, stdout=fd_trailer,
-                                 stderr=subprocess.STDOUT)
-        if status:
-            cumulative_status = 1
             if verbose:
-                print(f"Warning:  status = {status}")
+                print(f"Running ocrreject on {infile}")
+                print(f"  {arglist!s}")
+            status = subprocess.call(arglist, stdout=fd_trailer,
+                                     stderr=subprocess.STDOUT)
+            if status:
+                cumulative_status = 1
+                if verbose:
+                    print(f"Warning:  status = {status}")
 
     if f_trailer is not None:
         f_trailer.close()
