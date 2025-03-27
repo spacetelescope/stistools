@@ -19,7 +19,7 @@ except ImportError:
     HAS_PLOTLY = False
 
 __doc__ = """
-    Checks STIS CCD 1D spectroscpopic data for cosmic ray overflagging.
+    Checks STIS CCD 1D spectroscopic data for cosmic ray overflagging.
 
     Examples
     --------
@@ -66,7 +66,7 @@ __doc__ = """
        -d DATA_DIR  directory containing observation flt and sx1/x1d files. Defaults to current working directory.
        -p           option to create diagnostic plots
        -o PLOT_DIR  output directory to store diagnostic plots if plot=True. Defaults to data_dir.
-       -i           option to create zoomable html plots instead of static pngs. Defaults to False and requires plotly if True
+       -i           option to create zoomable html plots instead of static pngs. Defaults to False and requires Plotly if True
 
        v1.0; Written by Matt Dallas, Joleen Carlberg, Sean Lockwood, STScI, December 2024.
     """
@@ -256,7 +256,7 @@ def ocrreject_exam(obs_ids, data_dir='.', plot=False, plot_dir=None, interactive
             split_plot(cr_rejected_locs, box_lower, box_upper, len(cr_rejected_locs), exposure_times,
                 stacked_exposure_time, rootname, propid, plot_dir, interactive=interactive)
 
-        elif plot and interactive and HAS_PLOTLY: # case with interactive == True and plotly is installed
+        elif plot and interactive and HAS_PLOTLY: # case with interactive == True and Plotly is installed
             cr_rejected_stack = np.sum(cr_rejected_locs, axis=0) # stack all located crs on top of each other
             stacked_exposure_time = sum(exposure_times)
             stack_plot(cr_rejected_stack, box_lower, box_upper, len(cr_rejected_locs), stacked_exposure_time,
@@ -294,7 +294,7 @@ def _gen_color(cmap, n):
 
 
 def _discrete_colorscale(bvals, colors):
-    """Takes desired boundary values and colors from a matplotlib colorplot and makes a plotly colorscale.
+    """Takes desired boundary values and colors from a matplotlib colorplot and makes a Plotly colorscale.
 
     Based on discrete_colorscale() from https://community.plotly.com/t/colors-for-discrete-ranges-in-heatmaps/7780
     """
@@ -311,7 +311,7 @@ def _discrete_colorscale(bvals, colors):
 
 
 def _generate_intervals(n, divisions):
-    """Creates a list of strings that are the positions requred for centering an evenly spaced colorbar in plotly
+    """Creates a list of strings that are the positions requred for centering an evenly spaced colorbar in Plotly
     """
     result = np.linspace(0, n, divisions, endpoint=False)
     offset = (result[1] - result[0]) / 2
@@ -352,7 +352,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         Directory to save plot in
 
     interactive: bool 
-        If True, uses plotly to create an interactive zoomable html plot
+        If True, uses Plotly to create an interactive zoomable html plot
     """
     stack_shape = stack_image.shape
     max_stack_value = int(np.max(stack_image)) # This is usually equal to stack_shape,
@@ -407,7 +407,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
         plt.close()
 
     else:
-        # Create plotly image
+        # Create Plotly image
         fig = go.Figure()
 
         # calculate required x and y range, colorbar info, and figure titles
@@ -502,7 +502,7 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
         Directory to save plot in
 
     interactive: bool 
-        If True, uses plotly to create an interactive zoomable html plot
+        If True, uses Plotly to create an interactive zoomable html plot
     """
     custom_cmap = colors.ListedColormap([
         'k', 'tab:orange', 'tab:blue', 'tab:green', 'tab:red', 'tab:cyan', 'tab:olive',
@@ -563,7 +563,7 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
         plot_name = f"{obs_id}_splits.html"
         file_path = os.path.join(plot_dir, plot_name)
 
-        # Make plotly figure
+        # Make Plotly figure
         fig = make_subplots(row_value, 2, horizontal_spacing=0.15, subplot_titles=subplot_titles)
 
         # Set up discrete color values
@@ -632,7 +632,7 @@ def call_ocrreject_exam():
         help="output directory to store diagnostic plots if plot=True. Defaults to data_dir.")
     parser.add_argument('-i', dest='interactive', action='store_true',
         help="option to create zoomable html plots instead of static pngs. Defaults to False "
-             "and requires plotly if True")
+             "and requires Plotly if True")
 
     kwargs = vars(parser.parse_args())
     kwargs['verbose']=True
