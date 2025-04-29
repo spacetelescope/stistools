@@ -7,7 +7,6 @@ authors = [
 ]
 classifiers = [
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Topic :: Scientific/Engineering :: Astronomy",
@@ -22,6 +21,7 @@ dependencies = [
     "astroquery",
     "matplotlib",
 ]
+license-files = ["LICENSE.txt"]
 dynamic = [
     "version",
 ]
@@ -30,10 +30,6 @@ requires-python = ">=3.10"
 [project.readme]
 file = "README.md"
 content-type = "text/markdown"
-
-[project.license]
-file = "LICENSE.txt"
-content-type = "text/plain"
 
 [project.optional-dependencies]
 test = [
