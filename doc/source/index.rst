@@ -54,6 +54,7 @@ for getting started.
    poisson_err
    radialvel
    r_util
+   splice
    sshift
    stisnoise
    tastis
