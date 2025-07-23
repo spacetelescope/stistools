@@ -44,13 +44,13 @@ Scan type: LINEARAXIS2                  Step size (mas): 250
                     axis1 axis2     axis1  axis2         V2   V3
                       (pixels)        (arcsec)           (arcsec)
 Estimated slew:      0.0  -0.1     0.000 -0.005     -0.004  0.004
-Flux in post-slew confirmation image (751752) - Pedestal (748587) = 3165 DN
+Flux in post-slew confirmation image (751752) - Pedestal (748587) = 3165 Counts
 -------------------------------------------------------------------------------
 The flux in the confirmation image is 320% greater than the maximum flux
 in the ACQ/PEAK scan.  An excess greater than 100% indicates
 problems in the ACQ/PEAK.
 The flux in the confirmation image is 16% of the recommended minimum
-of 20000 DN for a dispersed-light ACQ/PEAK.  The signal-to-noise in
+of 20000 Counts for a dispersed-light ACQ/PEAK.  The signal-to-noise in
 the AC
 ===============================================================================
 
@@ -66,7 +66,7 @@ dom GS/FGS: S4B0000993F2    sub-dom GS/FGS: S4B0000953F1
 ACQ params:     bias sub: 1510   checkbox: 3      method: FLUX CENTROID
 subarray (axis1,axis2):   size=(100,100)          corner=(487,466)
 -------------------------------------------------------------------------------
-Coarse locate phase:           Target flux in max checkbox (DN): 1560
+Coarse locate phase:           Target flux in max checkbox (Counts): 1560
                        global          local
                     axis1 axis2     axis1 axis2
 Target location:    534.2  507.0    48.2  42.0
@@ -74,7 +74,7 @@ Target location:    534.2  507.0    48.2  42.0
                       (pixels)        (arcsec)            (arcsec)
 Estimated slew:     -1.5  -9.0    -0.079 -0.457       -0.379  0.268
 -------------------------------------------------------------------------------
-Fine locate phase:            Target flux in max checkbox (DN): 1559
+Fine locate phase:            Target flux in max checkbox (Counts): 1559
                        global            local
                     axis1 axis2     axis1 axis2
 Target location:    534.2  516.8    48.2  51.8
@@ -565,7 +565,7 @@ def _print_output(keywords, spt_exists):
     # Print rest of output according to data type: ACQ or ACQ/PEAK.
     if keywords['obsmode'] == "ACQ":
         print("Coarse locate phase:           Target flux in max checkbox "
-              "(DN): {:.0f}\n".format(keywords['counts1']))
+              "(Counts): {:.0f}\n".format(keywords['counts1']))
         print("                       global          local")
         print("                    axis1 axis2     axis1 axis2")
         print("Target location:    {:4.1f}  {:4.1f}    {:4.1f}  {:4.1f}\n".
@@ -587,7 +587,7 @@ def _print_output(keywords, spt_exists):
         # Print slews
         print('-' * 79)
 
-        print("Fine locate phase:            Target flux in max checkbox (DN):"
+        print("Fine locate phase:            Target flux in max checkbox (Counts):"
               " {:.0f}\n".format(keywords['counts2']))
         print("                       global            local")
         print("                    axis1 axis2     axis1 axis2")
@@ -654,7 +654,7 @@ def _print_output(keywords, spt_exists):
                                        keywords['V2total'],
                                        keywords['V3total']))
         print("Flux in post-slew confirmation image ({:.0f}) - Pedestal "
-              "({:.0f}) = {:.0f} DN".
+              "({:.0f}) = {:.0f} Counts".
               format(keywords['counts1'], keywords['pedestal'],
                      keywords['counts1'] - keywords['pedestal']))
 
@@ -780,7 +780,7 @@ def _print_warnings(keywords, spt_exists):
         if keywords['obstype'] == "IMAGING":
             if flux < MIN_IMAGING_FLUX:
                 print("The flux in the confirmation image is {:2.0f}% of the "
-                      "recommended minimum\nof {:.0f} DN for a direct-light "
+                      "recommended minimum\nof {:.0f} Counts for a direct-light "
                       "ACQ/PEAK.  The signal-to-noise in the\nACQ/PEAK may be "
                       "inadequate for an accurate centering.\n".
                       format(flux/MIN_IMAGING_FLUX*100, MIN_IMAGING_FLUX))
@@ -789,7 +789,7 @@ def _print_warnings(keywords, spt_exists):
         else:
             if flux < MIN_SPECTROSCOPIC_FLUX:
                 print("The flux in the confirmation image is {:2.0f}% of the "
-                      "recommended minimum\nof {:.0f} DN for a dispersed-light"
+                      "recommended minimum\nof {:.0f} Counts for a dispersed-light"
                       " ACQ/PEAK.  The signal-to-noise in\nthe ACQ/PEAK may be"
                       " inadequate for an accurate centering.\n".
                       format(flux/MIN_SPECTROSCOPIC_FLUX*100,
