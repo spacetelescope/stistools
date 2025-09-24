@@ -320,6 +320,24 @@ def _generate_intervals(n, divisions):
     return result
 
 
+def _inline_render_plot(fig, is_interactive_backend, user_interactive_setting):
+    """Show a matplotlib figure if in an interactive environment.
+    """
+    if not (is_interactive_backend and user_interactive_setting):
+        return
+
+    try:
+        from IPython.display import display
+        shell = get_ipython().__class__.__name__
+        if shell == "ZMQInteractiveShell":  # Force a display if running in Jupyter instead of trying to render at the end of a cell
+            display(fig)
+            return
+    except Exception:
+        pass 
+
+    plt.show(block=False)
+
+
 def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, propid, plot_dir,
                interactive):
     """Creates a visualization of where CR pixels are in a stacked image
@@ -409,6 +427,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
             plot_name = obs_id + '_stacked.png'
             file_path = os.path.join(plot_dir, plot_name)
             fig.savefig(file_path, dpi=150, bbox_inches='tight')
+            _inline_render_plot(fig, is_interactive_backend, user_interactive_setting) # show plot if in interactive env
         finally:
             plt.close(fig)
             if is_interactive_backend and user_interactive_setting:
@@ -567,6 +586,7 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
             plot_name = obs_id + '_splits.png'
             file_path = os.path.join(plot_dir, plot_name)
             fig.savefig(file_path, dpi=150, bbox_inches='tight')
+            _inline_render_plot(fig, is_interactive_backend, user_interactive_setting) # show plot if in interactive env
         finally:
             plt.close(fig)
             if is_interactive_backend and user_interactive_setting:
