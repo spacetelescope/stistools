@@ -372,38 +372,47 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
 
     if not interactive:
         # create matplotlib image
-        fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(9, 20*(9/41)),
-            gridspec_kw={'width_ratios': [1, 1, 0.05], 'height_ratios': [1]})
+        is_interactive_backend = matplotlib.get_backend().lower() not in {"agg", "pdf", "svg", "ps"}
+        user_interactive_setting = plt.isinteractive()
+        
+        if is_interactive_backend and user_interactive_setting:
+            plt.ioff()
+        try:
+            fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(9, 20*(9/41)),
+                gridspec_kw={'width_ratios': [1, 1, 0.05], 'height_ratios': [1]})
 
-        for axis in [ax1, ax2]:
-            axis.imshow(stack_image, interpolation='none', origin='lower',
-                extent=(0, stack_shape[1], 0, stack_shape[0]), cmap=cmap, norm=norm, aspect='auto')
-            axis.step(np.arange(len(box_upper)), box_upper, color='#222222', where='post', lw=0.7, alpha=0.7, ls='--')
-            axis.step(np.arange(len(box_lower)), box_lower, color='#222222', where='post', lw=0.7, alpha=0.7, ls='--')
+            for axis in [ax1, ax2]:
+                axis.imshow(stack_image, interpolation='none', origin='lower',
+                    extent=(0, stack_shape[1], 0, stack_shape[0]), cmap=cmap, norm=norm, aspect='auto')
+                axis.step(np.arange(len(box_upper)), box_upper, color='#222222', where='post', lw=0.7, alpha=0.7, ls='--')
+                axis.step(np.arange(len(box_lower)), box_lower, color='#222222', where='post', lw=0.7, alpha=0.7, ls='--')
 
-        ax1.set_title('Full image')
+            ax1.set_title('Full image')
 
-        # If it is a large enough image, zoom the 2nd subplot around the extraction box region
-        if ((stack_shape[0] - max(box_upper)) > 20) and (min(box_lower) > 20):
-            ax2.set_ylim([(min(box_lower)-20),(max(box_upper)+20)])
-            ax2.set_title('zoomed to 20 pixels above/below extraction box')
+            # If it is a large enough image, zoom the 2nd subplot around the extraction box region
+            if ((stack_shape[0] - max(box_upper)) > 20) and (min(box_lower) > 20):
+                ax2.set_ylim([(min(box_lower)-20),(max(box_upper)+20)])
+                ax2.set_title('zoomed to 20 pixels above/below extraction box')
 
-        # Otherwise just don't zoom in at all
-        else:
-            ax2.set_title('full image already 20 pixels above/below extraction box')
+            # Otherwise just don't zoom in at all
+            else:
+                ax2.set_title('full image already 20 pixels above/below extraction box')
 
-        cb = fig.colorbar(colormap.ScalarMappable(norm=norm, cmap=cmap), cax=ax3,
-            label='# times flagged as CR', ticks=np.arange(max_stack_value, max_stack_value + 2) - 0.5)
-        cb.set_ticklabels(np.arange(max_stack_value, max_stack_value+2)-1)
+            cb = fig.colorbar(colormap.ScalarMappable(norm=norm, cmap=cmap), cax=ax3,
+                label='# times flagged as CR', ticks=np.arange(max_stack_value, max_stack_value + 2) - 0.5)
+            cb.set_ticklabels(np.arange(max_stack_value, max_stack_value+2)-1)
 
-        fig.suptitle(f"CR flagged pixels in stacked image: {obs_id}\n Proposal {propid!s}, " \
-                     f"exposure time {texpt:.2f}, {split_num!s} subexposures")
-        fig.tight_layout()
+            fig.suptitle(f"CR flagged pixels in stacked image: {obs_id}\n Proposal {propid!s}, " \
+                        f"exposure time {texpt:.2f}, {split_num!s} subexposures")
+            fig.tight_layout()
 
-        plot_name = obs_id + '_stacked.png'
-        file_path = os.path.join(plot_dir, plot_name)
-        plt.savefig(file_path, dpi=150, bbox_inches='tight', backend="Agg")
-        plt.close()
+            plot_name = obs_id + '_stacked.png'
+            file_path = os.path.join(plot_dir, plot_name)
+            fig.savefig(file_path, dpi=150, bbox_inches='tight')
+        finally:
+            plt.close(fig)
+            if is_interactive_backend and user_interactive_setting:
+                plt.ion()
 
     else:
         # Create Plotly image
@@ -520,38 +529,48 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
     row_value = int(nrows)
 
     if not interactive:
-        fig, ax = plt.subplots(nrows=row_value, ncols=2, figsize=(9, nrows * 2))
-        ax = ax.flatten()
+        is_interactive_backend = matplotlib.get_backend().lower() not in {"agg", "pdf", "svg", "ps"}
+        user_interactive_setting = plt.isinteractive()
+        
+        if is_interactive_backend and user_interactive_setting:
+            plt.ioff()
 
-        # Plot each subexposure with CR pixels a different color
-        for num, axis in enumerate(ax):
-            if num < len(splits):
-                axis.imshow(splits[num], interpolation='none', origin='lower',
-                    extent=(0, splits[num].shape[1], 0, splits[num].shape[0]),
-                    cmap=cmap, norm=norm, aspect='auto')
-                axis.step(np.arange(len(box_upper)), box_upper, color='#222222', where='post',
-                    lw=0.7, alpha=0.7, ls='--')
-                axis.step(np.arange(len(box_lower)), box_lower, color='#222222', where='post',
-                    lw=0.7, alpha=0.7, ls='--')
+        try:
+            fig, ax = plt.subplots(nrows=row_value, ncols=2, figsize=(9, nrows * 2))
+            ax = ax.flatten()
 
-                if ((splits[num].shape[0] - max(box_upper)) > 20) and (min(box_lower) > 20):
-                    axis.set_ylim([min(box_lower) - 20, max(box_upper) + 20])
-                    axis.set_title(f"zoomed subexposure {(num+1)!s}, exposure time {individual_exposure_times[num]!s}")
+            # Plot each subexposure with CR pixels a different color
+            for num, axis in enumerate(ax):
+                if num < len(splits):
+                    axis.imshow(splits[num], interpolation='none', origin='lower',
+                        extent=(0, splits[num].shape[1], 0, splits[num].shape[0]),
+                        cmap=cmap, norm=norm, aspect='auto')
+                    axis.step(np.arange(len(box_upper)), box_upper, color='#222222', where='post',
+                        lw=0.7, alpha=0.7, ls='--')
+                    axis.step(np.arange(len(box_lower)), box_lower, color='#222222', where='post',
+                        lw=0.7, alpha=0.7, ls='--')
+
+                    if ((splits[num].shape[0] - max(box_upper)) > 20) and (min(box_lower) > 20):
+                        axis.set_ylim([min(box_lower) - 20, max(box_upper) + 20])
+                        axis.set_title(f"zoomed subexposure {(num+1)!s}, exposure time {individual_exposure_times[num]!s}")
+
+                    else:
+                        axis.set_title(f"subexposure {(num + 1)!s}, exposure time {individual_exposure_times[num]!s}")
 
                 else:
-                    axis.set_title(f"subexposure {(num + 1)!s}, exposure time {individual_exposure_times[num]!s}")
+                    axis.set_axis_off()
 
-            else:
-                axis.set_axis_off()
+            fig.suptitle(f"CR flagged pixels in individual splits for: {obs_id}\n Proposal {propid!s}, " \
+                        f"total exposure time {texpt:.2f}, {split_num!s} subexposures")
+            fig.tight_layout()
 
-        fig.suptitle(f"CR flagged pixels in individual splits for: {obs_id}\n Proposal {propid!s}, " \
-                     f"total exposure time {texpt:.2f}, {split_num!s} subexposures")
-        fig.tight_layout()
-
-        plot_name = obs_id + '_splits.png'
-        file_path = os.path.join(plot_dir, plot_name)
-        plt.savefig(file_path, dpi=150, bbox_inches='tight', backend="Agg")
-        plt.close()
+            plot_name = obs_id + '_splits.png'
+            file_path = os.path.join(plot_dir, plot_name)
+            fig.savefig(file_path, dpi=150, bbox_inches='tight')
+        finally:
+            plt.close(fig)
+            if is_interactive_backend and user_interactive_setting:
+                plt.ion()    
 
     else:
         subplot_titles = [f'zoomed subexposure {i+1}, exposure time {individual_exposure_times[i]}'
