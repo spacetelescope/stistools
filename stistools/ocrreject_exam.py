@@ -7,7 +7,6 @@ import argparse
 import numpy as np
 from astropy.io import fits
 import matplotlib
-matplotlib.use('Agg')
 from matplotlib import cm as colormap
 from matplotlib import colors
 from matplotlib import pyplot as plt
@@ -72,8 +71,8 @@ __doc__ = """
     """
 
 __taskname__ = "ocrreject_exam"
-__version__  = "1.0"
-__vdate__    = "09-December-2024"
+__version__  = "1.1"
+__vdate__    = "24-September-2025"
 __author__   = "Matt Dallas, Joleen Carlberg, Sean Lockwood, STScI, December 2024."
 
 
@@ -403,7 +402,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
 
         plot_name = obs_id + '_stacked.png'
         file_path = os.path.join(plot_dir, plot_name)
-        plt.savefig(file_path, dpi=150, bbox_inches='tight')
+        plt.savefig(file_path, dpi=150, bbox_inches='tight', backend="Agg")
         plt.close()
 
     else:
@@ -551,7 +550,7 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
 
         plot_name = obs_id + '_splits.png'
         file_path = os.path.join(plot_dir, plot_name)
-        plt.savefig(file_path, dpi=150, bbox_inches='tight')
+        plt.savefig(file_path, dpi=150, bbox_inches='tight', backend="Agg")
         plt.close()
 
     else:
