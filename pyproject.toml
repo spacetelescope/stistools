@@ -19,7 +19,7 @@ dependencies = [
     "stsci.tools",
     "pysiaf",
     "astroquery",
-    "matplotlib",
+    "matplotlib>=3.5",
 ]
 license-files = ["LICENSE.txt"]
 dynamic = [

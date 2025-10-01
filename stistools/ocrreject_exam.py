@@ -16,6 +16,7 @@ try:
     HAS_PLOTLY = True
 except ImportError:
     HAS_PLOTLY = False
+NON_INTERACTIVE_BACKENDS = {"agg", "pdf", "svg", "ps"}
 
 __doc__ = """
     Checks STIS CCD 1D spectroscopic data for cosmic ray overflagging.
@@ -390,7 +391,7 @@ def stack_plot(stack_image, box_lower, box_upper, split_num, texpt, obs_id, prop
 
     if not interactive:
         # create matplotlib image
-        is_interactive_backend = matplotlib.get_backend().lower() not in {"agg", "pdf", "svg", "ps"}
+        is_interactive_backend = matplotlib.get_backend().lower() not in NON_INTERACTIVE_BACKENDS
         user_interactive_setting = plt.isinteractive()
         
         if is_interactive_backend and user_interactive_setting:
@@ -548,7 +549,7 @@ def split_plot(splits, box_lower, box_upper, split_num, individual_exposure_time
     row_value = int(nrows)
 
     if not interactive:
-        is_interactive_backend = matplotlib.get_backend().lower() not in {"agg", "pdf", "svg", "ps"}
+        is_interactive_backend = matplotlib.get_backend().lower() not in NON_INTERACTIVE_BACKENDS
         user_interactive_setting = plt.isinteractive()
         
         if is_interactive_backend and user_interactive_setting:
