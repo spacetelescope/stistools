@@ -1,6 +1,7 @@
 import os
 import os.path
 import copy
+import shutil
 
 
 NOT_APPLICABLE = 'n/a'
@@ -84,3 +85,11 @@ def interpolate(x, values, xp):
                 break
 
     return value
+
+
+def check_hstcal_status():
+    on_readthedocs = os.environ.get('READTHEDOCS', 'False') == 'True'
+
+    if not on_readthedocs and not shutil.which('cs0.e'):
+        raise ImportError("The 'hstcal' package binaries were not found in $PATH.  "
+                          "Please check that it is installed.")
