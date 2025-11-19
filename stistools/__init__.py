@@ -19,7 +19,7 @@ from . import defringe
 from . import crrej_from_raw
 from . import ocrreject_exam
 from . import poisson_err
-
+from . import barycentric_correction
 
 # These lines allow TEAL to print out the names of TEAL-enabled tasks
 # upon importing this package.
