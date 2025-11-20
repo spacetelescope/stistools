@@ -276,18 +276,18 @@ class BaseCal(object):
                     # be used to replace the truth files (if OK).
                     updated_outputs.append((actual, desired))
 
-        if not all_okay:
-            # Write out JSON file to enable retention of different results
-            new_truths = [os.path.abspath(i[1]) for i in updated_outputs]
-            for files in updated_outputs:
-                print("Renaming {} as new 'truth' file: {}".format(
-                      files[0], files[1]))
-                shutil.move(files[0], files[1])
-            log_pattern = [os.path.join(os.path.dirname(x), '*.log')
-                           for x in new_truths]
-            upload_results(pattern=new_truths + log_pattern,
-                           testname=testname,
-                           target=tree)
+        #if not all_okay:
+        #    # Write out JSON file to enable retention of different results
+        #    new_truths = [os.path.abspath(i[1]) for i in updated_outputs]
+        #    for files in updated_outputs:
+        #        print("Renaming {} as new 'truth' file: {}".format(
+        #              files[0], files[1]))
+        #        shutil.move(files[0], files[1])
+        #    log_pattern = [os.path.join(os.path.dirname(x), '*.log')
+        #                   for x in new_truths]
+        #    upload_results(pattern=new_truths + log_pattern,
+        #                   testname=testname,
+        #                   target=tree)
 
         if not all_okay and raise_error:
             raise AssertionError(os.linesep + creature_report)
