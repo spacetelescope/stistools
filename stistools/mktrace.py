@@ -4,7 +4,7 @@ from astropy.io import fits
 import os
 import os.path
 import stat
-from scipy import signal
+from scipy.signal.windows import boxcar
 from scipy import ndimage as ni
 
 from stsci.tools import gfit, linefit
@@ -40,8 +40,8 @@ Simple example of running mktrace on a STIS file named 'file.fits':
 
 """
 
-__version__ = '2.0.0'
-__vdate__ = '2017-03-20'
+__version__ = '2.0.1'
+__vdate__ = '2025-11-19'
 
 
 def mktrace(fname, tracecen=0.0, weights=None):
@@ -407,7 +407,7 @@ class Trace:
 
         sizex, sizey = specimage.shape
         smoytrace = np.zeros(sizey).astype(np.float64)
-        boxcar_kernel = signal.boxcar(3) / 3.0
+        boxcar_kernel = boxcar(3) / 3.0
 
         for c in np.arange(sizey):
             col = specimage[:, c]

@@ -8,7 +8,7 @@ import numpy.fft as fft
 from scipy import ndimage
 from scipy import signal
 
-__version__ = '5.6 (2016-Mar-02)'
+__version__ = '5.6.1 (2025-Nov-19)'
 
 
 def _median(arg):
@@ -264,7 +264,7 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     # if median is not None:
     #    time_series = medianfilter(time_series, median)
     if boxcar > 0:
-        boxcar_filter = signal.boxcar(boxcar) / boxcar
+        boxcar_filter = signal.windows.boxcar(boxcar) / boxcar
         time_series = ndimage.convolve(time_series, boxcar_filter)
 
     elif wipe is not None:
