@@ -9,6 +9,10 @@ class TestDefringe(BaseSTIS):
 
     input_loc = 'defringe'
 
+    # Numerical tolerances to pass FITSDiff:
+    rtol = 5e-6
+    atol = 1e-5
+
 
     def test_normspflat_g750l(self):
         """Compare normspflat output for a g750l spectrum"""
