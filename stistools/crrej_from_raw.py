@@ -196,7 +196,7 @@ def crrej_from_raw(input, wavecal='', outroot='', savetmp=False, verbose=False,
     # Convert dict to Astropy Table:
     new_crr = create_new_crr(crr_par)
 
-    with TemporaryDirectory(prefix='crrej_from_raw_') as directory:
+    with TemporaryDirectory(prefix='crrej_from_raw_', ignore_cleanup_errors=True) as directory:
         # Write new CRREJTAB to a temporary location:
         new_crr_name = 'temp_crr.fits'
         new_crr.write(os.path.join(directory, new_crr_name))
