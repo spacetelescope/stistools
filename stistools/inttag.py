@@ -183,13 +183,7 @@ def inttag(tagfile, output, starttime=None, increment=None,
         dq_hdu = fits.ImageHDU(header=tag_sci_hdr.copy(), name='DQ')
 
         # Generate datetime for 'DATE' header keyword
-        dtstr = str(dt.utcnow())
-        date, h, m, s = [dtstr.split()[0], dtstr.split()[1].split(':')[0], dtstr.split()[1].split(':')[1],
-                         str(round(float(dtstr.split()[1].split(':')[-1])))]
-        if len(s) == 1:
-            s = '0' + s
-
-        dtval = date + 'T' + h + ':' + m + ':' + s
+        dtval = dt.now().isoformat().rsplit('.', 1)[0]
 
         # Populate extensions
         for idx, hdu in enumerate([sci_hdu, err_hdu, dq_hdu]):
