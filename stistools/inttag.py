@@ -51,8 +51,8 @@ Examples
 """
 
 __taskname__ = "inttag"
-__version__ = "1.1"
-__vdate__ = "27-March-2024"
+__version__ = "1.1.1"
+__vdate__ = "21-November-2025"
 __author__ = "Python: Doug Branton, C code: R. Katsanis, N. Zarate, Phil Hodge"
 
 
