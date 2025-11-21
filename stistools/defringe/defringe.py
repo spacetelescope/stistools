@@ -66,7 +66,7 @@ def defringe(science_file, fringe_flat, overwrite=True, verbose=True):
         suffix = "_drj"
 
     sci_dir, sci_filename = os.path.split(science_file)
-    sci_root = re.split('\.fits.*', sci_filename, flags=re.IGNORECASE)[0].rsplit('_',1)[0]
+    sci_root = re.split(r'\.fits.*', sci_filename, flags=re.IGNORECASE)[0].rsplit('_',1)[0]
     drj_filename = os.path.join(sci_dir, sci_root + suffix + '.fits')
     if science_file == drj_filename:
         raise RuntimeError('The input and output file names cannot be the same.')

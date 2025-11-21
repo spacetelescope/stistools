@@ -7,7 +7,7 @@ __all__ = ['cmp_fitshdr', 'cmp_gen_hdrkeywords',
            'word_precision_check',
            'download', 'check_url']
 
-RE_URL = re.compile('\w+://\S+')
+RE_URL = re.compile(r'\w+://\S+')
 
 default_compare = dict(
     ignore_keywords=['DATE', 'CAL_VER', 'CAL_VCS', 'CRDS_VER', 'CRDS_CTX'],
