@@ -13,8 +13,8 @@ from .r_util import expandFileName
 
 
 __taskname__ = "crrej_from_raw"
-__version__ = "0.1"
-__vdate__ = "12-May-2023"
+__version__ = "0.1.1"
+__vdate__ = "21-November-2025"
 __author__ = "Sean Lockwood, STScI, May 2023."
 
 VERBOSE = False
@@ -196,7 +196,7 @@ def crrej_from_raw(input, wavecal='', outroot='', savetmp=False, verbose=False,
     # Convert dict to Astropy Table:
     new_crr = create_new_crr(crr_par)
 
-    with TemporaryDirectory(prefix='crrej_from_raw_') as directory:
+    with TemporaryDirectory(prefix='crrej_from_raw_', ignore_cleanup_errors=True) as directory:
         # Write new CRREJTAB to a temporary location:
         new_crr_name = 'temp_crr.fits'
         new_crr.write(os.path.join(directory, new_crr_name))
@@ -298,8 +298,8 @@ def create_new_crr(crr_par):
     Astropy Table of CRREJECTAB contents
     '''
     # Convert to an Astropy table:
-    type_map = {'CRSPLIT': 'i2', 'MEANEXP': 'f', 'SCALENSE': 'a8', 'INITGUES': 'a8',
-                'SKYSUB': 'a4', 'CRSIGMAS': 'a20', 'CRRADIUS': 'f', 'CRTHRESH': 'f',
+    type_map = {'CRSPLIT': 'i2', 'MEANEXP': 'f', 'SCALENSE': 'S8', 'INITGUES': 'S8',
+                'SKYSUB': 'S4', 'CRSIGMAS': 'S20', 'CRRADIUS': 'f', 'CRTHRESH': 'f',
                 'BADINPDQ': 'l', 'CRMASK': bool, }
 
     if {x.upper() for x in crr_par} != {y.upper() for y in type_map}:

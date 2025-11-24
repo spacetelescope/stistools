@@ -4,7 +4,7 @@ from astropy.io import fits
 import os
 import os.path
 import stat
-from scipy import signal
+from scipy.signal.windows import boxcar
 from scipy import ndimage as ni
 
 from stsci.tools import gfit, linefit
@@ -40,8 +40,8 @@ Simple example of running mktrace on a STIS file named 'file.fits':
 
 """
 
-__version__ = '2.0.0'
-__vdate__ = '2017-03-20'
+__version__ = '2.0.1'
+__vdate__ = '2025-11-19'
 
 
 def mktrace(fname, tracecen=0.0, weights=None):
@@ -99,7 +99,7 @@ def mktrace(fname, tracecen=0.0, weights=None):
     w = np.zeros(1024)
     w[ind] = 1
 
-    X = np.arange(1024).astype(np.float64)
+    X = np.arange(1024, dtype=float)
     sparams = linefit.linefit(X, trace1024, weights=w)
     rparams = linefit.linefit(X, interp_trace, weights=w)
     sciline = sparams[0] + sparams[1] * X
@@ -140,7 +140,7 @@ def interp(y, n):
     """
     m = float(len(y))
     x = np.arange(m)
-    i = np.arange(n,dtype=np.float64)
+    i = np.arange(n, dtype=float)
     xx = i * (m-1)/n
     xind = np.searchsorted(x, xx)-1
     yy = y[xind]+(xx-x[xind])*(y[xind+1]-y[xind])/(x[xind+1]-x[xind])
@@ -374,7 +374,7 @@ class Trace:
             y2 = sizex
         specimage = data[y1:y2+1, :]
         smoytrace = self.gFitTrace(specimage, y1, y2)
-        med11smoytrace = ni.median_filter(smoytrace, 11)
+        med11smoytrace = ni.median_filter(smoytrace, 11, output=float)
         med11smoytrace[0] = med11smoytrace[2]
         diffmed = abs(smoytrace - med11smoytrace)
         tolerence = 3 * np.median(abs(smoytrace[wind] - med11smoytrace[wind]))
@@ -387,7 +387,7 @@ class Trace:
         # Convolve with a gaussian to smooth it.
         fwhm = 10.
         sigma = fwhm / 2.355
-        gaussconvxsmoytrace = ni.gaussian_filter1d(smoytrace, sigma)
+        gaussconvxsmoytrace = ni.gaussian_filter1d(smoytrace, sigma, output=float)
 
         # Compute the trace center as the median of the pixels
         # with nonzero weights.
@@ -406,13 +406,13 @@ class Trace:
         """
 
         sizex, sizey = specimage.shape
-        smoytrace = np.zeros(sizey).astype(np.float64)
-        boxcar_kernel = signal.boxcar(3) / 3.0
+        smoytrace = np.zeros(sizey, dtype=float)
+        boxcar_kernel = boxcar(3) / 3.0
 
         for c in np.arange(sizey):
             col = specimage[:, c]
             col = col - np.median(col)
-            smcol = ni.convolve(col, boxcar_kernel).astype(np.float64)
+            smcol = ni.convolve(col, boxcar_kernel, output=float)
             fit = gfit.gfit1d(smcol, quiet=1, maxiter=15)
             smoytrace[c] = fit.params[1]
 

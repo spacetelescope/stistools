@@ -51,7 +51,7 @@ def make_mock_crr(filename):
 class Test_crrej_from_raw:
     @classmethod
     def setup_class(cls):
-        cls.refdir = TemporaryDirectory(prefix='test_crrej_from_raw_ref_')
+        cls.refdir = TemporaryDirectory(prefix='test_crrej_from_raw_ref_', ignore_cleanup_errors=True)
         os.environ[ENVIRON_VAR] = cls.refdir.name + os.path.sep
         make_mock_crr(os.path.join(cls.refdir.name, CRDS_REF_FILE))
         cls.crds_ref_file = f"${ENVIRON_VAR}/{CRDS_REF_FILE}"
@@ -63,7 +63,7 @@ class Test_crrej_from_raw:
 
     def setup_method(self, method):
         self.cwd = os.getcwd()
-        self.directory = TemporaryDirectory(prefix='test_crrej_from_raw_')
+        self.directory = TemporaryDirectory(prefix='test_crrej_from_raw_', ignore_cleanup_errors=True)
         os.chdir(self.directory.name)
         self.filename = 'test.fits'
         make_mock_datafile(self.filename, crds_ref=self.crds_ref_file)

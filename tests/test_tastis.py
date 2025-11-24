@@ -6,7 +6,7 @@ import pytest
 
 @pytest.mark.bigdata
 @pytest.mark.slow
-class TestDoppinfo(BaseSTIS):
+class TestTastis(BaseSTIS):
 
     input_loc = 'tastis'
     ref_loc = 'tastis'
@@ -40,14 +40,14 @@ class TestDoppinfo(BaseSTIS):
                                "                    axis1 axis2     axis1  axis2         V2   V3\n" \
                                "                      (pixels)        (arcsec)           (arcsec)\n" \
                                "Estimated slew:      0.0  -0.1     0.000 -0.005     -0.004  0.004\n" \
-                               "Flux in post-slew confirmation image (751752) - Pedestal (748587) = 3165 DN\n" \
+                               "Flux in post-slew confirmation image (751752) - Pedestal (748587) = 3165 Counts\n" \
                                "-------------------------------------------------------------------------------\n" \
                                "The flux in the confirmation image is 320% greater than the maximum flux\n" \
                                "in the ACQ/PEAK scan.  An excess greater than 100% indicates\n" \
                                "problems in the ACQ/PEAK.\n" \
                                "\n" \
                                "The flux in the confirmation image is 16% of the recommended minimum\n" \
-                               "of 20000 DN for a dispersed-light ACQ/PEAK.  The signal-to-noise in\n" \
+                               "of 20000 Counts for a dispersed-light ACQ/PEAK.  The signal-to-noise in\n" \
                                "the ACQ/PEAK may be inadequate for an accurate centering.\n" \
                                "\n" \
                                "===============================================================================\n"
@@ -86,7 +86,7 @@ class TestDoppinfo(BaseSTIS):
                                "                    axis1 axis2     axis1  axis2         V2   V3\n" \
                                "                      (pixels)        (arcsec)           (arcsec)\n" \
                                "Estimated slew:      0.2   0.0     0.010  0.000      0.007  0.007\n" \
-                               "Flux in post-slew confirmation image (852814) - Pedestal (791686) = 61128 DN\n" \
+                               "Flux in post-slew confirmation image (852814) - Pedestal (791686) = 61128 Counts\n" \
                                "-------------------------------------------------------------------------------\n" \
                                "The flux in the confirmation image is only 73% of the maximum flux\n" \
                                "in the ACQ/PEAK scan.  Percentages below 80% often indicate problems\n" \
@@ -127,14 +127,14 @@ class TestDoppinfo(BaseSTIS):
                                "                    axis1 axis2     axis1  axis2         V2   V3\n" \
                                "                      (pixels)        (arcsec)           (arcsec)\n" \
                                "Estimated slew:      0.2   0.0     0.010  0.000      0.007  0.007\n" \
-                               "Flux in post-slew confirmation image (882661) - Pedestal (871184) = 11477 DN\n" \
+                               "Flux in post-slew confirmation image (882661) - Pedestal (871184) = 11477 Counts\n" \
                                "-------------------------------------------------------------------------------\n" \
                                "The flux in the confirmation image is 110% greater than the maximum flux\n" \
                                "in the ACQ/PEAK scan.  An excess greater than 100% indicates\n" \
                                "problems in the ACQ/PEAK.\n" \
                                "\n" \
                                "The flux in the confirmation image is 57% of the recommended minimum\n" \
-                               "of 20000 DN for a dispersed-light ACQ/PEAK.  The signal-to-noise in\n" \
+                               "of 20000 Counts for a dispersed-light ACQ/PEAK.  The signal-to-noise in\n" \
                                "the ACQ/PEAK may be inadequate for an accurate centering.\n" \
                                "\n" \
                                "The maximum flux in the sequence occurred at one end.\n" \
@@ -175,7 +175,7 @@ class TestDoppinfo(BaseSTIS):
                                "                    axis1 axis2     axis1  axis2         V2   V3\n" \
                                "                      (pixels)        (arcsec)           (arcsec)\n" \
                                "Estimated slew:     -2.6   0.0    -0.132  0.000     -0.093 -0.093\n" \
-                               "Flux in post-slew confirmation image (56705) - Pedestal (43530) = 13175 DN\n" \
+                               "Flux in post-slew confirmation image (56705) - Pedestal (43530) = 13175 Counts\n" \
                                "-------------------------------------------------------------------------------\n" \
                                "The flux in the confirmation image is only 77% of the maximum flux\n" \
                                "in the ACQ/PEAK scan.  Percentages below 80% often indicate problems\n" \
@@ -219,7 +219,7 @@ class TestDoppinfo(BaseSTIS):
                                "                    axis1 axis2     axis1  axis2         V2   V3\n" \
                                "                      (pixels)        (arcsec)           (arcsec)\n" \
                                "Estimated slew:      0.0   0.0     0.000  0.000      0.000  0.000\n" \
-                               "Flux in post-slew confirmation image (907707) - Pedestal (838752) = 68955 DN\n" \
+                               "Flux in post-slew confirmation image (907707) - Pedestal (838752) = 68955 Counts\n" \
                                "-------------------------------------------------------------------------------\n" \
                                "The confirmation image has a flux between 0.8 and 2.0 times the\n" \
                                "maximum flux in the peakup, which is typical of a successful ACQ/PEAK.\n" \
@@ -251,7 +251,7 @@ class TestDoppinfo(BaseSTIS):
                                "ACQ params:     bias sub: 1510   checkbox: 3      method: FLUX CENTROID\n" \
                                "subarray (axis1,axis2):   size=(100,100)          corner=(487,466)\n" \
                                "-------------------------------------------------------------------------------\n" \
-                               "Coarse locate phase:           Target flux in max checkbox (DN): 1560\n" \
+                               "Coarse locate phase:           Target flux in max checkbox (Counts): 1560\n" \
                                "\n" \
                                "                       global          local\n" \
                                "                    axis1 axis2     axis1 axis2\n" \
@@ -261,7 +261,7 @@ class TestDoppinfo(BaseSTIS):
                                "                      (pixels)        (arcsec)            (arcsec)\n" \
                                "Estimated slew:     -1.5  -9.0    -0.079 -0.457       -0.379  0.268\n" \
                                "-------------------------------------------------------------------------------\n" \
-                               "Fine locate phase:            Target flux in max checkbox (DN): 1559\n" \
+                               "Fine locate phase:            Target flux in max checkbox (Counts): 1559\n" \
                                "\n" \
                                "                       global            local\n" \
                                "                    axis1 axis2     axis1 axis2\n" \
@@ -306,7 +306,7 @@ class TestDoppinfo(BaseSTIS):
                                "ACQ params:     bias sub: 1510   checkbox: 3      method: FLUX CENTROID\n" \
                                "subarray (axis1,axis2):   size=(100,100)          corner=(487,466)\n" \
                                "-------------------------------------------------------------------------------\n" \
-                               "Coarse locate phase:           Target flux in max checkbox (DN): 278\n" \
+                               "Coarse locate phase:           Target flux in max checkbox (Counts): 278\n" \
                                "\n" \
                                "                       global          local\n" \
                                "                    axis1 axis2     axis1 axis2\n" \
@@ -316,7 +316,7 @@ class TestDoppinfo(BaseSTIS):
                                "                      (pixels)        (arcsec)            (arcsec)\n" \
                                "Estimated slew:     21.3  -43.0     1.080 -2.184       -0.781  2.308\n" \
                                "-------------------------------------------------------------------------------\n" \
-                               "Fine locate phase:            Target flux in max checkbox (DN): 280\n" \
+                               "Fine locate phase:            Target flux in max checkbox (Counts): 280\n" \
                                "\n" \
                                "                       global            local\n" \
                                "                    axis1 axis2     axis1 axis2\n" \
@@ -360,7 +360,7 @@ class TestDoppinfo(BaseSTIS):
                                "ACQ params:     bias sub: 1510   checkbox: 3      method: FLUX CENTROID\n" \
                                "subarray (axis1,axis2):   size=(100,100)          corner=(487,466)\n" \
                                "-------------------------------------------------------------------------------\n" \
-                               "Coarse locate phase:           Target flux in max checkbox (DN): 1442\n" \
+                               "Coarse locate phase:           Target flux in max checkbox (Counts): 1442\n" \
                                "\n" \
                                "                       global          local\n" \
                                "                    axis1 axis2     axis1 axis2\n" \
@@ -370,7 +370,7 @@ class TestDoppinfo(BaseSTIS):
                                "                      (pixels)        (arcsec)            (arcsec)\n" \
                                "Estimated slew:     -7.9  -2.9    -0.400 -0.147       -0.387 -0.179\n" \
                                "-------------------------------------------------------------------------------\n" \
-                               "Fine locate phase:            Target flux in max checkbox (DN): 611\n" \
+                               "Fine locate phase:            Target flux in max checkbox (Counts): 611\n" \
                                "\n" \
                                "                       global            local\n" \
                                "                    axis1 axis2     axis1 axis2\n" \
@@ -425,7 +425,7 @@ class TestDoppinfo(BaseSTIS):
               "ACQ params:     bias sub: 1510   checkbox: 3      method: GEOMETRIC-CENTER\n" \
               "subarray (axis1,axis2):   size=(104,104)          corner=(485,464)\n" \
               "-------------------------------------------------------------------------------\n" \
-              "Coarse locate phase:           Target flux in max checkbox (DN): 87956\n" \
+              "Coarse locate phase:           Target flux in max checkbox (Counts): 87956\n" \
               "\n" \
               "                       global          local\n" \
               "                    axis1 axis2     axis1 axis2\n" \
@@ -435,7 +435,7 @@ class TestDoppinfo(BaseSTIS):
               "                      (pixels)        (arcsec)            (arcsec)\n" \
               "Estimated slew:     -7.7  -1.0    -0.393 -0.051       -0.314 -0.242\n" \
               "-------------------------------------------------------------------------------\n" \
-              "Fine locate phase:            Target flux in max checkbox (DN): 87849\n" \
+              "Fine locate phase:            Target flux in max checkbox (Counts): 87849\n" \
               "\n" \
               "                       global            local\n" \
               "                    axis1 axis2     axis1 axis2\n" \
@@ -482,7 +482,7 @@ class TestDoppinfo(BaseSTIS):
            "                    axis1 axis2     axis1  axis2         V2   V3\n" \
            "                      (pixels)        (arcsec)           (arcsec)\n" \
            "Estimated slew:     -0.2   0.0    -0.010  0.000     -0.007 -0.007\n" \
-           "Flux in post-slew confirmation image (40210) - Pedestal (35982) = 4228 DN\n" \
+           "Flux in post-slew confirmation image (40210) - Pedestal (35982) = 4228 Counts\n" \
            "-------------------------------------------------------------------------------\n" \
            "The confirmation image has a flux between 0.8 and 2.0 times the\n" \
            "maximum flux in the peakup, which is typical of a successful ACQ/PEAK.\n" \

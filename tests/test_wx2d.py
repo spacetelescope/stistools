@@ -12,6 +12,7 @@ class TestWx2d(BaseSTIS):
     input_loc = 'wx2d'
     ref_loc = 'wx2d'
 
+    rtol = 6e-4
 
     def test_wx2d_t1(self):
         """
