@@ -276,6 +276,9 @@ class BaseCal(object):
                     # be used to replace the truth files (if OK).
                     updated_outputs.append((actual, desired))
 
+        ## Commenting out the following block as it doesn't currently function and breaks
+        ## some tests.  Retaining logic here to prompt future testing upgrades.
+
         #if not all_okay:
         #    # Write out JSON file to enable retention of different results
         #    new_truths = [os.path.abspath(i[1]) for i in updated_outputs]
