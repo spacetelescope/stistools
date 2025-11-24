@@ -6,7 +6,7 @@ import pytest
 
 @pytest.mark.bigdata
 @pytest.mark.slow
-class TestInttag(BaseSTIS):
+class TestBarycentricCorrection(BaseSTIS):
 
     input_loc = 'barycentric_correction'
 

@@ -50,18 +50,24 @@ __version__ = "1.0"
 __vdate__ = "21-August-2025"
 __author__ = "J. Lothringer"
 
-# File types, probably don't need this...
+# File types
 EVENTS_TABLE = 1
 
 SECPERDAY = 86400  #D0	# number of sec in a day
 MINPERDAY = 1440   #D0		# number of min in a day
 HRPERDAY = 24     #D0		# number of hours in a day
 
-LYPERPC	= 3.261633   #D0	# light years per parsec
-KMPERPC	= 3.085678e13  #D13	# kilometers per parsec
-AUPERPC	= 206264.8062470964  #D0	# how many AU in one parsec
+# Replacing with Astropy unit values
+# Keeping old ones commented out for comparison
+#LYPERPC	= 3.261633   #D0	# light years per parsec
+LYPERPC = u.pc.to('lightyear')
+#KMPERPC	= 3.085678e13  #D13	# kilometers per parsec
+KMPERPC = u.pc.to('km')
+#AUPERPC	= 206264.8062470964  #D0	# how many AU in one parsec
+AUPERPC = u.pc.to('AU')
 KMPERAU	= KMPERPC/AUPERPC
-CLIGHT = 499.00479   #D0	# light travel time (in sec) of 1 AU
+#CLIGHT = 499.00479   #D0	# light travel time (in sec) of 1 AU
+CLIGHT = (u.AU/c.c).to('s').value
 
 # might not need these
 EARTH_EPHEMERIS = 1
@@ -71,8 +77,6 @@ JD_TO_MJD = 2400000.5   #d0	# subtract from JD to get MJD
 
 RADIAN = 57.295779513082320877
 
-#should be done on the tag file, right? cuz changes will propogate to, like, inttag
-#nah, make it generic, may not TIME-TAG data!
 def bary_corr(table_names, verbose=True, distance=1e9, hst_orb = None, 
               in_col = 'TIME', time_script = False, outfiles = None):
     """
@@ -118,8 +122,7 @@ def bary_corr(table_names, verbose=True, distance=1e9, hst_orb = None,
         hst_orb: str
             Name of HST orbital file (generally starts p, ends as .fit) that
             covers the time of the observations. If not provided, JPL Horizons
-            will be used to get HST's orbital position. *Known bug where 
-            interpolation fails if numpy>=2.0. Use JPL Horizons in that case.*
+            will be used to get HST's orbital position.
             
         in_col: str
             Usually 'TIME' or 'time'. Used for compatability with files where
@@ -603,7 +606,7 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
 
     return lt_time
 
-def calc_delay_orbfile(times, ra, dec, hst_orb = None, distance=1e9, verbose=True):
+def calc_delay_orbfile(times, ra, dec, hst_orb = None, distance=1e9, verbose=True, in_col = 'Time'):
     """
     Calculate the light-travel time correction for HST observations using an orbit file.
     
@@ -630,6 +633,9 @@ def calc_delay_orbfile(times, ra, dec, hst_orb = None, distance=1e9, verbose=Tru
     verbose : bool, optional
         If True (default), print information about the finite-distance correction
         and the calculated light-travel times.
+    in_col : str, optional
+        If orbital file uses something other than 'Time' for the time axis, replace
+        with the correct column name.
     
     Returns
     -------
@@ -695,9 +701,9 @@ def calc_delay_orbfile(times, ra, dec, hst_orb = None, distance=1e9, verbose=Tru
     with fits.open(hst_orb) as hdu_orb:
     #hst_orb = fits.open(hst_orb)
     
-        f_hstx = interp1d(float(hdu_orb[1].header['FIRSTMJD'])+hdu_orb[1].data['TIME']/86400,hdu_orb[1].data['X'], kind='cubic')
-        f_hsty = interp1d(float(hdu_orb[1].header['FIRSTMJD'])+hdu_orb[1].data['TIME']/86400,hdu_orb[1].data['Y'], kind='cubic')
-        f_hstz = interp1d(float(hdu_orb[1].header['FIRSTMJD'])+hdu_orb[1].data['TIME']/86400,hdu_orb[1].data['Z'], kind='cubic')
+        f_hstx = interp1d(float(hdu_orb[1].header['FIRSTMJD'])+hdu_orb[1].data[in_col].astype(np.float64)/86400,hdu_orb[1].data['X'], kind='cubic')
+        f_hsty = interp1d(float(hdu_orb[1].header['FIRSTMJD'])+hdu_orb[1].data[in_col].astype(np.float64)/86400,hdu_orb[1].data['Y'], kind='cubic')
+        f_hstz = interp1d(float(hdu_orb[1].header['FIRSTMJD'])+hdu_orb[1].data[in_col].astype(np.float64)/86400,hdu_orb[1].data['Z'], kind='cubic')
         
         try:
             hstvecx = f_hstx(times_geo.tdb.mjd)
