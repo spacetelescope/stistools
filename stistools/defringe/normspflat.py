@@ -205,42 +205,41 @@ def normspflat(inflat, outflat='.', do_cal=True, biasfile=None, darkfile=None,
         if opt_elem == "G750M":
             fitted = np.ones(data.shape, dtype=data.dtype)
 
-            if cenwave < 9800:
-                for idx, row in enumerate(data):
-                    if (idx >= startrow) and (idx < lastrow):
-                        fit_data = row[85:1109]
-                        xrange = np.arange(0, len(fit_data), 1.)
-                        spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
-                                    order=1, low_reject=5.0, high_reject=5.0, niterate=2)
-                        with np.errstate(invalid='ignore', divide='ignore'):
+            with np.errstate(invalid='ignore', divide='ignore'):
+                if cenwave < 9800:
+                    for idx, row in enumerate(data):
+                        if (idx >= startrow) and (idx < lastrow):
+                            fit_data = row[85:1109]
+                            xrange = np.arange(0, len(fit_data), 1.)
+                            spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
+                                        order=1, low_reject=5.0, high_reject=5.0, niterate=2)
                             row_fit = fit_data / spl(xrange)
-                        row_fit[np.where(row_fit == 0.0)] = 1.0  # avoid zeros in output flat
-                        fitted[idx, 85:1109] = row_fit.copy()
+                            row_fit[np.where(row_fit == 0.0)] = 1.0  # avoid zeros in output flat
+                            fitted[idx, 85:1109] = row_fit.copy()
 
-            elif cenwave == 9851:
-                for idx, row in enumerate(data):
-                    if (idx >= startrow) and (idx < lastrow):
-                        fit_data = row[85:1109]
-                        xrange = np.arange(0, len(fit_data), 1.)
-                        spl = fit1d(xrange, fit_data, naverage=2, function="spline1",
-                                    order=2, low_reject=5.0, high_reject=5.0, niterate=2)
-                        with np.errstate(invalid='ignore', divide='ignore'):
+                elif cenwave == 9851:
+                    for idx, row in enumerate(data):
+                        if (idx >= startrow) and (idx < lastrow):
+                            fit_data = row[85:1109]
+                            xrange = np.arange(0, len(fit_data), 1.)
+                            spl = fit1d(xrange, fit_data, naverage=2, function="spline1",
+                                        order=2, low_reject=5.0, high_reject=5.0, niterate=2)
                             row_fit = fit_data / spl(xrange)
-                        row_fit[np.where(row_fit == 0.0)] = 1.0  # avoid zeros in output flat
-                        fitted[idx, 85:1109] = row_fit.copy()
-            else:  # This applies to cenwave 9806 and 10363
-                for idx, row in enumerate(data):
-                    if (idx >= startrow) and (idx < lastrow):
-                        fit_data = row[85:1109]
-                        xrange = np.arange(0, len(fit_data), 1.)
-                        spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
-                                    order=2, low_reject=5.0, high_reject=5.0, niterate=2)
-                        with np.errstate(invalid='ignore', divide='ignore'):
+                            row_fit[np.where(row_fit == 0.0)] = 1.0  # avoid zeros in output flat
+                            fitted[idx, 85:1109] = row_fit.copy()
+
+                else:  # This applies to cenwave 9806 and 10363
+                    for idx, row in enumerate(data):
+                        if (idx >= startrow) and (idx < lastrow):
+                            fit_data = row[85:1109]
+                            xrange = np.arange(0, len(fit_data), 1.)
+                            spl = fit1d(xrange, fit_data, naverage=2, function="spline3",
+                                        order=2, low_reject=5.0, high_reject=5.0, niterate=2)
                             row_fit = fit_data / spl(xrange)
-                        row_fit[np.where(row_fit == 0.0)] = 1.0  # avoid zeros in output flat
-                        fitted[idx, 85:1109] = row_fit.copy()
-                    else:
-                        fitted[idx, :] = 1.
+                            row_fit[np.where(row_fit == 0.0)] = 1.0  # avoid zeros in output flat
+                            fitted[idx, 85:1109] = row_fit.copy()
+                        else:
+                            fitted[idx, :] = 1.
 
             # Write to the output file
             hdulist[1].data = fitted.copy()
