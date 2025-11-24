@@ -77,8 +77,9 @@ JD_TO_MJD = 2400000.5   #d0	# subtract from JD to get MJD
 
 RADIAN = 57.295779513082320877
 
-def bary_corr(table_names, verbose=True, distance=1e9, hst_orb = None, 
-              in_col = 'TIME', time_script = False, outfiles = None):
+def barycentric_correction(table_names, verbose=True, distance=1e9, 
+                           hst_orb = None, in_col = 'TIME', 
+                           time_script = False, outfiles = None):
     """
         Calculates time-delay barycentric corrections from HST's position
         to the Solar System barycenter. This correction includes the classic
@@ -93,9 +94,9 @@ def bary_corr(table_names, verbose=True, distance=1e9, hst_orb = None,
         including barycorr, astroutils, and pintbary.
         
         HST's changing location around the Earth can lead to time-delay
-        differences of up to ~23 seconds. HST's location can be determined
-        either through STScI-provided HST orbital files, or through a
-        query to JPL Horizons.
+        differences of up to ~46 milliseconds. HST's location can be
+        determined either through STScI-provided HST orbital files, or through
+        a query to JPL Horizons.
         
         These calculations are accurate to within 1 millisecond
         outside the Solar System, and to within 5 milliseconds inside
