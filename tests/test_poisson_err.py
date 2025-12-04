@@ -5,7 +5,7 @@ import pytest
 
 @pytest.mark.bigdata
 @pytest.mark.slow
-class TestInttag(BaseSTIS):
+class TestPoissonErr(BaseSTIS):
 
     input_loc = 'poisson_err'
 
