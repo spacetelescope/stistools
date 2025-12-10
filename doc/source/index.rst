@@ -41,6 +41,7 @@ for getting started.
 
    basic2d
    calstis
+   crrej_from_raw
    ctestis
    defringe
    doppinfo
@@ -50,6 +51,7 @@ for getting started.
    mktrace
    ocrreject
    ocrreject_exam
+   poisson_err
    radialvel
    r_util
    sshift

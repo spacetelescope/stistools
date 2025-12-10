@@ -6,9 +6,10 @@ from astropy.io import fits
 import numpy
 import numpy.fft as fft
 from scipy import ndimage
-from scipy import signal
+from scipy.signal.windows import boxcar as boxcar_window
+from scipy.signal import correlate
 
-__version__ = '5.6 (2016-Mar-02)'
+__version__ = '5.6.1 (2025-Nov-24)'
 
 
 def _median(arg):
@@ -96,7 +97,7 @@ def windowfilter(time_series, image_type, sst, freqpeak, width, taper):
     kernx = numpy.arange(kernw)
     kerny = gauss(kernx, kernw//2, sigma, 1.0)  # gaussian kernel
     kerny = kerny/numpy.sum(kerny)
-    filterc = signal.correlate(filter, kerny, mode='same')
+    filterc = correlate(filter, kerny, mode='same')
     tran = tran * filterc
     # inverse transform
     time_series = fft.ifft(tran).real[:ntime+2]
@@ -264,7 +265,7 @@ def stisnoise(infile, exten=1, outfile=None, dc=1, verbose=1,
     # if median is not None:
     #    time_series = medianfilter(time_series, median)
     if boxcar > 0:
-        boxcar_filter = signal.boxcar(boxcar) / boxcar
+        boxcar_filter = boxcar_window(boxcar) / boxcar
         time_series = ndimage.convolve(time_series, boxcar_filter)
 
     elif wipe is not None:

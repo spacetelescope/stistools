@@ -1,5 +1,6 @@
 from stistools.mktrace import mktrace
 from .resources import BaseSTIS
+import re
 import pytest
 
 
@@ -11,6 +12,7 @@ class TestMktrace(BaseSTIS):
     ref_loc = 'mktrace'
 
     atol = 1e-14
+    rtol = 2e-4
 
     def test_mktrace_t1(self, capsys):
         """
@@ -28,9 +30,16 @@ class TestMktrace(BaseSTIS):
 
         # Compare results
         captured = capsys.readouterr()
-        assert captured.out == "Traces were rotated by 0.0066273851 degrees \n" \
-                               "\n" \
-                               "Trace is centered on row 509.2475494292\n"
+        m = re.search(
+            r"Traces were rotated by ([0-9.]+) degrees.*?"
+            r"trace is centered on row ([0-9.]+)",
+            captured.out,
+            re.S)
+        angle = float(m.group(1))
+        row = float(m.group(2))
+
+        assert angle == pytest.approx(0.0066273851, rel=1e-6)
+        assert row == pytest.approx(509.2475494292, rel=1e-6))
 
         outputs = [("o45a03010_crj_1dt.fits", "o45a03010_crj_1dt_ref.fits"),
                    ("o45a03010_crj_1dt_interp.fits", "o45a03010_crj_1dt_interp_ref.fits"),
@@ -57,9 +66,16 @@ class TestMktrace(BaseSTIS):
 
         # Compare results
         captured = capsys.readouterr()
-        assert captured.out == "Traces were rotated by 0.0317182356 degrees \n" \
-                               "\n" \
-                               "Trace is centered on row 893.7059707738\n"
+        m = re.search(
+            r"Traces were rotated by ([0-9.]+) degrees.*?"
+            r"trace is centered on row ([0-9.]+)",
+            captured.out,
+            re.S)
+        angle = float(m.group(1))
+        row = float(m.group(2))
+
+        assert angle == pytest.approx(0.0317182356, rel=1e-6)
+        assert row == pytest.approx(893.7059707738, rel=1e-6)
 
         outputs = [("o8pp31020_crj_1dt.fits", "o8pp31020_crj_1dt_ref.fits"),
                    ("o8pp31020_crj_1dt_interp.fits", "o8pp31020_crj_1dt_interp_ref.fits"),

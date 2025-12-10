@@ -69,7 +69,7 @@ def getTable(table, filter, sortcol=None,
 
         # Test for for wildcards in the table.
         wild = None
-        if isinstance(column, np.chararray):
+        if isinstance(column, (str, bytes)):
             wild = (column == STRING_WILDCARD)
         elif isinstance(column[0], np.integer):
             wild = (column == INT_WILDCARD)

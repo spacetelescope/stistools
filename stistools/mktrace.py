@@ -43,8 +43,7 @@ Simple example of running mktrace on a STIS file named 'file.fits':
 
 """
 __version__ = '3.0.0'
-__vdate__ = '2025-01-28'
-
+__vdate__ = '2025-12-10'
 
 
 def mktrace(fname, tracecen=0.0, weights=None):

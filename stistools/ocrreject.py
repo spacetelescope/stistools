@@ -34,8 +34,8 @@ From command line::
 """
 
 __taskname__ = "ocrreject"
-__version__ = "3.4"
-__vdate__ = "13-November-2013"
+__version__ = "3.5"
+__vdate__ = "25-February-2025"
 __author__ = "Phil Hodge, STScI, November 2013."
 
 
@@ -213,7 +213,7 @@ def ocrreject(input, output,
             files = glob.glob(in2)
             infiles.extend(files)
     if input1 and not infiles:
-        print("No file name matched the string '{}'".format(input))
+        print(f"No file name matched the string '{input}'")
         return 2
 
     outfiles = []
@@ -228,21 +228,19 @@ def ocrreject(input, output,
     n_outfiles = len(outfiles)
     if all:
         if n_outfiles != 1:
-            print("You specified {} output files; when all is True,".format(
-                n_outfiles))
+            print(f"You specified {n_outfiles} output files; when all is True,")
             print("output must be exactly one file name.")
             return 2
     else:
         n_infiles = len(infiles)
         if n_outfiles != n_infiles:
-            print("You specified {} input files but {} output files;".format(
-                n_infiles, n_outfiles))
+            print(f"You specified {n_infiles} input files but {n_outfiles} output files;")
             print("the number of input and output files must be the same.")
             return 2
 
     if trailer:
         if verbose and os.access(trailer, os.F_OK):
-            print("Appending to trailer file {}".format(trailer))
+            print(f"Appending to trailer file {trailer}")
         f_trailer = open(trailer, "a")
         fd_trailer = f_trailer.fileno()
     else:
@@ -267,13 +265,13 @@ def ocrreject(input, output,
         optional_args.append(crsigmas)
     if crradius:
         optional_args.append("-radius")
-        optional_args.append("%.10g" % crradius)
-    if crthresh:
+        optional_args.append(f"{crradius:.10g}")
+    if crthresh is not None:
         optional_args.append("-thresh")
-        optional_args.append("%.10g" % crthresh)
-    if badinpdq:
+        optional_args.append(f"{crthresh:.10g}")
+    if badinpdq is not None:
         optional_args.append("-pdq")
-        optional_args.append("%d" % badinpdq)
+        optional_args.append(f"{badinpdq//1:.0f}")
     if crmask:
         if crmask == "yes":
             optional_args.append("-crmask")
@@ -282,15 +280,12 @@ def ocrreject(input, output,
             optional_args.append("-crmask")
             optional_args.append("no")
         else:
-            raise RuntimeError("crmask = %s, must be yes or no." % crmask)
+            raise RuntimeError(f"crmask = {crmask}, must be 'yes' or 'no'.")
 
     if all:
         arglist = ["cs2.e"]
 
-        infilestr = "%s" % infiles[0]
-        n_infiles = len(infiles)
-        for i in range(1, n_infiles):
-            infilestr += " %s" % infiles[i]
+        infilestr = ' '.join(infiles)
         arglist.append(infilestr)
         arglist.append(output)
 
@@ -301,13 +296,13 @@ def ocrreject(input, output,
         arglist.extend(optional_args)
 
         if verbose:
-            print("'{}'".format(str(arglist)))
-            print("Running ocrreject on {}".format(infilestr))
+            print(f"'{arglist!s}'")
+            print(f"Running ocrreject on {infilestr}")
         del infilestr
         status = subprocess.call(arglist, stdout=fd_trailer,
                                  stderr=subprocess.STDOUT)
         if status and verbose:
-            print("Warning:  status = {}".format(status))
+            print(f"Warning:  status = {status}")
         cumulative_status = status
 
     else:
@@ -323,15 +318,15 @@ def ocrreject(input, output,
                 arglist.append("-t")
             arglist.extend(optional_args)
 
-        if verbose:
-            print("Running ocrreject on {}".format(infile))
-            print("  {}".format(str(arglist)))
-        status = subprocess.call(arglist, stdout=fd_trailer,
-                                 stderr=subprocess.STDOUT)
-        if status:
-            cumulative_status = 1
             if verbose:
-                print("Warning:  status = {}".format(status))
+                print(f"Running ocrreject on {infile}")
+                print(f"  {arglist!s}")
+            status = subprocess.call(arglist, stdout=fd_trailer,
+                                     stderr=subprocess.STDOUT)
+            if status:
+                cumulative_status = 1
+                if verbose:
+                    print(f"Warning:  status = {status}")
 
     if f_trailer is not None:
         f_trailer.close()

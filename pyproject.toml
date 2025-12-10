@@ -7,7 +7,6 @@ authors = [
 ]
 classifiers = [
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Topic :: Scientific/Engineering :: Astronomy",
@@ -20,24 +19,23 @@ dependencies = [
     "stsci.tools",
     "pysiaf",
     "astroquery",
-    "matplotlib",
+    "matplotlib>=3.5",
 ]
+license-files = ["LICENSE.txt"]
 dynamic = [
     "version",
 ]
+requires-python = ">=3.10"
 
 [project.readme]
 file = "README.md"
 content-type = "text/markdown"
 
-[project.license]
-file = "LICENSE.txt"
-content-type = "text/plain"
-
 [project.optional-dependencies]
 test = [
     "pytest",
     "ci-watson>=0.8.0",
+    "requests",
 ]
 docs = [
     "ipython",
@@ -55,6 +53,7 @@ ocrreject_exam = "stistools.ocrreject_exam:call_ocrreject_exam"
 requires = [
     "setuptools>=61.2",
     "setuptools_scm[toml]>=3.4",
+    "wheel",
 ]
 build-backend = "setuptools.build_meta"
 

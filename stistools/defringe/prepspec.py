@@ -65,7 +65,7 @@ def prepspec(inspec, outroot='./', darkfile=None, pixelflat=None, initguess=None
     #    return SX2 file
 
     science_data = os.path.abspath(expandFileName(inspec))
-    sci_root = re.split('\.fits.*', os.path.basename(science_data),
+    sci_root = re.split(r'\.fits.*', os.path.basename(science_data),
         flags=re.IGNORECASE)[0].rsplit('_', 1)[0]
     opt_elem = fits.getval(science_data, 'OPT_ELEM').strip().upper()
     if (fits.getval(science_data, ext=0, keyword='DETECTOR').strip().upper() != 'CCD') or \
