@@ -35,7 +35,7 @@ content-type = "text/markdown"
 test = [
     "pytest",
     "ci-watson>=0.8.0",
-    "six",
+    "requests",
 ]
 docs = [
     "ipython",

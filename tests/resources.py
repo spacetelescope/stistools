@@ -1,5 +1,5 @@
 """HSTCAL regression test helpers."""
-from six.moves import urllib
+import urllib.request
 import getpass
 import os
 import sys
