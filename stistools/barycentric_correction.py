@@ -36,7 +36,7 @@ Task :func:`odelay_file_compare' shows differences in times between two STIS
 .fits files. This is useful in what barycentric corrections were
 calculated.
 
-Examples
+Examplesslddd
 --------
 
 :func:`bary_corr` with default values:
@@ -79,7 +79,8 @@ RADIAN = 57.295779513082320877
 
 def barycentric_correction(table_names, verbose=True, distance=1e9, 
                            hst_orb = None, in_col = 'TIME', 
-                           time_script = False, outfiles = None):
+                           time_script = False, outfiles = None,
+                           time_system = 'TDB'):
     """
         Calculates time-delay barycentric corrections from HST's position
         to the Solar System barycenter. This correction includes the classic
@@ -138,11 +139,22 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
             Default None. If not None, then it is a list of output files for
             each table_names. Each table_name will be copied over to the corr-
             esponding outfile name.
+            
+        time_standard: str
+            Define either "TDB" or "UTC" for final time standard conversion.
+            They will be different by about 69.184 seconds plus or minus a few
+            ms depending on where Earth is in its orbit. Final results will
+            then be in either BJD_TDB or BJD_UTC. Default is "TDB".
         
         Returns
         -------
         Nothing is returned directly, but the file is written to output.
     """
+    
+    if time_standard not in ['UTC','TDB']:
+        print('time_standard not recognized.')
+        print('Use "UTC" or "TDB".')
+        raise ValueError
     
     if time_script:
         tstart = time.time()
@@ -304,8 +316,14 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
                 delta_sec = calc_delay_jpl(mjd1, ra, dec, distance=distance)
             else:
                 delta_sec = calc_delay_orbfile(mjd1, ra, dec, hst_orb, distance=distance)
-                
-            events_tab.header['EXPSTART'] = mjd1 + delta_sec.value
+                            
+            # If converting to TDB, apply clock correction. Otherwise, keep
+            # as is.
+            if time_system == 'UTC':
+                events_tab.header['EXPSTART'] = mjd1 + delta_sec.value
+            elif time_system == 'TDB':
+                mjd1_obj = T.Time(mjd1, format = 'mjd', scale='utc')  
+                events_tab.header['EXPSTART'] = mjd1_obj.tdb.value + delta_sec.value
         
         
             # DOUBLE CHECK FOR TYPO, should probably be mjd2
@@ -313,8 +331,15 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
                 delta_sec = calc_delay_jpl(mjd2, ra, dec, distance=distance)
             else:
                 delta_sec = calc_delay_orbfile(mjd2, ra, dec, hst_orb, distance=distance)
-                
-            events_tab.header['EXPEND'] = mjd2 + delta_sec.value
+            
+            # If converting to TDB, apply clock correction. Otherwise, keep
+            # as is.
+            if time_system == 'UTC':
+                events_tab.header['EXPEND'] = mjd2 + delta_sec.value
+            elif time_system == 'TDB':
+                mjd2_obj = T.Time(mjd2, format = 'mjd', scale='utc')  
+                events_tab.header['EXPEND'] = mjd2_obj.tdb.value + delta_sec.value
+            
             in_hdul.flush()
             if verbose:
                 print("    [EVENTS,{}] extension has been updated".
@@ -338,6 +363,15 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
                 else:
                     delta_sec = calc_delay_orbfile(mjd1, ra, dec, hst_orb, distance=distance)
                 cur_tab.header['EXPSTART'] = mjd1 + delta_sec.value
+                
+                # If converting to TDB, apply clock correction. Otherwise, keep
+                # as is.
+                if time_system == 'UTC':
+                    cur_tab.header['EXPSTART'] = mjd1 + delta_sec.value
+                elif time_system == 'TDB':
+                    mjd1_obj = T.Time(mjd1, format = 'mjd', scale='utc')  
+                    cur_tab.header['EXPSTART'] = mjd1_obj.tdb.value + delta_sec.value
+                    
                 modified = True
         
             if "EXPEND" in cur_tab.header:
@@ -346,7 +380,14 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
                     delta_sec = calc_delay_jpl(mjd2, ra, dec, distance=distance)
                 else:
                     delta_sec = calc_delay_orbfile(mjd2, ra, dec, hst_orb, distance=distance)
-                cur_tab.header['EXPEND'] = mjd2 + delta_sec.value
+                    
+                # If converting to TDB, apply clock correction. Otherwise, keep
+                # as is.
+                if time_system == 'UTC':
+                    cur_tab.header['EXPEND'] = mjd2 + delta_sec.value
+                elif time_system == 'TDB':
+                    mjd2_obj = T.Time(mjd2, format = 'mjd', scale='utc') 
+                    cur_tab.header['EXPEND'] = mjd2_obj.tdb.value + delta_sec.value
                 modified = True
         
             in_hdul.flush()
@@ -368,21 +409,34 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
                 delta_sec = calc_delay_orbfile(mjd1, ra, dec, hst_orb, 
                                                distance=distance)
             
-            in_hdul[0].header['TEXPSTRT'] = mjd1 + delta_sec.value
-            
+            # If converting to TDB, apply clock correction. Otherwise, keep
+            # as is.
+            if time_system == 'UTC':
+                in_hdul[0].header['TEXPSTRT'] = mjd1 + delta_sec.value
+            elif time_system == 'TDB':
+                mjd1_obj = T.Time(mjd1, format = 'mjd', scale='utc') 
+                in_hdul[0].header['TEXPSTRT'] = mjd1_obj.tdb.value + delta_sec.value
+                    
             mjd2 = in_hdul[0].header['TEXPEND']
             if hst_orb is None:
                 delta_sec = calc_delay_jpl(mjd2, ra, dec, distance=distance)
             else:
                 delta_sec = calc_delay_orbfile(mjd2, ra, dec, hst_orb, 
                                                distance=distance)
-            in_hdul[0].header['TEXPEND'] = mjd2 + delta_sec.value
-        
+                
+            # If converting to TDB, apply clock correction. Otherwise, keep
+            # as is.
+            if time_system == 'UTC':
+                in_hdul[0].header['TEXPEND'] = mjd2 + delta_sec.value
+            elif time_system == 'TDB':
+                mjd2_obj = T.Time(mjd2, format = 'mjd', scale='utc') 
+                in_hdul[0].header['TEXPEND'] = mjd2_obj.tdb.value + delta_sec.value
+                        
         # add keyword to flag the fact that the times have been corrected
         in_hdul[0].header['DELAYCOR'] = ("COMPLETE",
                                          "delaytime has been applied")
         in_hdul[0].header['history'] = "Times corrected to solar system barycenter;"
-        in_hdul[0].header['history'] = "All times now in BJD_TDB;"
+        in_hdul[0].header['history'] = f"All times now in BJD_{time_system};"
         
         if hst_orb is not None:
             in_hdul[0].header['history'] = f"HST orbital table {hst_orb}"
