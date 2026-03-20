@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import time
+import os
 import shutil
 import numpy as np
 from scipy.interpolate import interp1d
@@ -60,8 +61,7 @@ class OrbFileError(ValueError):
 
 
 def barycentric_correction(table_names, verbose=True, distance=1e9,
-                           hst_orb=None, in_col='TIME',
-                           time_script=False, outfiles=None,
+                           hst_orb=None, time_script=False, outfiles=None,
                            time_system='TDB'):
     """
     Calculates time-delay barycentric corrections from HST's position
@@ -106,10 +106,6 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
         Name of HST orbital file (generally starts p, ends as .fit) that
         covers the time of the observations. If not provided, JPL Horizons
         will be used to get HST's orbital position.
-
-    in_col: str
-        Usually 'TIME' or 'time'. Used for compatability with files where
-        the column name for time is upper- or lower-case.
 
     time_script: bool
         Set to True if you want to time how long the script takes. Useful
@@ -807,8 +803,10 @@ def odelay_file_compare(file1, file2, in_col='TIME'):
     ----------
     file1 : str
         Path to the first FITS file.
+
     file2 : str
         Path to the second FITS file to compare against file1.
+
     in_col : str, optional
         Name of the column containing time data in the FITS table.
         Default is 'TIME'.
@@ -829,9 +827,9 @@ def odelay_file_compare(file1, file2, in_col='TIME'):
     The function assumes:
     - Both files have TEXPSTRT in the primary header (extension 0)
     - Both files have EXPSTART in extension 1 header
-    - If 'tag' appears in file1 path, extension 1 contains a table with the
-      time column specified by in_col. The script will print the difference
-      between the first and last times in each file.
+    - If 'tag' appears in file1 name, extension 1 contains a table.
+      The script will print the difference between the first and
+      last times in each file.
 
     Examples
     --------
@@ -845,26 +843,31 @@ def odelay_file_compare(file1, file2, in_col='TIME'):
     In case it is helpful, the difference between TT and TDB_BJD is -0.001497 s
     """
 
-    x = fits.open(file1)
-    x2 = fits.open(file2)
+    with fits.open(file1) as f1, fits.open(file2) as f2:
+        # IF STIS
+        # add delaytime to TEXPSTRT and TEXPEND, and update primary header
+        # COS has no TEXPSTRT in primary header
+        if f1[0].header['INSTRUME'] == "STIS":
+            print(f"TEXPSTRT file2-file1 {(f2[0].header['TEXPSTRT'] - f1[0].header['TEXPSTRT']) * SECPERDAY} seconds")
 
-    # IF STIS
-    # add delaytime to TEXPSTRT and TEXPEND, and update primary header
-    # COS has no TEXPSTRT in primary header
-    if x[0].header['INSTRUME'] == "STIS":
-        # print(f"TEXPSTRT file2-file1: {x2[0].header['TEXPSTRT'] - x[0].header['TEXPSTRT']} days")
-        print(f"TEXPSTRT file2-file1 {(x2[0].header['TEXPSTRT'] - x[0].header['TEXPSTRT']) * 24 * 60 * 60} seconds")
+        print(f"EXPSTART file2-file1: {(f2[1].header['EXPSTART'] - f1[1].header['EXPSTART']) * SECPERDAY} seconds")
 
-    # print(f"EXPSTART file2-file1 {x2[1].header['EXPSTART'] - x[1].header['EXPSTART']} days")
-    print(f"EXPSTART file2-file1: {(x2[1].header['EXPSTART'] - x[1].header['EXPSTART']) * 24 * 60 * 60} seconds")
+        if 'tag' in os.path.basename(file1):
+            # Handle case changes in file's time column name:
+            try:
+                in_col = [x.name for x in f1[1].data.columns if x.name.lower().strip() == 'time'][0]
+            except IndexError as e:
+                raise ValueError(f'Unable to locate "TIME" column in file1 "{file1}".') from e
 
-    if 'tag' in file1:
-        print(f"First TIME file2-file1: {x2[1].data[in_col][0] - x[1].data[in_col][0]} seconds")
-        print(f"Last TIME file2-file1: {x2[1].data[in_col][-1] - x[1].data[in_col][-1]} seconds")
+            print(f"First TIME file2-file1: {f2[1].data[in_col][0] - f1[1].data[in_col][0]} seconds")
+            print(f"Last TIME file2-file1: {f2[1].data[in_col][-1] - f1[1].data[in_col][-1]} seconds")
 
-    if x[0].header['INSTRUME'] == "STIS":
-        t = Time(x[0].header['TEXPSTRT'], format='mjd', scale='utc')
-    if x[0].header['INSTRUME'] == "COS":
-        t = Time(x[1].header['EXPSTART'], format='mjd', scale='utc')
-    diff = (t.tdb.value - t.tt.value) * 24 * 60 * 60
+        if f1[0].header['INSTRUME'] == "STIS":
+            t = Time(f1[0].header['TEXPSTRT'], format='mjd', scale='utc')
+        elif f1[0].header['INSTRUME'] == "COS":
+            t = Time(f1[1].header['EXPSTART'], format='mjd', scale='utc')
+        else:
+            raise ValueError(f"Unexpected INSTRUME value: {f1[1].header['EXPSTART']}")
+
+    diff = (t.tdb.value - t.tt.value) * SECPERDAY
     print(f'In case it is helpful, the difference between TT and TDB_BJD is {diff:.6f} s')
