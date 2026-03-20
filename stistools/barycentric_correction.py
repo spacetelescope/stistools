@@ -114,7 +114,6 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
             is repsonsible for second-order correction, up to minutes.
             At 1 parsec, the correction can be on the order of a few ms.
         
-        
         output: str
             Name of the output FITS file. Will overwrite existing file.
         
@@ -140,7 +139,7 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
             each table_names. Each table_name will be copied over to the corr-
             esponding outfile name.
             
-        time_standard: str
+        time_system: str
             Define either "TDB" or "UTC" for final time standard conversion.
             They will be different by about 69.184 seconds plus or minus a few
             ms depending on where Earth is in its orbit. Final results will
@@ -151,14 +150,23 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
         Nothing is returned directly, but the file is written to output.
     """
     
-    if time_standard not in ['UTC','TDB']:
-        print('time_standard not recognized.')
+    if time_system not in ['UTC','TDB']:
+        print('time_system not recognized.')
         print('Use "UTC" or "TDB".')
         raise ValueError
     
     if time_script:
         tstart = time.time()
                 
+    # Allow input of one filename as a str:
+    if isinstance(table_names, (str, bytes)):
+        table_names = [table_names]
+    if outfiles is not None:
+        if isinstance(outfiles(str, bytes)):
+            outfiles = [outfiles]
+        if len(table_names) != len(outfiles):
+            raise ValueError("If 'outfiles' is specified, it must be the same length as 'table_names'.")
+
     for ii, in_table_file in enumerate(table_names):
         
         if verbose:

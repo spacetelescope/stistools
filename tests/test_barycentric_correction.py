@@ -24,6 +24,7 @@ class TestBarycentricCorrection(BaseSTIS):
     def test_raw_orbfile(self):
         """Compare output for a x1d file."""
         self.get_data("input", "od9m97020_raw.fits")
+        self.get_data("input", "p2o0000r.fit")
         output = "od9m97020_raw.fits"
         
         
