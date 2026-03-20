@@ -492,6 +492,7 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
     if np.isscalar(times) is False:
         if verbose:
             print('Multiple times: interpolating positions')
+
         # Query five minute before and after min and max times
         # (In case we only query a minute of tags, we need more for spline)
         # With a step of 1 min
@@ -514,18 +515,17 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
         hstvecy = f_hsty(times_geo.tdb.jd)
         hstvecz = f_hstz(times_geo.tdb.jd)
 
-        # Re-package witn units
+        # Re-package with units
         hstarr = [hstvecx, hstvecy, hstvecz] * u.AU
 
     else:
         # Query HST's gencentric position in JPL Horizons
-        hstobj = Horizons(id='-48', location='500',
-                          epochs=times_geo.tdb.jd)
+        hstobj = Horizons(id='-48', location='500', epochs=times_geo.tdb.jd)
 
         # Must be refplane = 'earth' not 'ecliptic
         hstvec = hstobj.vectors(refplane='earth')
 
-        # Re-package witn units
+        # Re-package with units
         hstarr = [hstvec['x'][0], hstvec['y'][0], hstvec['z'][0]] * u.AU
 
     # Convert from vector table to Astropy Quantity
@@ -569,24 +569,7 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
                       target.cartesian.z.value]
 
         # Calculate the finite-distance correction term
-        # correction_term = []
-        # for j in range(shape(hstbary)[1]):
-        #     hstbary_tmp = np.array([hstbary[0][j],hstbary[1][j],hstbary[2][j]])
-        #     correction_tmp = ((-0.5/distance) *
-        #                        (np.sum((np.array(hstbary_tmp))**2) -
-        #                         (np.dot(target_arr,hstbary_tmp))**2)*u.AU /
-        #                        c.c).to('day')
-        #     correction_term.append(correction_tmp.value)
-        # correction_term*u.day
-
-        # This is wrong when hstbary is multiple points!
-        # The more points querried, the larger the correction lmaoooo
-        # correction_term = ((-0.5/distance) *
-        #                   (np.sum((np.array(hstbary))**2) -
-        #                    (np.dot(target_arr,hstbary))**2)*u.AU /
-        #                   c.c).to('day')
-
-        # Actually just need to make the above sum over the correction axis
+        # make the sum over the correction axis
         correction_term = ((-0.5 / distance) *
                            (np.sum((np.array(hstbary))**2, axis=0) -
                                   (np.dot(target_arr, hstbary))**2) * u.AU /
@@ -610,12 +593,12 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
         # adding the correction term above.
         # Then define the new barycenter times!
         lt_time = hsttime.light_travel_time(target) + correction_term
+
     if verbose:
         if lt_time.size < 10:
             print(f"Light travel times: {lt_time.to('s')}")
         else:
             print(f"Light travel times: {lt_time[0:10].to('s')}")
-    # ssbtimes = hsttime.tdb + lt_time
 
     return lt_time
 
@@ -680,8 +663,7 @@ def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True)
     Light travel times: [-405.56687377] s
     """
 
-    # This should never execute, unless you try and run calc_delay_orbfile
-    # as standalone
+    # This should never execute, unless you try and run calc_delay_orbfile as standalone
     if hst_orb is None:
         print('HST orbfile needed in hst_orb')
         return
@@ -770,8 +752,7 @@ def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True)
                                           z=itrs_cartesian.z)
 
         # Define our targets location on the sky
-        target = SkyCoord(ra, dec,
-                          unit=(u.deg, u.deg), frame='icrs')
+        target = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame='icrs')
 
         # Put into an array to dot with hstbary
         # Cartesian makes this a unit vector in direction of target
@@ -790,7 +771,7 @@ def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True)
                 print(f"Finite distance correction: {correction_term.to('s')}")
             else:
                 print(f"Finite distance correction: \
-                      {correction_term[0:10].to('s')}")
+                      {correction_term[:10].to('s')}")
 
         # Let's now define HST's location relative to the barycenter
         # from_geocentric() is expecting an ITRS coordinate!
@@ -804,12 +785,12 @@ def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True)
         # adding the correction term above.
         # Then define the new barycenter times!
         lt_time = hsttime.light_travel_time(target) + correction_term
+
     if verbose:
         if lt_time.size < 10:
             print(f"Light travel times: {lt_time.to('s')}")
         else:
             print(f"Light travel times: {lt_time[0:10].to('s')}")
-    # ssbtimes = hsttime.tdb + lt_time
 
     return lt_time
 
