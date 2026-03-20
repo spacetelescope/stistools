@@ -1,24 +1,23 @@
 #!/usr/bin/env python
 
+import time
+import shutil
 import numpy as np
 from scipy.interpolate import interp1d
 from astropy.io import fits
-import astropy
 from astropy import units as u, constants as c
-import astropy.time as T
+from astropy.time import Time
 from astropy.coordinates import SkyCoord, get_body_barycentric
 from astropy.coordinates import solar_system_ephemeris, EarthLocation
 from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
 from astropy.coordinates import ITRS, GCRS, ICRS
-from astropy.coordinates import CartesianRepresentation
 from astroquery.jplhorizons import Horizons
-import time
-import shutil
+
 
 __doc__ = """
-This task :func:`bary_corr' calculates the barycentric correction between
-HST and the Solar System barycenter for times in HST/STIS observations. It
-updates the times in uncalibrated (tag, raw) and calibrated data. It stores
+This task :func:`barycentric_correction' calculates the barycentric correction
+between HST and the Solar System barycenter for times in HST/STIS observations.
+It updates the times in uncalibrated (tag, raw) and calibrated data. It stores
 the "old" times in a new column for tag data and in new header keywords for
 raw and calibrated data. The function puts the various delay terms and
 positions in the header as well.
@@ -40,10 +39,10 @@ calculated.
 Examples
 --------
 
-:func:`bary_corr` with default values:
+:func:`barycentric_correction` with default values:
 
 >>> import stistools
->>> stistools.barycentric_correction.bary_corr("oep502040_x1d.fits")
+>>> stistools.barycentric_correction.barycentric_correction("oep502040_x1d.fits")
 """
 
 __taskname__ = "barycentric_correction"
@@ -51,27 +50,13 @@ __version__ = "1.0"
 __vdate__ = "21-August-2025"
 __author__ = "J. Lothringer"
 
-# File types
-EVENTS_TABLE = 1
+SECPERDAY = 86400  # number of sec in a day
 
-SECPERDAY = 86400  # D0    # number of sec in a day
-MINPERDAY = 1440   # D0    # number of min in a day
-HRPERDAY = 24      # D0    # number of hours in a day
 
-# Replacing with Astropy unit values
-LYPERPC = u.pc.to('lightyear')
-KMPERPC = u.pc.to('km')
-AUPERPC = u.pc.to('AU')
-KMPERAU = KMPERPC / AUPERPC
-CLIGHT = (u.AU / c.c).to('s').value
-
-# might not need these
-EARTH_EPHEMERIS = 1
-OBS_EPHEMERIS = 2
-
-JD_TO_MJD = 2400000.5   # d0    # subtract from JD to get MJD
-
-RADIAN = 57.295779513082320877
+class OrbFileError(ValueError):
+    """Orbit file does not cover the requested time range.
+    """
+    pass
 
 
 def barycentric_correction(table_names, verbose=True, distance=1e9,
@@ -79,72 +64,72 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
                            time_script=False, outfiles=None,
                            time_system='TDB'):
     """
-        Calculates time-delay barycentric corrections from HST's position
-        to the Solar System barycenter. This correction includes the classic
-        geometric Roemer delay, as well as the general relativistic Einstein
-        delay.
+    Calculates time-delay barycentric corrections from HST's position
+    to the Solar System barycenter. This correction includes the classic
+    geometric Roemer delay, as well as the general relativistic Einstein
+    delay.
 
-        This function uses modern Astropy tools to calculate the position
-        of the barycenter, Earth's location, and deal with the time standards.
-        The function has been tested against a Python implementation of
-        the previous odelaytime IRAF task and found to be consistent.
-        We have also tested against other barycentric correction tools,
-        including barycorr, astroutils, and pintbary.
+    This function uses modern Astropy tools to calculate the position
+    of the barycenter, Earth's location, and deal with the time standards.
+    The function has been tested against a Python implementation of
+    the previous odelaytime IRAF task and found to be consistent.
+    We have also tested against other barycentric correction tools,
+    including barycorr, astroutils, and pintbary.
 
-        HST's changing location around the Earth can lead to time-delay
-        differences of up to ~46 milliseconds. HST's location can be
-        determined either through STScI-provided HST orbital files, or through
-        a query to JPL Horizons.
+    HST's changing location around the Earth can lead to time-delay
+    differences of up to ~46 milliseconds. HST's location can be
+    determined either through STScI-provided HST orbital files, or through
+    a query to JPL Horizons.
 
-        These calculations are accurate to within 1 millisecond
-        outside the Solar System, and to within 5 milliseconds inside
-        the Solar System.
+    These calculations are accurate to within 1 millisecond
+    outside the Solar System, and to within 5 milliseconds inside
+    the Solar System.
 
-        Parameters
-        ----------
-        table_names: str or list[str]
-            List of strings with the file names to be time-corrected.
+    Parameters
+    ----------
+    table_names: str or list[str]
+        List of strings with the file names to be time-corrected.
 
-        distance: float
-            Distance the object is from HST in AU. Default is a trillion
-            AU. Most important for objects in our Solar System as it
-            is repsonsible for second-order correction, up to minutes.
-            At 1 parsec, the correction can be on the order of a few ms.
+    distance: float
+        Distance the object is from HST in AU. Default is a trillion
+        AU. Most important for objects in our Solar System as it
+        is repsonsible for second-order correction, up to minutes.
+        At 1 parsec, the correction can be on the order of a few ms.
 
-        output: str
-            Name of the output FITS file. Will overwrite existing file.
+    output: str
+        Name of the output FITS file. Will overwrite existing file.
 
-        verbose: bool
-            Prints completion messages during execution.
+    verbose: bool
+        Prints completion messages during execution.
 
-        hst_orb: str
-            Name of HST orbital file (generally starts p, ends as .fit) that
-            covers the time of the observations. If not provided, JPL Horizons
-            will be used to get HST's orbital position.
+    hst_orb: str
+        Name of HST orbital file (generally starts p, ends as .fit) that
+        covers the time of the observations. If not provided, JPL Horizons
+        will be used to get HST's orbital position.
 
-        in_col: str
-            Usually 'TIME' or 'time'. Used for compatability with files where
-            the column name for time is upper- or lower-case.
+    in_col: str
+        Usually 'TIME' or 'time'. Used for compatability with files where
+        the column name for time is upper- or lower-case.
 
-        time_script: bool
-            Set to True if you want to time how long the script takes. Useful
-            for debugging, especially for .tag files with large numbers of
-            events.
+    time_script: bool
+        Set to True if you want to time how long the script takes. Useful
+        for debugging, especially for .tag files with large numbers of
+        events.
 
-        outfiles: str or list
-            Default None. If not None, then it is a list of output files for
-            each table_names. Each table_name will be copied over to the corr-
-            esponding outfile name.
+    outfiles: str or list
+        Default None. If not None, then it is a list of output files for
+        each table_names. Each table_name will be copied over to the corr-
+        esponding outfile name.
 
-        time_system: str
-            Define either "TDB" or "UTC" for final time standard conversion.
-            They will be different by about 69.184 seconds plus or minus a few
-            ms depending on where Earth is in its orbit. Final results will
-            then be in either BJD_TDB or BJD_UTC. Default is "TDB".
+    time_system: str
+        Define either "TDB" or "UTC" for final time standard conversion.
+        They will be different by about 69.184 seconds plus or minus a few
+        ms depending on where Earth is in its orbit. Final results will
+        then be in either BJD_TDB or BJD_UTC. Default is "TDB".
 
-        Returns
-        -------
-        Nothing is returned directly, but the file is written to output.
+    Returns
+    -------
+    Nothing is returned directly, but the file is written to output.
     """
 
     if time_system not in ['UTC', 'TDB']:
@@ -167,17 +152,18 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
     for ii, in_table_file in enumerate(table_names):
 
         if verbose:
-            print("odelaytime: processing {} ...".format(in_table_file))
+            print(f"odelaytime: processing {in_table_file} ...")
 
         # Copy to new outfile, otherwise overwrite input file.
-        if outfiles is not None:
-            if verbose:
-                print(f"Copying {in_table_file} to {outfiles[ii]}")
-            shutil.copy(in_table_file, outfiles[ii])
-            in_hdul = fits.open(outfiles[ii], mode='update')
-
+        if outfiles is None:
+            filename = in_table_file
         else:
-            in_hdul = fits.open(in_table_file, mode='update')
+            filename = outfiles[ii]
+            if verbose:
+                print(f"Copying {in_table_file} to {filename}")
+            shutil.copy(in_table_file, filename)
+
+        in_hdul = fits.open(filename, mode='update')
 
         # determine the file type, based on the first extension
         # original code (ln 124) contains some kind of catch all
@@ -188,14 +174,16 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
             filetype = "EVENTS_TABLE"
         elif extname == "SCI":
             filetype = "X1D_TABLE"
+        else:
+            raise ValueError(f"Unexpected extension name:  {extname}")
 
         if 'DELAYCOR' in in_hdul[0].header and \
                 in_hdul[0].header['DELAYCOR'] == "COMPLETE":
-            print("{} has already been corrected, so no further processing"
-                  " will be applied to this file".format(in_table_file))
+            print(f"{in_table_file} has already been corrected, so no further processing"
+                  " will be applied to this file")
             continue
-        else:
-            in_hdul[0].header['DELAYCOR'] = "PERFORM"
+
+        in_hdul[0].header['DELAYCOR'] = "PERFORM"
 
         # COS has no TEXPSTRT in primary header, so use EXPSTART in first ext
         if in_hdul[0].header['INSTRUME'] == "STIS":
@@ -241,26 +229,17 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
             # update times in GTI table
             if 'GTI' in in_hdul:
                 gti_tab = in_hdul['GTI'].data
-                nrows = len(gti_tab)
                 for row in gti_tab:
-                    tm = row['START']
-                    epoch = mjd1 + tm / SECPERDAY
+                    for keyword in ['START', 'STOP']:
+                        tm = row[keyword]
+                        epoch = mjd1 + tm / SECPERDAY
 
-                    if hst_orb is None:
-                        delta_sec = calc_delay_jpl(epoch, ra, dec, distance=distance)
-                    else:
-                        delta_sec = calc_delay_orbfile(epoch, ra, dec, hst_orb, distance=distance)
+                        if hst_orb is None:
+                            delta_sec = calc_delay_jpl(epoch, ra, dec, distance=distance)
+                        else:
+                            delta_sec = calc_delay_orbfile(epoch, ra, dec, hst_orb, distance=distance)
 
-                    row['START'] = tm + (delta_sec - t0_delay).value * SECPERDAY
-
-                    tm = row['STOP']
-                    epoch = mjd1 + tm / SECPERDAY
-                    if hst_orb is None:
-                        delta_sec = calc_delay_jpl(epoch, ra, dec, distance=distance)
-                    else:
-                        delta_sec = calc_delay_orbfile(epoch, ra, dec, hst_orb, distance=distance)
-
-                    row['STOP'] = tm + (delta_sec - t0_delay).value * SECPERDAY
+                        row[keyword] = tm + (delta_sec - t0_delay).value * SECPERDAY
 
                 in_hdul.flush()
 
@@ -284,8 +263,6 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
 
             # find the time (since EXPSTART) column in the table
             nrows = len(events_tab.data[in_col])
-
-            tm_prev = 0
 
             # pull out just the time array
             time_array = events_tab.data[in_col]
@@ -311,37 +288,23 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
             in_hdul['EVENTS', e_indx].data[in_col] = time_array
 
             # add delaytime to EXPSTART and EXPEND, and update header
-            if hst_orb is None:
-                delta_sec = calc_delay_jpl(mjd1, ra, dec, distance=distance)
-            else:
-                delta_sec = calc_delay_orbfile(mjd1, ra, dec, hst_orb, distance=distance)
+            for keyword in ['EXPSTART', 'EXPEND']:
+                mjd = events_tab.header[keyword]
+                if hst_orb is None:
+                    delta_sec = calc_delay_jpl(mjd, ra, dec, distance=distance)
+                else:
+                    delta_sec = calc_delay_orbfile(mjd, ra, dec, hst_orb, distance=distance)
 
-            # If converting to TDB, apply clock correction. Otherwise, keep
-            # as is.
-            if time_system == 'UTC':
-                events_tab.header['EXPSTART'] = mjd1 + delta_sec.value
-            elif time_system == 'TDB':
-                mjd1_obj = T.Time(mjd1, format='mjd', scale='utc')
-                events_tab.header['EXPSTART'] = mjd1_obj.tdb.value + delta_sec.value
-
-            # DOUBLE CHECK FOR TYPO, should probably be mjd2
-            if hst_orb is None:
-                delta_sec = calc_delay_jpl(mjd2, ra, dec, distance=distance)
-            else:
-                delta_sec = calc_delay_orbfile(mjd2, ra, dec, hst_orb, distance=distance)
-
-            # If converting to TDB, apply clock correction. Otherwise, keep
-            # as is.
-            if time_system == 'UTC':
-                events_tab.header['EXPEND'] = mjd2 + delta_sec.value
-            elif time_system == 'TDB':
-                mjd2_obj = T.Time(mjd2, format='mjd', scale='utc')
-                events_tab.header['EXPEND'] = mjd2_obj.tdb.value + delta_sec.value
+                # If converting to TDB, apply clock correction. Otherwise, keep as is.
+                if time_system == 'UTC':
+                    events_tab.header[keyword] = mjd + delta_sec.value
+                elif time_system == 'TDB':
+                    mjd_obj = Time(mjd, format='mjd', scale='utc')
+                    events_tab.header[keyword] = mjd_obj.tdb.value + delta_sec.value
 
             in_hdul.flush()
             if verbose:
-                print("    [EVENTS,{}] extension has been updated".
-                      format(e_indx))
+                print(f"    [EVENTS,{e_indx}] extension has been updated")
 
         # Loop through all x1d or image extensions (there will be none if
         # the input is an events file).  Note that we only expect EXPSTART
@@ -354,43 +317,26 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
             modified = False
 
             # add delaytime to EXPSTART and EXPEND, and update header
-            if "EXPSTART" in cur_tab.header:
-                mjd1 = cur_tab.header['EXPSTART']
-                if hst_orb is None:
-                    delta_sec = calc_delay_jpl(mjd1, ra, dec, distance=distance)
-                else:
-                    delta_sec = calc_delay_orbfile(mjd1, ra, dec, hst_orb, distance=distance)
-                cur_tab.header['EXPSTART'] = mjd1 + delta_sec.value
+            for keyword in ['EXPSTART', 'EXPEND']:
+                if keyword in cur_tab.header:
+                    mjd = cur_tab.header[keyword]
+                    if hst_orb is None:
+                        delta_sec = calc_delay_jpl(mjd, ra, dec, distance=distance)
+                    else:
+                        delta_sec = calc_delay_orbfile(mjd, ra, dec, hst_orb, distance=distance)
 
-                # If converting to TDB, apply clock correction. Otherwise, keep
-                # as is.
-                if time_system == 'UTC':
-                    cur_tab.header['EXPSTART'] = mjd1 + delta_sec.value
-                elif time_system == 'TDB':
-                    mjd1_obj = T.Time(mjd1, format='mjd', scale='utc')
-                    cur_tab.header['EXPSTART'] = mjd1_obj.tdb.value + delta_sec.value
+                    # If converting to TDB, apply clock correction. Otherwise, keep as is.
+                    if time_system == 'UTC':
+                        cur_tab.header[keyword] = mjd + delta_sec.value
+                    elif time_system == 'TDB':
+                        mjd_obj = Time(mjd, format='mjd', scale='utc')
+                        cur_tab.header[keyword] = mjd_obj.tdb.value + delta_sec.value
 
-                modified = True
-
-            if "EXPEND" in cur_tab.header:
-                mjd2 = cur_tab.header['EXPEND']
-                if hst_orb is None:
-                    delta_sec = calc_delay_jpl(mjd2, ra, dec, distance=distance)
-                else:
-                    delta_sec = calc_delay_orbfile(mjd2, ra, dec, hst_orb, distance=distance)
-
-                # If converting to TDB, apply clock correction. Otherwise, keep
-                # as is.
-                if time_system == 'UTC':
-                    cur_tab.header['EXPEND'] = mjd2 + delta_sec.value
-                elif time_system == 'TDB':
-                    mjd2_obj = T.Time(mjd2, format='mjd', scale='utc')
-                    cur_tab.header['EXPEND'] = mjd2_obj.tdb.value + delta_sec.value
-                modified = True
+                    modified = True
 
             in_hdul.flush()
             if verbose and modified:
-                print("    extension {} has been updated".format(e_indx))
+                print(f"    extension {e_indx} has been updated")
 
         if time_script:
             tcheck2 = time.time()
@@ -400,33 +346,19 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
         # add delaytime to TEXPSTRT and TEXPEND, and update primary header
         # COS has no TEXPSTRT in primary header
         if in_hdul[0].header['INSTRUME'] == "STIS":
-            mjd1 = in_hdul[0].header['TEXPSTRT']
-            if hst_orb is None:
-                delta_sec = calc_delay_jpl(mjd1, ra, dec, distance=distance)
-            else:
-                delta_sec = calc_delay_orbfile(mjd1, ra, dec, hst_orb, distance=distance)
+            for keyword in ['TEXPSTRT', 'TEXPEND']:
+                mjd = in_hdul[0].header[keyword]
+                if hst_orb is None:
+                    delta_sec = calc_delay_jpl(mjd, ra, dec, distance=distance)
+                else:
+                    delta_sec = calc_delay_orbfile(mjd, ra, dec, hst_orb, distance=distance)
 
-            # If converting to TDB, apply clock correction. Otherwise, keep
-            # as is.
-            if time_system == 'UTC':
-                in_hdul[0].header['TEXPSTRT'] = mjd1 + delta_sec.value
-            elif time_system == 'TDB':
-                mjd1_obj = T.Time(mjd1, format='mjd', scale='utc')
-                in_hdul[0].header['TEXPSTRT'] = mjd1_obj.tdb.value + delta_sec.value
-
-            mjd2 = in_hdul[0].header['TEXPEND']
-            if hst_orb is None:
-                delta_sec = calc_delay_jpl(mjd2, ra, dec, distance=distance)
-            else:
-                delta_sec = calc_delay_orbfile(mjd2, ra, dec, hst_orb, distance=distance)
-
-            # If converting to TDB, apply clock correction. Otherwise, keep
-            # as is.
-            if time_system == 'UTC':
-                in_hdul[0].header['TEXPEND'] = mjd2 + delta_sec.value
-            elif time_system == 'TDB':
-                mjd2_obj = T.Time(mjd2, format='mjd', scale='utc')
-                in_hdul[0].header['TEXPEND'] = mjd2_obj.tdb.value + delta_sec.value
+                # If converting to TDB, apply clock correction. Otherwise, keep as is.
+                if time_system == 'UTC':
+                    in_hdul[0].header[keyword] = mjd + delta_sec.value
+                elif time_system == 'TDB':
+                    mjd_obj = Time(mjd, format='mjd', scale='utc')
+                    in_hdul[0].header[keyword] = mjd_obj.tdb.value + delta_sec.value
 
         # add keyword to flag the fact that the times have been corrected
         in_hdul[0].header['DELAYCOR'] = ("COMPLETE",
@@ -449,8 +381,6 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
             tcheck3 = time.time()
             print(f'Checkpoint 3: {tcheck3 - tstart} s')
 
-        return
-
 
 def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
     """
@@ -466,13 +396,17 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
     ----------
     times : array-like or `~astropy.time.Time`
         Observation times in Modified Julian Date (MJD). Can be a scalar or an array.
+
     ra : float or `~astropy.units.Quantity`
         Right ascension of the target in degrees.
+
     dec : float or `~astropy.units.Quantity`
         Declination of the target in degrees.
+
     distance : float, optional
         Distance to the target (default ``1e9``). This value is used in the finite-distance
         correction term. (See ``Notes`` for how it enters the equation.)
+
     verbose : bool, optional
         If True (default) print diagnostics about interpolation, the finite-distance
         correction, and the computed light-travel times.
@@ -506,7 +440,7 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
 
     Raises
     ------
-    Exception
+    ValueError, RemoteServiceError, ConvertError
         If the Horizons query or interpolation fails to produce vectors covering the
         requested time range, or if the vector transformation cannot be performed.
 
@@ -538,10 +472,10 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
     # Put times into Astropy time object
     # We will query HST's position at this time
     # We will be off by the HST-geocenter light travel time, FWIW
-    times_geo = T.Time(times,
-                       format='mjd',
-                       scale='utc',
-                       location=EarthLocation.from_geocentric(0, 0, 0, unit='m'))
+    times_geo = Time(times,
+                     format='mjd',
+                     scale='utc',
+                     location=EarthLocation.from_geocentric(0, 0, 0, unit='m'))
 
     # Get HST's location
 
@@ -625,8 +559,8 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
                    earthICRS.z.to('AU').value + hstITRS.z.value]
 
         # Define our targets location on the sky
-        target = astropy.coordinates.SkyCoord(ra, dec,
-                                              unit=(u.deg, u.deg), frame='icrs')
+        target = SkyCoord(ra, dec,
+                          unit=(u.deg, u.deg), frame='icrs')
 
         # Put into an array to dot with hstbary
         # Cartesian makes this a unit vector in direction of target
@@ -670,7 +604,7 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
                                                y=hstITRS.y,
                                                z=hstITRS.z)
         # Define the times, now with the correct location
-        hsttime = T.Time(times, format='mjd', scale='utc', location=hstloc)
+        hsttime = Time(times, format='mjd', scale='utc', location=hstloc)
 
         # Calculate the light travel time,
         # adding the correction term above.
@@ -686,7 +620,7 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
     return lt_time
 
 
-def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True, in_col='Time'):
+def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True):
     """
     Calculate the light-travel time correction for HST observations using an orbit file.
 
@@ -699,23 +633,25 @@ def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True,
     ----------
     times : array-like or float
         Observation times in Modified Julian Date (MJD), corresponding to HST exposures.
+
     ra : float
         Right ascension of the target in degrees.
+
     dec : float
         Declination of the target in degrees.
+
     hst_orb : str, optional
         Path to the HST orbit FITS file. This file must contain columns `TIME`, `X`, `Y`, and `Z`
         giving HST’s position (in km) relative to the Earth's center.
         If `None`, the function will print a message and exit.
+
     distance : float, optional
         Distance to the target in kilometers (default is `1e9`, effectively infinite distance).
         Used to apply the finite-distance light-travel time correction.
+
     verbose : bool, optional
         If True (default), print information about the finite-distance correction
         and the calculated light-travel times.
-    in_col : str, optional
-        If orbital file uses something other than 'Time' for the time axis, replace
-        with the correct column name.
 
     Returns
     -------
@@ -734,7 +670,7 @@ def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True,
 
     Raises
     ------
-    Exception
+    OrbFileError
         If the orbit file does not cover the requested time range.
 
     Examples
@@ -758,10 +694,10 @@ def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True,
     # Put times into Astropy time object
     # We will query HST's position at this time
     # We will be off by the HST-geocenter light travel time, FWIW
-    times_geo = T.Time(times,
-                       format='mjd',
-                       scale='utc',
-                       location=EarthLocation.from_geocentric(0, 0, 0, unit='m'))
+    times_geo = Time(times,
+                     format='mjd',
+                     scale='utc',
+                     location=EarthLocation.from_geocentric(0, 0, 0, unit='m'))
 
     # Get HST's location
 
@@ -776,18 +712,23 @@ def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True,
 
     # HST orb file
     with fits.open(hst_orb) as hdu_orb:
-        f_hstx = interp1d(float(hdu_orb[1].header['FIRSTMJD']) + hdu_orb[1].data[in_col].astype(np.float64) / 86400, hdu_orb[1].data['X'], kind='cubic')
-        f_hsty = interp1d(float(hdu_orb[1].header['FIRSTMJD']) + hdu_orb[1].data[in_col].astype(np.float64) / 86400, hdu_orb[1].data['Y'], kind='cubic')
-        f_hstz = interp1d(float(hdu_orb[1].header['FIRSTMJD']) + hdu_orb[1].data[in_col].astype(np.float64) / 86400, hdu_orb[1].data['Z'], kind='cubic')
+        # Handle case changes in orbital file time column name:
+        try:
+            in_col = [x.name for x in hdu_orb[1].data.columns if x.name.lower().strip() == 'time'][0]
+        except IndexError as e:
+            raise ValueError(f'Unable to locate "Time" column in hst_orb file "{hst_orb}".') from e
+
+        f_hstx = interp1d(float(hdu_orb[1].header['FIRSTMJD']) + hdu_orb[1].data[in_col].astype(np.float64) / SECPERDAY, hdu_orb[1].data['X'], kind='cubic')
+        f_hsty = interp1d(float(hdu_orb[1].header['FIRSTMJD']) + hdu_orb[1].data[in_col].astype(np.float64) / SECPERDAY, hdu_orb[1].data['Y'], kind='cubic')
+        f_hstz = interp1d(float(hdu_orb[1].header['FIRSTMJD']) + hdu_orb[1].data[in_col].astype(np.float64) / SECPERDAY, hdu_orb[1].data['Z'], kind='cubic')
 
         try:
             hstvecx = f_hstx(times_geo.tdb.mjd)
             hstvecy = f_hsty(times_geo.tdb.mjd)
             hstvecz = f_hstz(times_geo.tdb.mjd)
-        except ValueError:
-            print('Orbit file does not match observation times.')
-            print('Make sure you have got the correct one.')
-            raise Exception('OrbFileError')
+        except ValueError as e:
+            raise OrbFileError('Orbit file does not match observation times. '
+                               'Make sure you have got the correct one.') from e
 
         hstarr = [hstvecx, hstvecy, hstvecz] * u.km
 
@@ -829,8 +770,8 @@ def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True,
                                           z=itrs_cartesian.z)
 
         # Define our targets location on the sky
-        target = astropy.coordinates.SkyCoord(ra, dec,
-                                              unit=(u.deg, u.deg), frame='icrs')
+        target = SkyCoord(ra, dec,
+                          unit=(u.deg, u.deg), frame='icrs')
 
         # Put into an array to dot with hstbary
         # Cartesian makes this a unit vector in direction of target
@@ -857,7 +798,7 @@ def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True,
                                                y=itrs_cartesian.y,
                                                z=itrs_cartesian.z)
         # Define the times, now with the correct location
-        hsttime = T.Time(times, format='mjd', scale='utc', location=hstloc)
+        hsttime = Time(times, format='mjd', scale='utc', location=hstloc)
 
         # Calculate the light travel time,
         # adding the correction term above.
@@ -868,7 +809,7 @@ def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True,
             print(f"Light travel times: {lt_time.to('s')}")
         else:
             print(f"Light travel times: {lt_time[0:10].to('s')}")
-    # ssbtimes = hsttime.tdb+lt_time
+    # ssbtimes = hsttime.tdb + lt_time
 
     return lt_time
 
@@ -941,8 +882,8 @@ def odelay_file_compare(file1, file2, in_col='TIME'):
         print(f"Last TIME file2-file1: {x2[1].data[in_col][-1] - x[1].data[in_col][-1]} seconds")
 
     if x[0].header['INSTRUME'] == "STIS":
-        t = T.Time(x[0].header['TEXPSTRT'], format='mjd', scale='utc')
+        t = Time(x[0].header['TEXPSTRT'], format='mjd', scale='utc')
     if x[0].header['INSTRUME'] == "COS":
-        t = T.Time(x[1].header['EXPSTART'], format='mjd', scale='utc')
+        t = Time(x[1].header['EXPSTART'], format='mjd', scale='utc')
     diff = (t.tdb.value - t.tt.value) * 24 * 60 * 60
     print(f'In case it is helpful, the difference between TT and TDB_BJD is {diff:.6f} s')
