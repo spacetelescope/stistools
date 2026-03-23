@@ -71,14 +71,14 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
     This function uses modern Astropy tools to calculate the position
     of the barycenter, Earth's location, and deal with the time standards.
     The function has been tested against a Python implementation of
-    the previous odelaytime IRAF task and found to be consistent.
+    the previous `odelaytime` IRAF task and found to be consistent.
     We have also tested against other barycentric correction tools,
-    including barycorr, astroutils, and pintbary.
+    including `barycorr`, `astroutils`, and `pintbary`.
 
     HST's changing location around the Earth can lead to time-delay
     differences of up to ~46 milliseconds. HST's location can be
-    determined either through STScI-provided HST orbital files, or through
-    a query to JPL Horizons.
+    determined either through STScI-provided `HST orbital files <https://www.stsci.edu/~STIS/monitors/ephemeris_files.html>`_,
+    or through a query to JPL Horizons.
 
     These calculations are accurate to within 1 millisecond
     outside the Solar System, and to within 5 milliseconds inside
@@ -656,6 +656,8 @@ def calc_delay_orbfile(times, ra, dec, hst_orb, distance=1e9, verbose=True):
     - The finite-distance correction term scales as ``~(r^2 - (r·n)^2) / (2cD)``, where
       `r` is HST's barycentric position vector, `n` is the unit vector toward the target,
       `c` is the speed of light, and `D` is the target distance.
+    - HST orbit files may be downloaded using information provided at
+      https://www.stsci.edu/~STIS/monitors/ephemeris_files.html
 
     Raises
     ------
@@ -799,7 +801,7 @@ def calc_delay_orbfile(times, ra, dec, hst_orb, distance=1e9, verbose=True):
     return lt_time
 
 
-def odelay_file_compare(file1, file2, in_col='TIME'):
+def odelay_file_compare(file1, file2):
     """
     Compare timing information between two FITS files.
 
@@ -814,10 +816,6 @@ def odelay_file_compare(file1, file2, in_col='TIME'):
 
     file2: str
         Path to the second FITS file to compare against file1.
-
-    in_col: str, optional
-        Name of the column containing time data in the FITS table.
-        Default is 'TIME'.
 
     Returns
     -------
