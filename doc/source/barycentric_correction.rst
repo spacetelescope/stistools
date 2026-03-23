@@ -1,8 +1,8 @@
-.. _x1d:
+.. _barycentric_correction:
 
-**************************
-x1d
-**************************
+**********************
+barycentric_correction
+**********************
 
 .. currentmodule:: stistools.barycentric_correction
 

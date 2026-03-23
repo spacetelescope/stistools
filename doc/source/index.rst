@@ -40,6 +40,7 @@ for getting started.
    :maxdepth: 1
 
    basic2d
+   barycentric_correction
    calstis
    crrej_from_raw
    ctestis

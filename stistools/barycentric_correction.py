@@ -16,26 +16,25 @@ from astroquery.jplhorizons import Horizons
 
 
 __doc__ = """
-This task :func:`barycentric_correction' calculates the barycentric correction
+This task :func:`barycentric_correction` calculates the barycentric correction
 between HST and the Solar System barycenter for times in HST/STIS observations.
-It updates the times in uncalibrated (tag, raw) and calibrated data. It stores
-the "old" times in a new column for tag data and in new header keywords for
-raw and calibrated data. The function puts the various delay terms and
+It updates the times in uncalibrated (``tag``, ``raw``) and calibrated data. It
+stores the old times in a new column for tag data and in new header keywords
+for raw and calibrated data. The function puts the various delay terms and
 positions in the header as well.
 
 The function works by first determining the position of the Earth with
 Astropy and HST with either JPL Horizons or the STScI-provided HST
 orbital files.
 
-For *tag.fits files with many times to convert, performance can be slow due to
-the high number of coordinate transformations.
+For ``*tag.fits`` files with many times to convert, performance can be slow due
+to the high number of coordinate transformations.
 
-Stand-alone tasks :func:`calc_delay_jpl' :func:`calc_delay_orbfile' can be used
+Stand-alone tasks :func:`calc_delay_jpl` :func:`calc_delay_orbfile` can be used
 to calculate barycentric corrections without file modifications.
 
-Task :func:`odelay_file_compare' shows differences in times between two STIS
-.fits files. This is useful in what barycentric corrections were
-calculated.
+Task :func:`odelay_file_compare` shows differences in times between two STIS
+FITS files. This is useful in what barycentric corrections were calculated.
 
 Examples
 --------
@@ -87,7 +86,7 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
 
     Parameters
     ----------
-    table_names: str or list[str]
+    table_names: str or iterable[str]
         List of strings with the file names to be time-corrected.
 
     distance: float
@@ -109,23 +108,24 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
 
     time_script: bool
         Set to True if you want to time how long the script takes. Useful
-        for debugging, especially for .tag files with large numbers of
+        for debugging, especially for ``tag`` files with large numbers of
         events.
 
-    outfiles: str or list
+    outfiles: str or list[str]
         Default None. If not None, then it is a list of output files for
         each table_names. Each table_name will be copied over to the corr-
         esponding outfile name.
 
     time_system: str
-        Define either "TDB" or "UTC" for final time standard conversion.
+        Define as either ``"TDB"`` or ``"UTC"`` for final time standard conversion.
         They will be different by about 69.184 seconds plus or minus a few
         ms depending on where Earth is in its orbit. Final results will
-        then be in either BJD_TDB or BJD_UTC. Default is "TDB".
+        then be in either BJD_TDB or BJD_UTC. Default is ``"TDB"``.
 
     Returns
     -------
-    Nothing is returned directly, but the file is written to output.
+    None
+        However, the file is written to output.
     """
 
     if time_system not in ['UTC', 'TDB']:
@@ -379,7 +379,7 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
 
 
 def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
-    """
+    r"""
     Calculate the barycentric light-travel time correction for HST using JPL Horizons.
 
     Compute the barycentric light-travel time delay for the Hubble Space Telescope (HST)
@@ -390,26 +390,26 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
 
     Parameters
     ----------
-    times : array-like or `~astropy.time.Time`
+    times: array-like or `~astropy.time.Time`
         Observation times in Modified Julian Date (MJD). Can be a scalar or an array.
 
-    ra : float or `~astropy.units.Quantity`
+    ra: float or `~astropy.units.Quantity`
         Right ascension of the target in degrees.
 
-    dec : float or `~astropy.units.Quantity`
+    dec: float or `~astropy.units.Quantity`
         Declination of the target in degrees.
 
-    distance : float, optional
+    distance: float, optional
         Distance to the target (default ``1e9``). This value is used in the finite-distance
         correction term. (See ``Notes`` for how it enters the equation.)
 
-    verbose : bool, optional
+    verbose: bool, optional
         If True (default) print diagnostics about interpolation, the finite-distance
         correction, and the computed light-travel times.
 
     Returns
     -------
-    lt_time : `~astropy.units.Quantity`
+    lt_time: `~astropy.units.Quantity`
         Light-travel time correction(s) (Astropy Quantity) in days. This is the time
         that should be added to the observation times to obtain barycentric arrival times,
         and includes the finite-distance correction.
@@ -424,7 +424,11 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
       scalar time it queries Horizons directly at that epoch.
     - The finite-distance correction implemented here follows the same algebraic
       form used elsewhere in this codebase:
-        correction_term = (-0.5 / D) * (|r|^2 - (n·r)^2) / c
+
+      .. math::
+
+           \mbox{correction\_term} = \frac{-0.5}{D} \left(|r|^2 - (n \cdot r)^2\right) / c
+
       where `r` is the HST barycentric position vector, `n` is the unit vector toward
       the target, `D` is the provided `distance`, and `c` is the speed of light.
       The expression is converted into days before being returned.
@@ -434,19 +438,26 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
     - Requires `astroquery` (Horizons), Astropy with the `jplephem` ephemeris available,
       and a working internet connection for Horizons queries when not using a local orbit file.
 
-    Raises
-    ------
-    ValueError, RemoteServiceError, ConvertError
-        If the Horizons query or interpolation fails to produce vectors covering the
-        requested time range, or if the vector transformation cannot be performed.
+    **Performance / Accuracy Considerations**
 
-    Performance / accuracy considerations
-    -----------------------------------
     - Interpolation at 1-minute sampling is a compromise between speed and accuracy;
       a timing error of ~1 minute corresponds to a maximum light-travel time error of
       a few milliseconds. Increase sampling density or query exact epochs if sub-ms
       accuracy is required.
     - Converting large arrays of epochs and coordinate transforms may be time-consuming.
+
+    Raises
+    ------
+    ValueError
+        If the Horizons query or interpolation fails to produce vectors covering the
+        requested time range, or if the vector transformation cannot be performed.
+
+    RemoteServiceError
+        If the Horizons query or interpolation fails to produce vectors covering the
+        requested time range.
+
+    ConvertError
+        If the vector transformation cannot be performed.
 
     Examples
     --------
@@ -599,52 +610,51 @@ def calc_delay_jpl(times, ra, dec, distance=1e9, verbose=True):
     return lt_time
 
 
-def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True):
-    """
+def calc_delay_orbfile(times, ra, dec, hst_orb, distance=1e9, verbose=True):
+    r"""
     Calculate the light-travel time correction for HST observations using an orbit file.
 
     This function computes the barycentric light-travel time delay for the Hubble Space Telescope (HST)
-    given a set of observation times and a target sky position (RA, Dec). It interpolates HST’s position
+    given a set of observation times and a target sky position (RA, Dec). It interpolates HST's position
     from a provided orbit file, combines it with Earth's barycentric position, and calculates the
     light-travel time correction to the Solar System barycenter, including a finite-distance correction term.
 
     Parameters
     ----------
-    times : array-like or float
+    times: array-like or float
         Observation times in Modified Julian Date (MJD), corresponding to HST exposures.
 
-    ra : float
+    ra: float
         Right ascension of the target in degrees.
 
-    dec : float
+    dec: float
         Declination of the target in degrees.
 
-    hst_orb : str, optional
+    hst_orb: str
         Path to the HST orbit FITS file. This file must contain columns `TIME`, `X`, `Y`, and `Z`
-        giving HST’s position (in km) relative to the Earth's center.
-        If `None`, the function will print a message and exit.
+        giving HST's position (in km) relative to the Earth's center.
 
-    distance : float, optional
+    distance: float, optional
         Distance to the target in kilometers (default is `1e9`, effectively infinite distance).
         Used to apply the finite-distance light-travel time correction.
 
-    verbose : bool, optional
+    verbose: bool, optional
         If True (default), print information about the finite-distance correction
         and the calculated light-travel times.
 
     Returns
     -------
-    lt_time : `~astropy.units.Quantity`
+    lt_time: `~astropy.units.Quantity`
         The barycentric light-travel time correction(s) in days, including the finite-distance correction term.
 
     Notes
     -----
     - Uses the JPL planetary ephemeris (`jplephem`) for consistency with NASA Horizons.
-    - Interpolates HST’s orbital position at each observation time using cubic interpolation
+    - Interpolates HST's orbital position at each observation time using cubic interpolation
       to avoid excessive Horizons queries.
-    - The resulting correction term accounts for HST’s motion relative to the Solar System barycenter.
-    - The finite-distance correction term scales as `~(r^2 - (r·n)^2) / (2cD)`, where
-      `r` is HST’s barycentric position vector, `n` is the unit vector toward the target,
+    - The resulting correction term accounts for HST's motion relative to the Solar System barycenter.
+    - The finite-distance correction term scales as ``~(r^2 - (r·n)^2) / (2cD)``, where
+      `r` is HST's barycentric position vector, `n` is the unit vector toward the target,
       `c` is the speed of light, and `D` is the target distance.
 
     Raises
@@ -659,10 +669,8 @@ def calc_delay_orbfile(times, ra, dec, hst_orb=None, distance=1e9, verbose=True)
     Light travel times: [-405.56687377] s
     """
 
-    # This should never execute, unless you try and run calc_delay_orbfile as standalone
-    if hst_orb is None:
-        print('HST orbfile needed in hst_orb')
-        return
+    if not os.access(hst_orb, os.F_OK):
+        raise FileNotFoundError('HST orbfile not found')
 
     # Using the JPL epehermis to be consistent with what Horizons gives
     # see https://github.com/astropy/astropy/pull/11608
@@ -801,13 +809,13 @@ def odelay_file_compare(file1, file2, in_col='TIME'):
 
     Parameters
     ----------
-    file1 : str
+    file1: str
         Path to the first FITS file.
 
-    file2 : str
+    file2: str
         Path to the second FITS file to compare against file1.
 
-    in_col : str, optional
+    in_col: str, optional
         Name of the column containing time data in the FITS table.
         Default is 'TIME'.
 
@@ -819,28 +827,32 @@ def odelay_file_compare(file1, file2, in_col='TIME'):
     Notes
     -----
     The function prints the following comparisons (file2 - file1):
+
     - TEXPSTRT header keyword difference in days and seconds
     - EXPSTART header keyword difference in days and seconds (from extension 1)
     - First and last TIME values difference in seconds (only if 'tag' is in file1 name)
     - TT to TDB time scale conversion difference for reference
 
     The function assumes:
+
     - Both files have TEXPSTRT in the primary header (extension 0)
     - Both files have EXPSTART in extension 1 header
-    - If 'tag' appears in file1 name, extension 1 contains a table.
+    - If ``tag`` appears in file1 name, extension 1 contains a table.
       The script will print the difference between the first and
       last times in each file.
 
     Examples
     --------
-    >>> odelay_file_compare('observation1_tag.fits', 'observation2_tag.fits')
-    TEXPSTRT f2-f1: -1.5854311641305685e-08 days
-    TEXPSTRT f2-f1: -0.0013698125258088112 seconds
-    EXPSTART f2-f1: -1.5854311641305685e-08 days
-    EXPSTART f2-f1: -0.0013698125258088112 seconds
-    First TIME f2-f1: 0.0 seconds
-    Last TIME f2-f1: -0.23225000000002183 seconds
-    In case it is helpful, the difference between TT and TDB_BJD is -0.001497 s
+    ::
+
+        >>> odelay_file_compare('observation1_tag.fits', 'observation2_tag.fits')
+        TEXPSTRT f2-f1: -1.5854311641305685e-08 days
+        TEXPSTRT f2-f1: -0.0013698125258088112 seconds
+        EXPSTART f2-f1: -1.5854311641305685e-08 days
+        EXPSTART f2-f1: -0.0013698125258088112 seconds
+        First TIME f2-f1: 0.0 seconds
+        Last TIME f2-f1: -0.23225000000002183 seconds
+        In case it is helpful, the difference between TT and TDB_BJD is -0.001497 s
     """
 
     with fits.open(file1) as f1, fits.open(file2) as f2:
