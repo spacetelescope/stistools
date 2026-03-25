@@ -19,6 +19,7 @@ dependencies = [
     "stsci.tools",
     "pysiaf",
     "astroquery",
+    "jplephem",
     "matplotlib>=3.5",
 ]
 license-files = ["LICENSE.txt"]
