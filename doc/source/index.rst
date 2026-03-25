@@ -39,8 +39,8 @@ for getting started.
    :caption: Routines
    :maxdepth: 1
 
-   basic2d
    barycentric_correction
+   basic2d
    calstis
    crrej_from_raw
    ctestis
