@@ -47,7 +47,7 @@ Examples
 
 __taskname__ = "barycentric_correction"
 __version__ = "1.0"
-__vdate__ = "21-August-2025"
+__vdate__ = "25-March-2026"
 __author__ = "J. Lothringer"
 
 SECPERDAY = 86400  # number of sec in a day
@@ -148,7 +148,7 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
     for ii, in_table_file in enumerate(table_names):
 
         if verbose:
-            print(f"odelaytime: processing {in_table_file} ...")
+            print(f"\nbarycentric_correction: processing {in_table_file} ...")
 
         # Copy to new outfile, otherwise overwrite input file.
         if outfiles is None:
@@ -173,13 +173,10 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
         else:
             raise ValueError(f"Unexpected extension name:  {extname}")
 
-        if 'DELAYCOR' in in_hdul[0].header and \
-                in_hdul[0].header['DELAYCOR'] == "COMPLETE":
+        if in_hdul[0].header.get("DLAYCORR", "PERFORM") == "COMPLETE":
             print(f"{in_table_file} has already been corrected, so no further processing"
                   " will be applied to this file")
             continue
-
-        in_hdul[0].header['DELAYCOR'] = "PERFORM"
 
         # COS has no TEXPSTRT in primary header, so use EXPSTART in first ext
         if in_hdul[0].header['INSTRUME'] == "STIS":
@@ -203,7 +200,7 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
             # assume (for now) that the last extension is a GTI table
             nevents_tab = max(nextend - 1, 1)
             nsci_ext = 0
-        elif filetype == "X1D_TYPE":
+        elif filetype == "X1D_TABLE":
             nevents_tab = 0
             nsci_ext = nextend
         else:
@@ -253,6 +250,8 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
         # loop through all EVENTS extensions (there will be none if
         # the input is an x1d or image file)
         for e_indx in range(1, nevents_tab + 1):
+            in_col = [x.name for x in in_hdul['EVENTS', e_indx].data.columns if x.name.lower().strip() == 'time'][0]
+
             events_tab = in_hdul['EVENTS', e_indx]
             mjd1 = events_tab.header['EXPSTART']
             mjd2 = events_tab.header['EXPEND']
@@ -357,8 +356,7 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
                     in_hdul[0].header[keyword] = mjd_obj.tdb.value + delta_sec.value
 
         # add keyword to flag the fact that the times have been corrected
-        in_hdul[0].header['DELAYCOR'] = ("COMPLETE",
-                                         "delaytime has been applied")
+        in_hdul[0].header.insert('DQICORR', ('DLAYCORR', 'COMPLETE', 'delaytime has been applied'), after=True)
         in_hdul[0].header['history'] = "Times corrected to solar system barycenter;"
         in_hdul[0].header['history'] = f"All times now in BJD_{time_system};"
 
