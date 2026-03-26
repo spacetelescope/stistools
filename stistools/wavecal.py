@@ -302,6 +302,8 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
             if Version(cs4_version) >= Version("3.5.0"):
                 print("Using -e option for cs4.e since PROPAPER is {}".format(propaper))
                 use_e_aperture = True
+            else:
+                print(f"Warning: calstis version 3.5.0 or later is recommended for {propaper} data")
 
         runWavecal(w2d_file, dbg, angle, verbose, timestamps, fd_trailer, use_e_aperture)
 
