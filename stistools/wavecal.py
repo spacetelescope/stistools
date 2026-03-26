@@ -5,6 +5,7 @@ import sys
 import getopt
 import glob
 import subprocess
+from packaging.version import Version
 
 import numpy.random as rn               # used by mkRandomName
 from astropy.io import fits
@@ -93,7 +94,7 @@ def main(args):
         sys.exit()
     input = pargs[0]
     if nargs == 2:
-        outroot = pargs[1]
+        inwave = pargs[1]
 
     status = wavecal(input, wavecal=inwave, debugfile="",
                      savetmp=savetmp,
@@ -205,6 +206,10 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
         not the same.
     """
 
+    cs4_output = subprocess.run(["cs4.e", "--version"], capture_output=True, text=True)
+    cs4_version = cs4_output.stdout.strip()
+    print("Calstis version: {}".format(cs4_version))
+
     if print_version:
         status = subprocess.call(["cs4.e", "--version"])
         return 0
@@ -264,6 +269,9 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
         f_trailer = None
         fd_trailer = None
 
+    print(f"Input files: {infiles}")
+    print(f"Wavecal files: {wavecal_files}")
+
     for (i, infile) in enumerate(infiles):
 
         tempfnames = []
@@ -285,7 +293,17 @@ def wavecal(input, wavecal, debugfile="", savetmp=False,
             dbg = dbgfiles[i]
         else:
             dbg = None
-        runWavecal(w2d_file, dbg, angle, verbose, timestamps, fd_trailer)
+        
+        # calstis 3.5.0 introduced wavecal processing for E apertures, but we need to add
+        # the -e option if the data uses an E aperture and the version is 3.5.0 or later
+        use_e_aperture = False
+        propaper = fits.getval(infile, "PROPAPER", default="missing")
+        if propaper.endswith("E1") or propaper.endswith("E2"):
+            if Version(cs4_version) >= Version("3.5.0"):
+                print("Using -e option for cs4.e since PROPAPER is {}".format(propaper))
+                use_e_aperture = True
+
+        runWavecal(w2d_file, dbg, angle, verbose, timestamps, fd_trailer, use_e_aperture)
 
         # Run cs12.e to copy the shifts to infile.
         runCs12(w2d_file, infile, option, verbose, timestamps, fd_trailer)
@@ -485,13 +503,15 @@ def runX2d(cwv_file, angle, tempfnames,
     return flag, w2d_file
 
 
-def runWavecal(w2d_file, dbg, angle, verbose, timestamps, fd_trailer):
+def runWavecal(w2d_file, dbg, angle, verbose, timestamps, fd_trailer, use_e_aperture):
 
     arglist = ["cs4.e"]
     if verbose:
         arglist.append("-v")
     if timestamps:
         arglist.append("-t")
+    if use_e_aperture:
+        arglist.append("-e")
     arglist.append(w2d_file)
     if angle is not None:
         arglist.append("-angle")
