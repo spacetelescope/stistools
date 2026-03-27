@@ -79,6 +79,9 @@ norecursedirs = [
     "docs/_build",
 ]
 junit_family = "xunit2"
+filterwarnings = [
+    "ignore:.*did not parse as fits unit.*:astropy.units.core.UnitsWarning",
+]
 
 [tool.setuptools_scm]
 write_to = "stistools/version.py"
