@@ -31,6 +31,7 @@ COS_FILES = [
 class TestBarycentricCorrection(BaseSTIS):
 
     input_loc = 'barycentric_correction'
+    rtol = 1e-10
 
     @pytest.mark.parametrize('filename', STIS_FILES)
     def test_stis_jpl(self, filename):

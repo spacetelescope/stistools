@@ -58,6 +58,7 @@ __vdate__ = "25-March-2026"
 __author__ = "J. Lothringer"
 
 SECPERDAY = 86400  # number of sec in a day
+MJD_OFFSET = 2400000.5
 
 warnings.simplefilter('ignore', category=UnitsWarning)
 
@@ -294,8 +295,18 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
             in_hdul['EVENTS', e_indx].data[in_col] = time_array
 
             # add delaytime to EXPSTART and EXPEND, and update header
-            for keyword in ['EXPSTART', 'EXPEND']:
+            for keyword in ['EXPSTART', 'EXPEND', 'EXPSTRTJ', 'EXPENDJ']:
+                if keyword not in events_tab.header:
+                    continue
+
                 mjd = events_tab.header[keyword]
+                if mjd > MJD_OFFSET:
+                    # keyword is in JD instead of MJD
+                    offset = MJD_OFFSET
+                else:
+                    offset = 0.
+                mjd -= offset
+
                 if hst_orb is None:
                     delta_sec = calc_delay_jpl(mjd, ra, dec, distance=distance)
                 else:
@@ -303,10 +314,10 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
 
                 # If converting to TDB, apply clock correction. Otherwise, keep as is.
                 if time_system == 'UTC':
-                    events_tab.header[keyword] = mjd + delta_sec.value
+                    events_tab.header[keyword] = mjd + delta_sec.value + offset
                 elif time_system == 'TDB':
                     mjd_obj = Time(mjd, format='mjd', scale='utc')
-                    events_tab.header[keyword] = mjd_obj.tdb.value + delta_sec.value
+                    events_tab.header[keyword] = mjd_obj.tdb.value + delta_sec.value + offset
 
             in_hdul.flush()
             if verbose:
@@ -323,9 +334,16 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
             modified = False
 
             # add delaytime to EXPSTART and EXPEND, and update header
-            for keyword in ['EXPSTART', 'EXPEND']:
+            for keyword in ['EXPSTART', 'EXPEND', 'EXPSTRTJ', 'EXPENDJ']:
                 if keyword in cur_tab.header:
                     mjd = cur_tab.header[keyword]
+                    if mjd > MJD_OFFSET:
+                        # keyword is in JD instead of MJD
+                        offset = MJD_OFFSET
+                    else:
+                        offset = 0.
+                    mjd -= offset
+
                     if hst_orb is None:
                         delta_sec = calc_delay_jpl(mjd, ra, dec, distance=distance)
                     else:
@@ -333,10 +351,10 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
 
                     # If converting to TDB, apply clock correction. Otherwise, keep as is.
                     if time_system == 'UTC':
-                        cur_tab.header[keyword] = mjd + delta_sec.value
+                        cur_tab.header[keyword] = mjd + delta_sec.value + offset
                     elif time_system == 'TDB':
                         mjd_obj = Time(mjd, format='mjd', scale='utc')
-                        cur_tab.header[keyword] = mjd_obj.tdb.value + delta_sec.value
+                        cur_tab.header[keyword] = mjd_obj.tdb.value + delta_sec.value + offset
 
                     modified = True
 
