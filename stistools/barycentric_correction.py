@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 
+import warnings
 import time
+import datetime
 import os
 import shutil
 import numpy as np
 from scipy.interpolate import interp1d
 from astropy.io import fits
+from astropy.table import Table, vstack
 from astropy import units as u, constants as c
+from astropy.units.core import UnitsWarning
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, get_body_barycentric
 from astropy.coordinates import solar_system_ephemeris, EarthLocation
@@ -33,6 +37,9 @@ to the high number of coordinate transformations.
 Stand-alone tasks :func:`calc_delay_jpl` :func:`calc_delay_orbfile` can be used
 to calculate barycentric corrections without file modifications.
 
+Task :func:`combine_hst_orb_files` combines two neighboring HST orbital files
+together for use on MAST data spanning their coverage.
+
 Task :func:`odelay_file_compare` shows differences in times between two STIS
 FITS files. This is useful in what barycentric corrections were calculated.
 
@@ -51,6 +58,8 @@ __vdate__ = "25-March-2026"
 __author__ = "J. Lothringer"
 
 SECPERDAY = 86400  # number of sec in a day
+
+warnings.simplefilter('ignore', category=UnitsWarning)
 
 
 class OrbFileError(ValueError):
@@ -86,8 +95,11 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
 
     Parameters
     ----------
-    table_names: str or iterable[str]
+    table_names: str or Iterable[str]
         List of strings with the file names to be time-corrected.
+
+    verbose: bool
+        Prints completion messages during execution. Default=True
 
     distance: float
         Distance the object is from HST in AU. Default is a trillion
@@ -95,13 +107,7 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
         is repsonsible for second-order correction, up to minutes.
         At 1 parsec, the correction can be on the order of a few ms.
 
-    output: str
-        Name of the output FITS file. Will overwrite existing file.
-
-    verbose: bool
-        Prints completion messages during execution.
-
-    hst_orb: str
+    hst_orb: str or None
         Name of HST orbital file (generally starts p, ends as .fit) that
         covers the time of the observations. If not provided, JPL Horizons
         will be used to get HST's orbital position.
@@ -111,10 +117,10 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
         for debugging, especially for ``tag`` files with large numbers of
         events.
 
-    outfiles: str or list[str]
-        Default None. If not None, then it is a list of output files for
-        each table_names. Each table_name will be copied over to the corr-
-        esponding outfile name.
+    outfiles: str or list[str] or None
+        If not None, then it is a list of output files for each table_names.
+        Each table_name will be copied over to the corresponding outfile name.
+        Default None.
 
     time_system: str
         Define as either ``"TDB"`` or ``"UTC"`` for final time standard conversion.
@@ -126,6 +132,11 @@ def barycentric_correction(table_names, verbose=True, distance=1e9,
     -------
     None
         However, the file is written to output.
+
+    Notes
+    -----
+    If an :class:`OrbFileError` is raised, you may need to combine two
+    neighboring HST orbital files using :func:`combine_hst_orb_files`.
     """
 
     if time_system not in ['UTC', 'TDB']:
@@ -797,6 +808,109 @@ def calc_delay_orbfile(times, ra, dec, hst_orb, distance=1e9, verbose=True):
             print(f"Light travel times: {lt_time[0:10].to('s')}")
 
     return lt_time
+
+
+def combine_hst_orb_files(file1, file2, outname, overwrite=False):
+    """
+    Combine two neighboring hst_orb ephemeris files (ORBs) together.  Useful for
+    correcting MAST datasets that are observed over an ORB file boundary.
+
+    Parameters
+    ----------
+    file1: str
+        Path to the first hst_orb FITS file.
+
+    file2: str
+        Path to the second hst_orb FITS file.
+
+    outname: str
+        Name/path of combined hst_orb FITS file to output.
+
+    overwrite: bool
+        Overwrite a pre-existing output file?  Default=False
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    OrbFileError
+        The time gap between orbit files is too large (>120 s)
+
+    FileExistsError
+        Output file already exists and overwrite=False
+
+    ValueError
+        Unexpected duplicate times detected after truncation of later file
+    """
+
+    if not overwrite and os.access(outname, os.F_OK):
+        raise FileExistsError(f"Output file already exists.  Remove or set overwrite=True.")
+
+    # Stack arrays together, excluding the repeated point in the middle:
+    t1 = Table.read(file1, hdu=1)
+    t2 = Table.read(file2, hdu=1)
+
+    # Check time ordering and contiguousness of files:
+    if t1.meta['FIRSTMJD'] > t2.meta['FIRSTMJD']:
+        tmpfile = file1
+        file1 = file2
+        file2 = tmpfile
+
+        tmp = t1
+        t1 = t2
+        t2 = tmp
+
+        del tmpfile, tmp
+
+    acceptable_gap = 120.  # s
+    if (t2.meta['FIRSTMJD'] - t1.meta['LASTMJD']) > acceptable_gap / SECPERDAY:
+        raise OrbFileError(f"hst_orb files have a gap > {acceptable_gap:.0f} s")
+
+    # Access time arrays case-insensitively:
+    time_col = [x for x in t1.columns if x.lower().strip() == 'time'][0]
+    time_col2 = [x for x in t2.columns if x.lower().strip() == 'time'][0]
+    t2.rename_column(time_col2, time_col)
+
+    # Increment later file's time array to be relative to the earlier file:
+    t2[time_col] += (t2.meta['FIRSTMJD'] - t1.meta['FIRSTMJD']) * SECPERDAY
+
+    # Concatenate non-overlapping times:
+    g = t2[time_col] > t1[time_col].max()
+    # Silence MergeConflictWarnings of unused output metadata:
+    with warnings.catch_warnings(record=True) as _:
+        t_combined = vstack([t1, t2[g]])
+    if len(t_combined) != len(set(t_combined[time_col])):
+        raise ValueError('Non-unique times found in input hst_orb files')
+
+    # Combine into a single output FITS file:
+    hdu = fits.HDUList()
+    with fits.open(file1) as f1, fits.open(file2) as f2:
+        hdr0 = f1[0].header.copy()
+        hdr1 = f1[1].header.copy()
+
+        # Update metadata:
+        hdr0['FILENAME'] = os.path.basename(outname)
+        hdr0['DATE'] = datetime.datetime.now().isoformat().rsplit('.', 1)[0]
+        hdr0['LEAPSECO'] = f1[0].header.get('LEAPSECO', False) and f2[0].header.get('LEAPSECO', False)
+        hdr0['LEAPSECS'] = f1[0].header.get('LEAPSECS', 0) + f2[0].header.get('LEAPSECS', 0)
+        hdr1['ROOTNAME'] = f"{f1[1].header.get('ROOTNAME', 'UNKNOWN').strip()} + {f2[1].header.get('ROOTNAME', 'UNKNOWN').strip()}"
+        hdr1['EXPNAME'] = f"{f1[1].header.get('EXPNAME', 'UNKNOWN').strip()} + {f2[1].header.get('EXPNAME', 'UNKNOWN').strip()}"
+        # Update keywords in earlier file's header with appropriate end times:
+        hdr0['DEFINEND'] = f2[0].header.get('DEFINEND', 'UNKNOWN')
+        hdr1['LASTMJD'] = f2[1].header.get('LASTMJD', 'UNKNOWN')
+
+        hdr0.add_history('This file was created from components via')
+        hdr0.add_history('stistools.barycentric_correction.combine_hst_orb_files() from:')
+        hdr0.add_history(os.path.basename(file1))
+        hdr0.add_history(os.path.basename(file2))
+
+        hdu.append(fits.PrimaryHDU(header=hdr0))
+        hdu.append(fits.BinTableHDU(data=t_combined, header=hdr1))
+        hdu.writeto(outname, checksum=True, overwrite=True)
+
+    print(f"Combined hst_orb file written:  {outname}")
 
 
 def odelay_file_compare(file1, file2):

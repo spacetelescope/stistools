@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from astropy.io import fits
-from stistools.barycentric_correction import barycentric_correction, OrbFileError
+from stistools.barycentric_correction import barycentric_correction, OrbFileError, combine_hst_orb_files
 from .resources import BaseSTIS
 import pytest
 
@@ -11,7 +11,8 @@ import pytest
 #         proper data location on Artifactory (`BaseSTIS.get_data()`).
 
 
-ORB_FILE = 'p2o0000r.fit'  # 2017-02-24 00:00:00 - 2017-02-24 00:00:00
+ORB_FILE = 'p2o0000r.fit'       # 2017-02-24 00:00:00 - 2017-02-27 00:00:00
+ORB_FILE_NEXT = 'p2q0000r.fit'  # 2017-02-26 00:00:00 - 2017-03-01 00:00:00
 
 STIS_FILES = [
     'od9m97020_raw.fits',
@@ -110,3 +111,19 @@ class TestBarycentricCorrection(BaseSTIS):
 
         with pytest.raises(OrbFileError):
             barycentric_correction(test_file, hst_orb=ORB_FILE)
+
+    def test_combine_orbfiles(self):
+        '''Test combining two neighboring hst_orb files together.
+        '''
+        self.get_data('input', ORB_FILE)
+        self.get_data('input', ORB_FILE_NEXT)
+        outname = 'combined.fits'
+
+        combine_hst_orb_files(ORB_FILE, ORB_FILE_NEXT, outname)
+
+        # Test failing to overwrite an existing output file:
+        with pytest.raises(FileExistsError):
+            combine_hst_orb_files(ORB_FILE, ORB_FILE_NEXT, outname)
+
+        # Test out-of-order input files and overwriting an existing output file:
+        combine_hst_orb_files(ORB_FILE_NEXT, ORB_FILE, outname, overwrite=True)
