@@ -1,6 +1,7 @@
 .. code:: ipython3
 
     import stistools
+    import os
     from astropy.io import fits
 
 Defringing STIS CCD Spectra With The Stistools Defringing Tool Suite
@@ -149,6 +150,12 @@ the input science file depends on the observation mode. For G750L,
 required before defringing can take place, so ``sx2`` products should be
 used.
 
+**E1 Pseudo-Aperture Position:** Science data taken at Y-positions outside
+the middle 60% of the detector are beyond the extraction position search
+range. So, data taken at the E1 position should have the ``extrloc`` manually
+set to the rounded value closest to the ``A2CENTER`` position in the X1D/SX1
+file.  Note that one may also need to revise the ``rms_region`` parameter.
+
 .. code:: ipython3
 
     # choose the correct science product type based on the mode
@@ -157,10 +164,23 @@ used.
         prod_type = "crj"
     elif mode == "G750M":
         prod_type = "sx2"
-    
+
+    # manually specify the extraction position if data taken at the E1 position
+    propaper = fits.getval(f"{sci_file}_raw.fits", ext=0, keyword='PROPAPER')
+    if propaper.endswith('E1'):
+        if os.access(f"{sci_file}_sx1.fits", os.F_OK):
+            pipeline_1d = f"{sci_file}_sx1.fits"
+        elif os.access(f"{sci_file}_x1d.fits", os.F_OK):
+            pipeline_1d = f"{sci_file}_sx1.fits"
+        else:
+            raise ValueError("Please download or calibrate the 1D science data to determine A2CENTER for E1 data")
+        extrloc = int(round(fits.getdata(pipeline_1d, ext=1)['A2CENTER'][0]))
+    else:
+        extrloc = None
+
     stistools.defringe.mkfringeflat(f"{sci_file}_{prod_type}.fits", f"{flat_file}_nsp.fits", 
                                     f"{flat_file}_frr.fits", beg_shift=-0.5, end_shift=2, shift_step=0.1,
-                                    beg_scale=0.8, end_scale=1.7, scale_step=0.04)
+                                    beg_scale=0.8, end_scale=1.7, scale_step=0.04, extrloc=extrloc)
 
 
 .. parsed-literal::
