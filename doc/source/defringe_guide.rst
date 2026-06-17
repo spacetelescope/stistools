@@ -174,7 +174,8 @@ file.  Note that one may also need to revise the ``rms_region`` parameter.
             pipeline_1d = f"{sci_file}_x1d.fits"
         else:
             raise ValueError("Please download or calibrate the 1D science data to determine A2CENTER for E1 data")
-        extrloc = int(round(fits.getdata(pipeline_1d, ext=1)['A2CENTER'][0]))
+        a2center = fits.getdata(pipeline_1d, ext=1)['A2CENTER'][0]
+        extrloc = int(round(a2center))
     else:
         extrloc = None
 
