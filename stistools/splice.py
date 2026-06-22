@@ -80,16 +80,11 @@ def nearest_index(array, target_value):
     index : ``int``
         Index of the value in ``array`` that is closest to ``target_value``.
     """
-    index = array.searchsorted(target_value)
-    index = np.clip(index, 1, len(array) - 1)
-    left = array[index - 1]
-    right = array[index]
-    index -= target_value - left < right - target_value
-    return index
+    return np.abs(array - target_value).argmin()
 
 
 # Read the Echelle spectrum based on dataset name and a prefix for file location
-def read_spectrum(x1d_input, truncate_edge_left=None, truncate_edge_right=None):
+def read_spectrum(x1d_input, truncate_edge_left=5, truncate_edge_right=5):
     """
     This is a fairly straightforward function to read the spectrum from a `x1d`
     FITS file.
@@ -101,13 +96,13 @@ def read_spectrum(x1d_input, truncate_edge_left=None, truncate_edge_right=None):
 
     truncate_edge_left : ``int``, optional
         Set the number of low-resolution pixels at the left edge of the detector
-        where the spectra should be truncated. If ``None``, then no truncation
-        is applied. Default is ``None``.
+        where the spectra should be truncated. If ``0``, then no truncation
+        is applied. Default is ``5``.
 
     truncate_edge_right : ``int``, optional
         Set the number of low-resolution pixels at the right edge of the
-        detector where the spectra should be truncated. If ``None``, then no
-        truncation is applied. Default is ``None``.
+        detector where the spectra should be truncated. If ``0``, then no
+        truncation is applied. Default is ``5``.
 
     Returns
     -------
@@ -130,34 +125,31 @@ def read_spectrum(x1d_input, truncate_edge_left=None, truncate_edge_right=None):
     sporders = data['SPORDER']
     n_orders = len(wavelength)
 
+    # Determine how to truncate the left and right edges with a slice:
+    if (not isinstance(truncate_edge_left, int)) or (truncate_edge_left < 0):
+        raise ValueError('truncate_edge_left should be a positive integer.')
+    if (not isinstance(truncate_edge_right, int)) or (truncate_edge_right < 0):
+        raise ValueError('truncate_edge_right should be a positive integer.')
+    subset = slice(truncate_edge_left, flux.shape[1] - truncate_edge_right)
+
     # We index the spectral regions as a `dict` in order to avoid confusion with
     # too many numerical indexes. Also, since the orders are in reverse order,
     # we index them in the opposite way
     spectrum = [{'filename': x1d_input,
                  'sporder': int(sporders[-i - 1]),
-                 'wavelength': wavelength[-i - 1],
-                 'flux': flux[-i - 1],
-                 'uncertainty': uncertainty[-i - 1],
-                 'data_quality': data_quality[-i - 1],
-                 'gross': gross_counts[-i - 1],
-                 'net': net_counts[-i - 1]}
+                 'wavelength': wavelength[-i - 1][subset],
+                 'flux': flux[-i - 1][subset],
+                 'uncertainty': uncertainty[-i - 1][subset],
+                 'data_quality': data_quality[-i - 1][subset],
+                 'gross': gross_counts[-i - 1][subset],
+                 'net': net_counts[-i - 1][subset]}
                 for i in range(n_orders)]
-
-    # If edge truncation is passed, we simply assign a different DQ flags to the
-    # pixels to be truncated. We choose the flag 4096, which corresponds to
-    # "Extracted flux affected by bad input data."
-    if truncate_edge_right is not None:
-        for sk in spectrum:
-            sk['data_quality'][-truncate_edge_right:] = 4096
-    if truncate_edge_left is not None:
-        for sk in spectrum:
-            sk['data_quality'][:truncate_edge_left] = 4096
 
     return spectrum
 
 
 # Identify overlaps in the whole spectrum
-def find_overlap(spectrum):
+def find_overlap(spectrum, extent=1024):
     """
     Find and return the overlapping sections of the Echelle spectrum.
 
@@ -166,6 +158,11 @@ def find_overlap(spectrum):
     spectrum : ``list``
         List of dictionaries containing the orders of the Echelle spectrum.
         It should resemble the output of ``read_spectrum()``.
+
+    extent : ``int``
+        Pixel extent of a full order after truncation.  Typically
+        1024 - truncate_left_edge - truncate_right_edge.  Default is
+        ``1024``.
 
     Returns
     -------
@@ -178,6 +175,8 @@ def find_overlap(spectrum):
     overlap_trio_sections : ``list``
         List containing the overlapping trios of the spectrum.
     """
+    right_edge = extent - 1
+
     n_orders = len(spectrum)
 
     # Identify the wavelength borders of each order
@@ -224,9 +223,9 @@ def find_overlap(spectrum):
                         'gross': order['gross'][overlap_01],
                         'net': order['net'][overlap_01]})
 
-    if idx[1] < 1023:
+    if idx[1] < right_edge:
         # There is a trio overlap
-        overlap_012 = np.arange(idx[1], 1023, 1)
+        overlap_012 = np.arange(idx[1], right_edge, 1)
         third_trio.append({'filename': order['filename'],
                            'sporder': order['sporder'],
                            'wavelength': order['wavelength'][overlap_012],
@@ -253,10 +252,10 @@ def find_overlap(spectrum):
         overlap_012 = np.arange(idx[0], idx[1], 1)
         unique_1 = None
 
-        if idx[2] < 1023:
+        if idx[2] < right_edge:
             # There is another trio overlap
             overlap_12 = np.arange(idx[1], idx[2], 1)
-            overlap_123 = np.arange(idx[2], 1023, 1)
+            overlap_123 = np.arange(idx[2], right_edge, 1)
         else:
             overlap_123 = None
             overlap_12 = np.arange(idx[0], idx[2], 1)
@@ -350,8 +349,8 @@ def find_overlap(spectrum):
             overlap_idx_123 = np.arange(idx[1], idx[2], 1)
             unique_idx_2 = None
             overlap_idx_23 = np.arange(idx[2], idx[3], 1)
-        if idx[3] < 1023:
-            overlap_idx_234 = np.arange(idx[3], 1023, 1)
+        if idx[3] < right_edge:
+            overlap_idx_234 = np.arange(idx[3], right_edge, 1)
         else:
             overlap_idx_234 = None
 
@@ -455,19 +454,19 @@ def find_overlap(spectrum):
             # There is another trio overlap
             overlap_123 = np.arange(idx[1], idx[2], 1)
             overlap_12 = np.arange(idx[0], idx[1], 1)
-            overlap_23 = np.arange(idx[2], 1023, 1)
+            overlap_23 = np.arange(idx[2], right_edge, 1)
             unique_2 = None
         else:
             overlap_123 = None
             unique_2 = np.arange(idx[2], idx[1], 1)
             overlap_12 = np.arange(idx[0], idx[2], 1)
-            overlap_23 = np.arange(idx[1], 1023, 1)
+            overlap_23 = np.arange(idx[1], right_edge, 1)
     else:
         overlap_012 = None
         overlap_123 = None
         unique_2 = np.arange(idx[2], idx[1], 1)
         overlap_12 = np.arange(idx[0], idx[2], 1)
-        overlap_23 = np.arange(idx[1], 1023, 1)
+        overlap_23 = np.arange(idx[1], right_edge, 1)
 
     # Add the to the lists
     if unique_2 is not None:
@@ -537,7 +536,7 @@ def find_overlap(spectrum):
            nearest_index(wl, borders[-2][1])]
 
     # There is always a unique section here
-    unique_idx = np.arange(idx[1], 1023, 1)
+    unique_idx = np.arange(idx[1], right_edge, 1)
     unique_sections.append(
         {'filename': order['filename'],
          'sporder': order['sporder'],
@@ -1009,7 +1008,7 @@ def concatenate_sections(unique_spectra_list, merged_pair_list,
 # The splice pipeline does everything
 def splice(x1d_input, update_fits=False, output_file=None, weight='sensitivity',
            sdqflags=31743,
-           truncate_edge_left=None, truncate_edge_right=None):
+           truncate_edge_left=5, truncate_edge_right=5):
     """
     The main workhorse of the package. This pipeline performs all the steps
     necessary to merge overlapping spectral sections and splice them with the
@@ -1038,17 +1037,17 @@ def splice(x1d_input, update_fits=False, output_file=None, weight='sensitivity',
     sdqflags : ``int``, optional
         Serious data quality flags.  This is a bitwise-or of the flag values
         to use when excluding data from its source.
-        # Leo had sdqflags=62271; (0, 64, 128, 1024, 2048) acceptable.
+        # Leo had sdqflags=29503; (0, 64, 128, 1024, 2048) acceptable.
 
     truncate_edge_left (``int``, optional):
         Set the number of low-resolution pixels at the left edge of the detector
         where the spectra should be truncated. If ``None``, then no truncation
-        is applied. Default is ``None``.
+        is applied. Default is ``5``.
 
     truncate_edge_right (``int``, optional):
         Set the number of low-resolution pixels at the right edge of the
-        detector where the spectra should be truncated. If ``None``, then no
-        truncation is applied. Default is ``None``.
+        detector where the spectra should be truncated. If ``0``, then no
+        truncation is applied. Default is ``5``.
 
     Returns
     -------
@@ -1066,7 +1065,7 @@ def splice(x1d_input, update_fits=False, output_file=None, weight='sensitivity',
                              truncate_edge_right=truncate_edge_right)
 
     unique_sections, overlap_pair_sections, overlap_trio_sections = \
-        find_overlap(sections)
+        find_overlap(sections, extent=1024 - truncate_edge_left - truncate_edge_right)
 
     # Merge the overlapping spectral sections
     merged_pairs = [
