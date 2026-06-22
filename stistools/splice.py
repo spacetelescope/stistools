@@ -10,22 +10,22 @@ from functools import reduce
 from .calculate_sensitivity import calculate_sensitivity
 
 __doc__ = r"""
-The ``splice`` module concatenates the several orders contained in a STIS 
+The ``splice`` module concatenates the several orders contained in a STIS
 Echelle ``_x1d`` spectrum while co-adding the overlapping sections. This code
 emulates the splice module previously implemented on the STSDAS IRAF package.
 
 The function :func:`splice` takes as input an ``_x1d`` Echelle spectrum
 (including path) and outputs an Astropy Table containing the wavelength, flux,
 flux uncertainty and data-quality flags. The spliced spectrum can be saved as
-an additional extension to the ``_x1d`` file by setting ``update_fits`` to 
+an additional extension to the ``_x1d`` file by setting ``update_fits`` to
 ``True``. The spliced spectrum can also be exported to an ascii file by setting
 a path and filename to ``output_file``.
 
 The codebase from the ULLYSES project, which is also sponsored by STScI, possess
-routines that can be used to co-add and splice STIS echelle spectra. The main 
+routines that can be used to co-add and splice STIS echelle spectra. The main
 differences between these codes are the following: 1) ``splice`` does not change
-the spectra in non-overlap regions; 2) ``splice`` takes into account 
-data-quality (DQ) flags and assignes specific DQ values to co-added pixels; 
+the spectra in non-overlap regions; 2) ``splice`` takes into account
+data-quality (DQ) flags and assignes specific DQ values to co-added pixels;
 3) ``splice`` only works for STIS spectra and does not concatenate or co-add
 COS spectra or multiple STIS spectra.
 
@@ -234,8 +234,6 @@ def find_overlap(spectrum, extent=1024):
                            'data_quality': order['data_quality'][overlap_012],
                            'gross': order['gross'][overlap_012],
                            'net': order['net'][overlap_012]})
-    else:
-        pass
 
     # Now the second order
     order = spectrum[1]
@@ -280,8 +278,6 @@ def find_overlap(spectrum, extent=1024):
              'gross': order['gross'][unique_1],
              'net': order['net'][unique_1]}
         )
-    else:
-        pass
 
     first_pair.append({'filename': order['filename'],
                        'sporder': order['sporder'],
@@ -309,8 +305,6 @@ def find_overlap(spectrum, extent=1024):
                             'data_quality': order['data_quality'][overlap_012],
                             'gross': order['gross'][overlap_012],
                             'net': order['net'][overlap_012]})
-    else:
-        pass
 
     if overlap_123 is not None:
         third_trio.append({'filename': order['filename'],
@@ -365,8 +359,6 @@ def find_overlap(spectrum, extent=1024):
                  'gross': order['gross'][overlap_idx_12],
                  'net': order['net'][overlap_idx_12]}
             )
-        else:
-            pass
 
         if len(overlap_idx_23) > 0:
             second_pair.append(
@@ -379,8 +371,6 @@ def find_overlap(spectrum, extent=1024):
                  'gross': order['gross'][overlap_idx_23],
                  'net': order['net'][overlap_idx_23]}
             )
-        else:
-            pass
 
         if overlap_idx_012 is not None:
             first_trio.append(
@@ -393,8 +383,6 @@ def find_overlap(spectrum, extent=1024):
                  'gross': order['gross'][overlap_idx_012],
                  'net': order['net'][overlap_idx_012]}
             )
-        else:
-            pass
 
         if overlap_idx_123 is not None:
             second_trio.append(
@@ -407,8 +395,6 @@ def find_overlap(spectrum, extent=1024):
                  'gross': order['gross'][overlap_idx_123],
                  'net': order['net'][overlap_idx_123]}
             )
-        else:
-            pass
 
         if overlap_idx_234 is not None:
             third_trio.append(
@@ -421,8 +407,6 @@ def find_overlap(spectrum, extent=1024):
                  'gross': order['gross'][overlap_idx_234],
                  'net': order['net'][overlap_idx_234]}
             )
-        else:
-            pass
 
         if unique_idx_2 is not None:
             unique_sections.append(
@@ -435,8 +419,6 @@ def find_overlap(spectrum, extent=1024):
                  'gross': order['gross'][unique_idx_2],
                  'net': order['net'][unique_idx_2]}
             )
-        else:
-            pass
 
     # Now we deal with the last orders. Almost there!
     order = spectrum[-2]
@@ -480,8 +462,6 @@ def find_overlap(spectrum, extent=1024):
              'gross': order['gross'][unique_2],
              'net': order['net'][unique_2]}
         )
-    else:
-        pass
 
     if len(overlap_12) > 0:
         first_pair.append({'filename': order['filename'],
@@ -492,8 +472,6 @@ def find_overlap(spectrum, extent=1024):
                            'data_quality': order['data_quality'][overlap_12],
                            'gross': order['gross'][overlap_12],
                            'net': order['net'][overlap_12]})
-    else:
-        pass
 
     if len(overlap_23) > 0:
         second_pair.append({'filename': order['filename'],
@@ -504,8 +482,6 @@ def find_overlap(spectrum, extent=1024):
                             'data_quality': order['data_quality'][overlap_23],
                             'gross': order['gross'][overlap_23],
                             'net': order['net'][overlap_23]})
-    else:
-        pass
 
     if overlap_012 is not None:
         first_trio.append({'filename': order['filename'],
@@ -516,8 +492,6 @@ def find_overlap(spectrum, extent=1024):
                            'data_quality': order['data_quality'][overlap_012],
                            'gross': order['gross'][overlap_012],
                            'net': order['net'][overlap_012]})
-    else:
-        pass
 
     if overlap_123 is not None:
         second_trio.append({'filename': order['filename'],
@@ -563,8 +537,6 @@ def find_overlap(spectrum, extent=1024):
              'gross': order['gross'][overlap_23],
              'net': order['net'][overlap_23]}
         )
-    else:
-        pass
 
     if idx[0] > 0:
         # There is a trio overlap
@@ -579,8 +551,6 @@ def find_overlap(spectrum, extent=1024):
              'gross': order['gross'][overlap_123],
              'net': order['net'][overlap_123]}
         )
-    else:
-        pass
 
     # With all that done, we assemble the overlap sections into a large list
     overlap_pair_sections = []
@@ -637,7 +607,7 @@ def merge_overlap(overlap_pair_section,
     to_shift = deepcopy(overlap_pair_section[1])
 
     assert np.array_equal(reference['wavelength'], sorted(reference['wavelength']))
-    assert np.array_equal(to_shift['wavelength'],  sorted(to_shift['wavelength']))
+    assert np.array_equal(to_shift['wavelength'], sorted(to_shift['wavelength']))
 
     # Interpolate flux and uncertainty onto the target wavelength grid:
     to_shift['flux_interpolated'] = interp1d(
@@ -661,7 +631,7 @@ def merge_overlap(overlap_pair_section,
             idx1 = idx2 = len(to_shift['wavelength']) - 1
         elif λ_ref in to_shift['wavelength']:
             idx1 = idx2 = np.where(to_shift['wavelength'] == λ_ref)[0][0]
-        else: 
+        else:
             idx1 = np.searchsorted(to_shift['wavelength'], λ_ref, side='left') - 1
             idx1 = np.clip(idx1, 0, len(to_shift['wavelength']) - 2)
             idx2 = idx1 + 1
@@ -686,10 +656,10 @@ def merge_overlap(overlap_pair_section,
 
     # Keep DQ bits associated with retained data.  If no data retained, use the bitwise-or of all:
     combined_dq = np.where(np.isnan(reference['flux_with_nans']), 0, reference['data_quality']) | \
-                  np.where(np.isnan(to_shift['flux_interpolated']), 0, to_shift['dq_regridded']) | \
-                  np.where(np.isnan(reference['flux_with_nans']) & \
-                           np.isnan(to_shift['flux_interpolated']), \
-                           reference['data_quality'] | to_shift['dq_regridded'], 0)
+        np.where(np.isnan(to_shift['flux_interpolated']), 0, to_shift['dq_regridded']) | \
+        np.where(np.isnan(reference['flux_with_nans']) &
+                 np.isnan(to_shift['flux_interpolated']),
+                 reference['data_quality'] | to_shift['dq_regridded'], 0)
 
     # Stack arrays:
     flux_arrays = np.array([reference['flux_with_nans'], to_shift['flux_interpolated']])
@@ -697,10 +667,12 @@ def merge_overlap(overlap_pair_section,
     uncertainty_arrays = np.array([reference['uncertainty_with_nans'], to_shift['uncertainty_interpolated']])
 
     if weight == 'sensitivity':
-        _, weights_ref = calculate_sensitivity(reference['filename'], ext=1,  # EXT HARDCODED FOR NOW!
+        _, weights_ref = calculate_sensitivity(
+            reference['filename'], ext=1,  # EXT HARDCODED FOR NOW!
             sporder=reference['sporder'],
             output_wavelengths=reference['wavelength'])
-        _, weights_to_shift = calculate_sensitivity(to_shift['filename'], ext=1,  # EXT HARDCODED FOR NOW!
+        _, weights_to_shift = calculate_sensitivity(
+            to_shift['filename'], ext=1,  # EXT HARDCODED FOR NOW!
             sporder=to_shift['sporder'],
             output_wavelengths=reference['wavelength'])
         weights = np.array([weights_ref, weights_to_shift])
@@ -747,9 +719,9 @@ def merge_overlap(overlap_pair_section,
         raise ValueError(f'Unexpected weight value:  "{weight}"')
 
     overlap_merged = {
-        'wavelength'  : reference['wavelength'],
-        'flux'        : combined_flux,
-        'uncertainty' : combined_uncertainty,
+        'wavelength': reference['wavelength'],
+        'flux': combined_flux,
+        'uncertainty': combined_uncertainty,
         'data_quality': combined_dq, }
 
     return overlap_merged
@@ -793,11 +765,9 @@ def concatenate_sections(unique_spectra_list, merged_pair_list,
         all_spectra.append(merged_pair_list[i])
         try:
             all_spectra.append(merged_trio_list[i])
-            pass
         except IndexError:
             all_spectra.append(unique_spectra_list[k])
             k += 1
-            pass
 
     # There may still be some unique spectra remaining
     unique_remaining = len(unique_spectra_list) - k
@@ -910,11 +880,9 @@ def splice(x1d_input, update_fits=False, output_file=None, weight='sensitivity',
     table_hdu = fits.BinTableHDU(spliced_spectrum_table)
 
     # This feature modifies the fits input file! Use carefully!
-    if update_fits is True:
+    if update_fits:
         with fits.open(x1d_input, mode='update') as hdul:
             hdul.append(table_hdu)
-    else:
-        pass
 
     # Return or output the result
     if output_file is None:
