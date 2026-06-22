@@ -597,7 +597,7 @@ def find_overlap(spectrum, extent=1024):
     return unique_sections, overlap_pair_sections, overlap_trio_sections
 
 
-## Merge overlapping sections
+# Merge overlapping sections
 def merge_overlap(overlap_pair_section,
                   sdqflags=31743,
                   weight='sensitivity'):
@@ -631,9 +631,8 @@ def merge_overlap(overlap_pair_section,
     overlap_merged : ``dict``
         Dictionary containing the merged overlapping spectrum.
     '''
-    warnings.filterwarnings('ignore', message='Mean of empty slice', category=RuntimeWarning)  #  np.nanmean
+    warnings.filterwarnings('ignore', message='Mean of empty slice', category=RuntimeWarning)  # np.nanmean
 
-    # HARD-CODED ORDER FOR NOW!
     reference = overlap_pair_section[0]
     to_shift = deepcopy(overlap_pair_section[1])
 
@@ -686,7 +685,7 @@ def merge_overlap(overlap_pair_section,
     to_shift['uncertainty_interpolated'][(to_shift['dq_regridded'] & sdqflags) != 0] = np.nan
 
     # Keep DQ bits associated with retained data.  If no data retained, use the bitwise-or of all:
-    combined_dq = np.where(np.isnan(reference['flux_with_nans']), 0, reference['data_quality'])  | \
+    combined_dq = np.where(np.isnan(reference['flux_with_nans']), 0, reference['data_quality']) | \
                   np.where(np.isnan(to_shift['flux_interpolated']), 0, to_shift['dq_regridded']) | \
                   np.where(np.isnan(reference['flux_with_nans']) & \
                            np.isnan(to_shift['flux_interpolated']), \
@@ -704,14 +703,14 @@ def merge_overlap(overlap_pair_section,
         _, weights_to_shift = calculate_sensitivity(to_shift['filename'], ext=1,  # EXT HARDCODED FOR NOW!
             sporder=to_shift['sporder'],
             output_wavelengths=reference['wavelength'])
-        weights = np.array([weights_ref, weights_to_shift])  # Apply valid_mask?
+        weights = np.array([weights_ref, weights_to_shift])
         valid_mask = ~np.isnan(flux_arrays)
         weights = np.where(valid_mask, weights, 0.)
         # Scale weights by exptime (needed if combining different observations)
 
         with warnings.catch_warnings(record=True) as _:  # Ignore 0 and NaN in divisors
             combined_flux = np.nansum(flux_arrays * weights, axis=0) / np.nansum(weights, axis=0)
-            combined_uncertainty = (uncertainty_arrays**2 * weights**2).sum(axis=0)**0.5 / weights.sum(axis=0)  # CONFIRM WEIGHTING!
+            combined_uncertainty = (uncertainty_arrays**2 * weights**2).sum(axis=0)**0.5 / weights.sum(axis=0)
 
     elif weight == 'sensitivity-dataset':
         valid_mask = ~np.isnan(flux_arrays)
@@ -720,7 +719,7 @@ def merge_overlap(overlap_pair_section,
 
         with warnings.catch_warnings(record=True) as _:  # Ignore 0 and NaN in divisors
             combined_flux = np.nansum(flux_arrays * weights, axis=0) / np.nansum(weights, axis=0)
-            combined_uncertainty = (uncertainty_arrays**2 * weights**2).sum(axis=0)**0.5 / weights.sum(axis=0)  # CONFIRM WEIGHTING!
+            combined_uncertainty = (uncertainty_arrays**2 * weights**2).sum(axis=0)**0.5 / weights.sum(axis=0)
 
     elif weight in {'snr', 'inverse-variance'}:
         valid_mask = ~np.isnan(flux_arrays)
@@ -734,19 +733,6 @@ def merge_overlap(overlap_pair_section,
         # Set uncertainty to NaN where no valid data contributed:
         combined_uncertainty[np.nansum(weights, axis=0) == 0] = np.nan
         combined_flux[np.nansum(weights, axis=0) == 0] = np.nan
-
-        #scale = 1e-20  # *** Do we need to include a scaling factor for numerical stability? ***
-        #fluxref_weight = 1. / reference['uncertainty']**2 * scale
-        #fluxref_weight[(reference['data_quality'] & sdqflags) != 0] = np.nan
-        #flux_interpolated_weight = 1. / to_shift['uncertainty_interpolated']**2 * scale
-        #flux_interpolated_weight[(to_shift['dq_regridded'] & sdqflags) != 0] = np.nan
-        #with warnings.catch_warnings(record=True) as _:  # Ignore 0 and NaN in divisors
-        #    combined_flux = np.nansum([reference['flux_with_nans'] * fluxref_weight, 
-        #                               to_shift['flux_interpolated'] * flux_interpolated_weight], axis=0) / \
-        #                    np.nansum([fluxref_weight, flux_interpolated_weight], axis=0)
-        #    combined_uncertainty = np.sqrt(np.nansum([reference['uncertainty']**2 * fluxref_weight**2, \
-        #                                              to_shift['uncertainty_interpolated']**2 * flux_interpolated_weight**2])) / \
-        #                           np.nansum([fluxref_weight, flux_interpolated_weight], axis=0)
 
     elif weight == 'equal':
         combined_flux = np.nanmean([reference['flux_with_nans'], to_shift['flux_interpolated']], axis=0)
@@ -767,179 +753,6 @@ def merge_overlap(overlap_pair_section,
         'data_quality': combined_dq, }
 
     return overlap_merged
-
-
-## Merge overlapping sections
-#def merge_overlap(overlap_sections,
-#                  acceptable_dq_flags=(0, 64, 128, 1024, 2048),
-#                  weight='sensitivity'):
-#    """
-#    Merges overlapping spectral regions. The basic workflow of this function
-#    is to interpolate the sections into a common wavelength table and calculate
-#    the weighted mean flux for each wavelength bin. If the fluxes are
-#    inconsistent between each other, the code can use the flux with higher SNR
-#    instead of the mean. If there are still outlier fluxes (compared to
-#    neighboring pixels), the code uses the flux from the lower SNR section
-#    instead. Co-added (merged) pixels will have their DQ flag set to `32768` if
-#    they are the result of combining good pixels (according to the list of
-#    acceptable flags). Their DQ flag will be set to `65536` if the combined
-#    pixels do not have an acceptable DQ flag.
-#
-#    Parameters
-#    ----------
-#    overlap_sections : ``list``
-#        List of dictionaries containing the overlapping spectra of neighboring
-#        orders.
-#
-#    acceptable_dq_flags : array-like, optional
-#        Data-quality flags that are acceptable when co-adding overlapping
-#        spectra. The default values are (0, 64, 128, 1024, 2048), which
-#        correspond to: 0 = regular pixel, 64 = vignetted pixel, 128 = pixel in
-#        overscan region, 1024 = small blemish, 2048 = more than 30% of
-#        background pixels rejected by sigma-clipping in the data reduction.
-#
-#    weight : ``str``, optional
-#        Defines how to merge the overlapping sections. The options currently
-#        implemented are ``'sensitivity'`` and ``'snr'`` (inverse square of the
-#        uncertainties). Default is ``'sensitivity'``.
-#
-#    Returns
-#    -------
-#    overlap_merged : ``dict``
-#        Dictionary containing the merged overlapping spectrum.
-#    """
-#    n_overlaps = len(overlap_sections)
-#    bitwise_or_acceptable_dq_flags = reduce(np.bitwise_or, acceptable_dq_flags)
-#    unacceptable_dq_flags = int(~np.uint16(bitwise_or_acceptable_dq_flags)) # ***
-#
-#    # First we need to determine which spectrum has a higher sensitivity
-#    avg_sensitivity = np.array([np.nanmean(ok['net'] / ok['flux'])
-#                                for ok in overlap_sections])
-#
-#    # We interpolate the lower-SNR spectra to the wavelength bins of the higher
-#    # SNR spectrum.
-#    max_sens_idx = np.where(avg_sensitivity == np.nanmax(avg_sensitivity))[0][0]
-#    overlap_ref = overlap_sections.pop(max_sens_idx)  # *** This modifies the input list!
-#
-#    f_interp = []
-#    err_interp = []
-#    net_interp = []
-#    for i in range(n_overlaps - 1):
-#        # Since we cannot really interpolate DQ flags, before we do the
-#        # interpolation, we need to identify the pixels where
-#        # the DQ flags are not acceptable, and assign them a NaN value
-#        overlap_s_f = np.copy(overlap_sections[i]['flux'])
-#        overlap_s_u = np.copy(overlap_sections[i]['uncertainty'])
-#        overlap_s_n = np.copy(overlap_sections[i]['net'])
-#        overlap_s_dq = overlap_sections[i]['data_quality']  # No copy here?  ***
-#        where_dq_bad = (overlap_s_dq & unacceptable_dq_flags) != 0  # ***
-#        overlap_s_f[where_dq_bad] = np.nan
-#        overlap_s_u[where_dq_bad] = np.nan
-#        overlap_s_n[where_dq_bad] = np.nan
-#
-#        # Now we perform the interpolation
-#        f_interp.append(np.interp(overlap_ref['wavelength'],
-#                                  overlap_sections[i]['wavelength'],
-#                                  overlap_s_f))
-#        err_interp.append(np.interp(overlap_ref['wavelength'],
-#                                    overlap_sections[i]['wavelength'],
-#                                    overlap_s_u))
-#        net_interp.append(np.interp(overlap_ref['wavelength'],
-#                                    overlap_sections[i]['wavelength'],
-#                                    overlap_s_n))
-#    f_interp = np.array(f_interp)
-#    err_interp = np.array(err_interp)
-#    net_interp = np.array(net_interp)
-#    sens_interp = net_interp / f_interp  # This is a good estimate of the
-#    # sensitivity. If there were NaNs, however, we set the sensitivity to an
-#    # arbitraty value; these interpolated pixels will be ignored anyway during
-#    # merging
-#    sens_interp[np.where(np.isnan(sens_interp))] = 0.0
-#    sens_ref = overlap_ref['net'] / overlap_ref['flux']
-#
-#    # Merge the spectra. We will take the weighted averaged, with weights equal
-#    # to the inverse of the uncertainties squared multiplied by a scale factor
-#    # to avoid numerical overflows.
-#    if weight == 'sensitivity':
-#        scale = 1E-10
-#        weights_interp = sens_interp * scale
-#        weights_ref = sens_ref * scale
-#    elif weight == 'snr':
-#        scale = 1E-20
-#        weights_interp = (1 / err_interp) ** 2 * scale
-#        weights_ref = (1 / overlap_ref['uncertainty']) ** 2 * scale
-#    elif weight == 'binary':
-#        weights_interp = np.zeros_like(sens_interp)
-#        weights_ref = np.ones_like(sens_ref)
-#    else:
-#        raise ValueError(
-#            'The weighting option "{}" is not implemented.'.format(weight))
-#
-#    # Here we deal with the data-quality flags. We only accept flags that are
-#    # listed in `acceptable_dq_flags`. Let's initialize the dq flag arrays
-#    dq_ref = overlap_ref['data_quality']
-#    # We start assuming that all the dq weights are zero
-#    dq_weights_ref = np.zeros_like(dq_ref)
-#    # And then for each acceptable dq, if the element of the dq array is one
-#    # of the acceptable flags, we set its dq weight to one
-#    dq_weights_ref[np.where(dq_ref & bitwise_or_acceptable_dq_flags)] = 1
-#    # The lines above do not catch a DQ flag of zero, so we have to manually
-#    # add them in case they are an acceptable DQ flag
-#    dq_weights_ref_0 = np.zeros_like(dq_weights_ref)
-#    if 0 in acceptable_dq_flags:  # *** ???
-#        dq_weights_ref_0[np.where(dq_ref == 0)] = 1
-#    dq_weights_ref += dq_weights_ref_0
-#
-#    # For the merged section, we create a new data-quality array filled with
-#    # 32768, which is what we establish as the flag for co-added pixels
-#    #dq_merge = np.ones_like(dq_ref, dtype=int) * 32768
-#    dq_merge = dq_ref.copy() | 32768  # ***
-#    # And the pixel-by-pixel weights are all one, except where there were set to
-#    # Nan
-#    dq_weights_interp = np.ones_like(f_interp)
-#    dq_weights_interp[np.where(np.isnan(f_interp))] = 0
-#
-#    # Now we need to get rid of the NaNs to avoid numerical problems. We will
-#    # assign them an arbitrary value of -99, but the value does not matter
-#    # because their weight is zero anyway
-#    f_interp[np.where(np.isnan(f_interp))] = -99
-#    err_interp[np.where(np.isnan(err_interp))] = -99
-#    net_interp[np.where(np.isnan(net_interp))] = -99
-#    sens_interp[np.where(np.isnan(sens_interp))] = -99
-#
-#    # Now we need to verify if we are setting the dq weighting to zero in both
-#    # the reference and the interpolated dqs. If this is the case, we will
-#    # set their weights to one and then flag these pixels
-#    sum_dq_weights = np.copy(dq_weights_ref + np.sum(dq_weights_interp, axis=0))
-#    dq_weights_ref[sum_dq_weights < 1] = 1
-#    for i in range(n_overlaps - 1):
-#        dq_weights_interp[i][sum_dq_weights < 1] = 1
-#    dq_merge[sum_dq_weights < 1] |= 65536
-#
-#    # And then we multiply the original weights by the dq weights
-#    weights_interp *= dq_weights_interp
-#    weights_ref *= dq_weights_ref
-#
-#    # This following array will be important later
-#    sum_weights = np.sum(weights_interp, axis=0) + weights_ref
-#
-#    # Finally co-add the overlaps
-#    wl_merge = np.copy(overlap_ref['wavelength'])
-#
-#    f_merge = np.zeros_like(overlap_ref['flux'])
-#    err_merge = np.zeros_like(overlap_ref['uncertainty'])
-#    for i in range(n_overlaps - 1):
-#        f_merge += f_interp[i] * weights_interp[i]
-#        err_merge += err_interp[i] ** 2 * weights_interp[i] ** 2
-#    f_merge += overlap_ref['flux'] * weights_ref
-#    err_merge += overlap_ref['uncertainty'] ** 2 * weights_ref ** 2
-#    f_merge = f_merge / sum_weights
-#    err_merge = err_merge ** 0.5 / sum_weights
-#
-#    overlap_merged = {'wavelength': wl_merge, 'flux': f_merge,
-#                      'uncertainty': err_merge, 'data_quality': dq_merge}
-#
-#    return overlap_merged
 
 
 # Splice the spectra
