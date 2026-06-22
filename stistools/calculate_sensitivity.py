@@ -4,6 +4,27 @@ from astropy.io import fits
 from astropy.table import Table
 from stistools.r_util import expandFileName
 
+
+__doc__ = r"""
+The ``calculate_sensitivity`` module is intended to estimate the instrument sensitivity
+to facilitate weighting in ``splice``.  While sensitivity is proportional to NET / FLUX,
+direct evaluation of this ratio does not work for pixels containing zero counts.  Thus,
+we directly evaluate the sensitivity using information from STIS reference files in the
+header of X1D/SX1 files, including the time- and temperature-dependence, blaze shift,
+aperture throughput, extraction height correction, etc.
+
+While throughputs are available via the synphot/stsynphot packages, these data do not
+provide accurate inter-order echelle throughput levels.  Furthermore, users would need
+to download and install synphot data.
+
+Notes
+-----
+The results of ``calculate_sensitivity`` are not used by ``calstis`` to directly
+flux-calibrate data.  We do not recommend its use for this purpose.  The algorithms
+here attempt to recreate the logic found in the ``hstcal`` package.
+"""
+
+
 SEC_PER_DAY = 24 * 60 * 60
 HC = 1.9864e-8  # Plank's constant * speed of light (erg * Å)
 A_HST = 45_238.93416  # effective area of HST primary mirror (cm^2)
