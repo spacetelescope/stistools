@@ -84,7 +84,7 @@ def nearest_index(array, target_value):
 
 
 # Read the Echelle spectrum based on dataset name and a prefix for file location
-def read_spectrum(x1d_input, truncate_edge_left=5, truncate_edge_right=5):
+def read_spectrum(x1d_input, ext=1, truncate_edge_left=5, truncate_edge_right=5):
     """
     This is a fairly straightforward function to read the spectrum from a `x1d`
     FITS file.
@@ -93,6 +93,10 @@ def read_spectrum(x1d_input, truncate_edge_left=5, truncate_edge_right=5):
     ----------
     x1d_input : ``str``
         Path and name of the ``*_x1d.fits`` file containing the spectrum.
+
+    ext : ``int``, optional
+        FITS extension to read from the X1D file.  Most X1D files contain only
+        one SCI extension (i.e., ``REPEATOBS=1``).  Default is ``1``.
 
     truncate_edge_left : ``int``, optional
         Set the number of low-resolution pixels at the left edge of the detector
@@ -112,7 +116,7 @@ def read_spectrum(x1d_input, truncate_edge_left=5, truncate_edge_right=5):
     """
     with fits.open(x1d_input) as hdu:
         header = hdu[0].header
-        data = hdu['SCI'].data
+        data = hdu[ext].data
     optical_element = header['OPT_ELEM']
     if optical_element[0] != 'E':
         raise TypeError("This is not an Echelle spectrum.")
@@ -136,6 +140,7 @@ def read_spectrum(x1d_input, truncate_edge_left=5, truncate_edge_right=5):
     # too many numerical indexes. Also, since the orders are in reverse order,
     # we index them in the opposite way
     spectrum = [{'filename': x1d_input,
+                 'ext': ext,
                  'sporder': int(sporders[-i - 1]),
                  'wavelength': wavelength[-i - 1][subset],
                  'flux': flux[-i - 1][subset],
@@ -203,6 +208,7 @@ def find_overlap(spectrum, extent=1024):
     # There is always a unique section here
     unique_idx = np.arange(0, idx[0], 1)
     unique_sections.append({'filename': order['filename'],
+                            'ext': order['ext'],
                             'sporder': order['sporder'],
                             'wavelength': order['wavelength'][unique_idx],
                             'flux': order['flux'][unique_idx],
@@ -215,6 +221,7 @@ def find_overlap(spectrum, extent=1024):
     # considered a "second pair"
     overlap_01 = np.arange(idx[0], idx[1], 1)
     second_pair.append({'filename': order['filename'],
+                        'ext': order['ext'],
                         'sporder': order['sporder'],
                         'wavelength': order['wavelength'][overlap_01],
                         'flux': order['flux'][overlap_01],
@@ -227,6 +234,7 @@ def find_overlap(spectrum, extent=1024):
         # There is a trio overlap
         overlap_012 = np.arange(idx[1], right_edge, 1)
         third_trio.append({'filename': order['filename'],
+                           'ext': order['ext'],
                            'sporder': order['sporder'],
                            'wavelength': order['wavelength'][overlap_012],
                            'flux': order['flux'][overlap_012],
@@ -270,6 +278,7 @@ def find_overlap(spectrum, extent=1024):
     if unique_1 is not None:
         unique_sections.append(
             {'filename': order['filename'],
+             'ext': order['ext'],
              'sporder': order['sporder'],
              'wavelength': order['wavelength'][unique_1],
              'flux': order['flux'][unique_1],
@@ -280,6 +289,7 @@ def find_overlap(spectrum, extent=1024):
         )
 
     first_pair.append({'filename': order['filename'],
+                       'ext': order['ext'],
                        'sporder': order['sporder'],
                        'wavelength': order['wavelength'][overlap_01],
                        'flux': order['flux'][overlap_01],
@@ -288,6 +298,7 @@ def find_overlap(spectrum, extent=1024):
                        'gross': order['gross'][overlap_01],
                        'net': order['net'][overlap_01]})
     second_pair.append({'filename': order['filename'],
+                        'ext': order['ext'],
                         'sporder': order['sporder'],
                         'wavelength': order['wavelength'][overlap_12],
                         'flux': order['flux'][overlap_12],
@@ -298,6 +309,7 @@ def find_overlap(spectrum, extent=1024):
 
     if overlap_012 is not None:
         second_trio.append({'filename': order['filename'],
+                            'ext': order['ext'],
                             'sporder': order['sporder'],
                             'wavelength': order['wavelength'][overlap_012],
                             'flux': order['flux'][overlap_012],
@@ -308,6 +320,7 @@ def find_overlap(spectrum, extent=1024):
 
     if overlap_123 is not None:
         third_trio.append({'filename': order['filename'],
+                           'ext': order['ext'],
                            'sporder': order['sporder'],
                            'wavelength': order['wavelength'][overlap_123],
                            'flux': order['flux'][overlap_123],
@@ -351,6 +364,7 @@ def find_overlap(spectrum, extent=1024):
         if len(overlap_idx_12) > 0:
             first_pair.append(
                 {'filename': order['filename'],
+                 'ext': order['ext'],
                  'sporder': order['sporder'],
                  'wavelength': order['wavelength'][overlap_idx_12],
                  'flux': order['flux'][overlap_idx_12],
@@ -363,6 +377,7 @@ def find_overlap(spectrum, extent=1024):
         if len(overlap_idx_23) > 0:
             second_pair.append(
                 {'filename': order['filename'],
+                 'ext': order['ext'],
                  'sporder': order['sporder'],
                  'wavelength': order['wavelength'][overlap_idx_23],
                  'flux': order['flux'][overlap_idx_23],
@@ -375,6 +390,7 @@ def find_overlap(spectrum, extent=1024):
         if overlap_idx_012 is not None:
             first_trio.append(
                 {'filename': order['filename'],
+                 'ext': order['ext'],
                  'sporder': order['sporder'],
                  'wavelength': order['wavelength'][overlap_idx_012],
                  'flux': order['flux'][overlap_idx_012],
@@ -387,6 +403,7 @@ def find_overlap(spectrum, extent=1024):
         if overlap_idx_123 is not None:
             second_trio.append(
                 {'filename': order['filename'],
+                 'ext': order['ext'],
                  'sporder': order['sporder'],
                  'wavelength': order['wavelength'][overlap_idx_123],
                  'flux': order['flux'][overlap_idx_123],
@@ -399,6 +416,7 @@ def find_overlap(spectrum, extent=1024):
         if overlap_idx_234 is not None:
             third_trio.append(
                 {'filename': order['filename'],
+                 'ext': order['ext'],
                  'sporder': order['sporder'],
                  'wavelength': order['wavelength'][overlap_idx_234],
                  'flux': order['flux'][overlap_idx_234],
@@ -411,6 +429,7 @@ def find_overlap(spectrum, extent=1024):
         if unique_idx_2 is not None:
             unique_sections.append(
                 {'filename': order['filename'],
+                 'ext': order['ext'],
                  'sporder': order['sporder'],
                  'wavelength': order['wavelength'][unique_idx_2],
                  'flux': order['flux'][unique_idx_2],
@@ -454,6 +473,7 @@ def find_overlap(spectrum, extent=1024):
     if unique_2 is not None:
         unique_sections.append(
             {'filename': order['filename'],
+             'ext': order['ext'],
              'sporder': order['sporder'],
              'wavelength': order['wavelength'][unique_2],
              'flux': order['flux'][unique_2],
@@ -465,6 +485,7 @@ def find_overlap(spectrum, extent=1024):
 
     if len(overlap_12) > 0:
         first_pair.append({'filename': order['filename'],
+                           'ext': order['ext'],
                            'sporder': order['sporder'],
                            'wavelength': order['wavelength'][overlap_12],
                            'flux': order['flux'][overlap_12],
@@ -475,6 +496,7 @@ def find_overlap(spectrum, extent=1024):
 
     if len(overlap_23) > 0:
         second_pair.append({'filename': order['filename'],
+                            'ext': order['ext'],
                             'sporder': order['sporder'],
                             'wavelength': order['wavelength'][overlap_23],
                             'flux': order['flux'][overlap_23],
@@ -485,6 +507,7 @@ def find_overlap(spectrum, extent=1024):
 
     if overlap_012 is not None:
         first_trio.append({'filename': order['filename'],
+                           'ext': order['ext'],
                            'sporder': order['sporder'],
                            'wavelength': order['wavelength'][overlap_012],
                            'flux': order['flux'][overlap_012],
@@ -495,6 +518,7 @@ def find_overlap(spectrum, extent=1024):
 
     if overlap_123 is not None:
         second_trio.append({'filename': order['filename'],
+                            'ext': order['ext'],
                             'sporder': order['sporder'],
                             'wavelength': order['wavelength'][overlap_123],
                             'flux': order['flux'][overlap_123],
@@ -513,6 +537,7 @@ def find_overlap(spectrum, extent=1024):
     unique_idx = np.arange(idx[1], right_edge, 1)
     unique_sections.append(
         {'filename': order['filename'],
+         'ext': order['ext'],
          'sporder': order['sporder'],
          'wavelength': order['wavelength'][unique_idx],
          'flux': order['flux'][unique_idx],
@@ -529,6 +554,7 @@ def find_overlap(spectrum, extent=1024):
     if len(overlap_23) > 0:
         first_pair.append(
             {'filename': order['filename'],
+             'ext': order['ext'],
              'sporder': order['sporder'],
              'wavelength': order['wavelength'][overlap_23],
              'flux': order['flux'][overlap_23],
@@ -543,6 +569,7 @@ def find_overlap(spectrum, extent=1024):
         overlap_123 = np.arange(0, idx[0], 1)
         first_trio.append(
             {'filename': order['filename'],
+             'ext': order['ext'],
              'sporder': order['sporder'],
              'wavelength': order['wavelength'][overlap_123],
              'flux': order['flux'][overlap_123],
@@ -668,11 +695,11 @@ def merge_overlap(overlap_pair_section,
 
     if weight == 'sensitivity':
         _, weights_ref = calculate_sensitivity(
-            reference['filename'], ext=1,  # EXT HARDCODED FOR NOW!
+            reference['filename'], ext=reference['ext'],
             sporder=reference['sporder'],
             output_wavelengths=reference['wavelength'])
         _, weights_to_shift = calculate_sensitivity(
-            to_shift['filename'], ext=1,  # EXT HARDCODED FOR NOW!
+            to_shift['filename'], ext=to_shift['ext'],
             sporder=to_shift['sporder'],
             output_wavelengths=reference['wavelength'])
         weights = np.array([weights_ref, weights_to_shift])
@@ -789,7 +816,7 @@ def concatenate_sections(unique_spectra_list, merged_pair_list,
 
 
 # The splice pipeline does everything
-def splice(x1d_input, update_fits=False, output_file=None, weight='sensitivity',
+def splice(x1d_input, ext=1, update_fits=False, output_file=None, weight='sensitivity',
            sdqflags=31743,
            truncate_edge_left=5, truncate_edge_right=5):
     """
@@ -801,6 +828,10 @@ def splice(x1d_input, update_fits=False, output_file=None, weight='sensitivity',
     ----------
     x1d_input : ``str``
         Path and name of the ``*_x1d.fits`` file containing the spectrum.
+
+    ext : ``int``, optional
+        FITS extension to read from the X1D file.  Most X1D files contain only
+        one SCI extension (i.e., ``REPEATOBS=1``).  Default is ``1``.
 
     update_fits : ``bool``, optional
         Use carefully, since it can modify fits files permanently. Parameter
@@ -844,7 +875,7 @@ def splice(x1d_input, update_fits=False, output_file=None, weight='sensitivity',
     so data taken with REPEATOBS > 1 are not processed.
     """
     # Read the data
-    sections = read_spectrum(x1d_input, truncate_edge_left=truncate_edge_left,
+    sections = read_spectrum(x1d_input, ext=ext, truncate_edge_left=truncate_edge_left,
                              truncate_edge_right=truncate_edge_right)
 
     unique_sections, overlap_pair_sections, overlap_trio_sections = \
