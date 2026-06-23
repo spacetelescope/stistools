@@ -2,11 +2,11 @@
 
 import warnings
 from copy import deepcopy
+from functools import reduce
 import numpy as np
 from scipy.interpolate import interp1d
 from astropy.io import fits
 from astropy.table import Table
-from functools import reduce
 from .calculate_sensitivity import calculate_sensitivity
 
 __doc__ = r"""
@@ -597,7 +597,8 @@ def find_overlap(spectrum, extent=1024):
 # Merge overlapping sections
 def merge_overlap(overlap_pair_section,
                   sdqflags=31743,
-                  weight='sensitivity'):
+                  weight='sensitivity',
+                  kind='linear'):
     '''
     Merges overlapping spectral regions. The basic workflow of this function
     is to interpolate the sections into a common wavelength table and calculate
@@ -623,6 +624,13 @@ def merge_overlap(overlap_pair_section,
         implemented are ``'sensitivity'``, ``'sensitivity-dataset'`` (NET / FLUX),
         and ``'snr'`` (inverse square of the uncertainties). Default is ``'sensitivity'``.
 
+    kind : ``str``, optional
+        One of {``'linear'``, ``'zero'``, ``'slinear'``, ``'quadratic'``, ``'cubic'``}.
+        Interpolation or resampling method used.
+        Default is ``'linear'``.  ``'zero'``, ``'slinear'``, ``'quadratic'``
+        and ``'cubic'`` refer to a spline interpolation of zeroth, first,
+        second and third order, respectively.
+
     Returns
     -------
     overlap_merged : ``dict``
@@ -640,15 +648,15 @@ def merge_overlap(overlap_pair_section,
     to_shift['flux_interpolated'] = interp1d(
         to_shift['wavelength'],
         to_shift['flux'],
-        kind='linear', fill_value='extrapolate')(reference['wavelength'])
+        kind=kind, fill_value='extrapolate')(reference['wavelength'])
     to_shift['net_interpolated'] = interp1d(
         to_shift['wavelength'],
         to_shift['net'],
-        kind='linear', fill_value='extrapolate')(reference['wavelength'])
+        kind=kind, fill_value='extrapolate')(reference['wavelength'])
     to_shift['uncertainty_interpolated'] = interp1d(
         to_shift['wavelength'],
         to_shift['uncertainty'],
-        kind='linear', fill_value='extrapolate')(reference['wavelength'])
+        kind=kind, fill_value='extrapolate')(reference['wavelength'])
 
     to_shift['dq_regridded'] = np.zeros_like(reference['wavelength'], dtype=np.uint16)
     for i, λ_ref in enumerate(reference['wavelength']):
@@ -709,7 +717,7 @@ def merge_overlap(overlap_pair_section,
 
         with warnings.catch_warnings(record=True) as _:  # Ignore 0 and NaN in divisors
             combined_flux = np.nansum(flux_arrays * weights, axis=0) / np.nansum(weights, axis=0)
-            combined_uncertainty = (uncertainty_arrays**2 * weights**2).sum(axis=0)**0.5 / weights.sum(axis=0)
+            combined_uncertainty = np.nansum(uncertainty_arrays**2 * weights**2, axis=0)**0.5 / np.nansum(weights, axis=0)
 
     elif weight == 'sensitivity-dataset':
         valid_mask = ~np.isnan(flux_arrays)
@@ -718,7 +726,7 @@ def merge_overlap(overlap_pair_section,
 
         with warnings.catch_warnings(record=True) as _:  # Ignore 0 and NaN in divisors
             combined_flux = np.nansum(flux_arrays * weights, axis=0) / np.nansum(weights, axis=0)
-            combined_uncertainty = (uncertainty_arrays**2 * weights**2).sum(axis=0)**0.5 / weights.sum(axis=0)
+            combined_uncertainty = np.nansum(uncertainty_arrays**2 * weights**2, axis=0)**0.5 / np.nansum(weights, axis=0)
 
     elif weight in {'snr', 'inverse-variance'}:
         valid_mask = ~np.isnan(flux_arrays)
@@ -817,7 +825,7 @@ def concatenate_sections(unique_spectra_list, merged_pair_list,
 
 # The splice pipeline does everything
 def splice(x1d_input, ext=1, update_fits=False, output_file=None, weight='sensitivity',
-           sdqflags=31743,
+           kind='linear', sdqflags=31743,
            truncate_edge_left=5, truncate_edge_right=5):
     """
     The main workhorse of the package. This pipeline performs all the steps
@@ -847,6 +855,16 @@ def splice(x1d_input, ext=1, update_fits=False, output_file=None, weight='sensit
         Defines how to merge the overlapping sections. The options currently
         implemented are ``'sensitivity'`` and ``'snr'`` (inverse square of the
         uncertainties). Default is ``'sensitivity'``.
+
+    kind : ``str``, optional
+        One of {``'linear'``, ``'zero'``, ``'slinear'``, ``'quadratic'``, ``'cubic'``,
+        ``'FluxConservingResampler'``, ``'LinearInterpolatedResampler'``,
+        ``'SplineInterpolatedResampler'``}.
+        Interpolation or resampling method used.
+        Default is ``'linear'``.  ``'zero'``, ``'slinear'``, ``'quadratic'``
+        and ``'cubic'`` refer to a spline interpolation of zeroth, first,
+        second and third order, respectively.
+        The 'Resampler' options require specutils to be installed.
 
     sdqflags : ``int``, optional
         Serious data quality flags.  This is a bitwise-or of the flag values
@@ -883,13 +901,13 @@ def splice(x1d_input, ext=1, update_fits=False, output_file=None, weight='sensit
 
     # Merge the overlapping spectral sections
     merged_pairs = [
-        merge_overlap(overlap_pair_sections[k], sdqflags, weight)
+        merge_overlap(overlap_pair_sections[k], sdqflags, weight, kind=kind)
         for k in range(len(overlap_pair_sections))
     ]
 
     if len(overlap_trio_sections) > 0:
         merged_trios = [
-            merge_overlap(overlap_trio_sections[k], sdqflags, weight)
+            merge_overlap(overlap_trio_sections[k], sdqflags, weight, kind=kind)
             for k in range(len(overlap_trio_sections))
         ]
     else:
