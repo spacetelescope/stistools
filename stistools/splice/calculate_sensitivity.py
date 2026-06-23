@@ -6,9 +6,12 @@ from stistools.r_util import expandFileName
 
 
 __doc__ = r"""
+calculate_sensitivity
+---------------------
+
 The ``calculate_sensitivity`` sub-module is intended to estimate the instrument
-sensitivity to facilitate weighting in ``splice``.  While sensitivity is proportional to
-``NET`` / ``FLUX`` (and available with the ``weight='sensitivity-dataset'`` option to
+sensitivity to facilitate weighting in :func:`splice`.  While sensitivity is proportional
+to ``NET / FLUX`` (and available with the ``weight='sensitivity-dataset'`` option to
 :func:`splice`), direct evaluation of this ratio does not work for pixels containing zero
 counts.  Thus, we directly evaluate the sensitivity using information from STIS reference
 files in the header of X1D/SX1 files, including the time- and temperature-dependence,

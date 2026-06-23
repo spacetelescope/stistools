@@ -12,7 +12,8 @@ from .calculate_sensitivity import calculate_sensitivity
 __doc__ = r"""
 The ``splice`` module concatenates the several orders contained in a STIS
 echelle ``_x1d`` spectrum while co-adding the overlapping sections. This code
-emulates the splice module previously implemented on the STSDAS IRAF package.
+emulates the splice module previously implemented on the `STSDAS IRAF package
+<https://github.com/spacetelescope/stsdas_stripped/tree/master/stsdas/pkg/hst_calib/ctools/splice>`_.
 
 The function :func:`splice` takes as input an ``_x1d`` echelle spectrum
 (including path) and outputs an Astropy Table containing the wavelength, flux,
@@ -66,6 +67,19 @@ using ``matplotlib``:
    plt.show()
 
 .. image:: splice_eg2.png
+
+Splicing another dataset (``ofhde2020_x1d.fits``).  In this case, the lighter shades
+indicate pixels with serious DQ flags present.
+
+.. image:: splice_eg3a.png
+
+And zooming in:
+
+.. image:: splice_eg3b.png
+
+Note the spikes present at the edges of the orders.  These can be trimmed by setting
+the parameters ``truncate_edge_left`` and ``truncate_edge_right`` to a non-zero integer
+number of pixels in splice (the default is 5 pixels for each).
 """
 
 __taskname__ = "splice"
