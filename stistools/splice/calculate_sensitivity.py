@@ -35,33 +35,34 @@ A_HST = 45_238.93416  # effective area of HST primary mirror (cm^2)
 
 
 def eval_tds(dataset, ext=1, tempcorr=True, output_wavelengths=None):
-    '''Evaluate the Time-Dependent Sensitivity (TDS) at a specified observation's MJD
+    """
+    Evaluate the Time-Dependent Sensitivity (TDS) at a specified observation's MJD
     and temperature, and then optionally interpolate to a specified wavelength grid (in Å).
 
     Parameters
     ----------
-    dataset : ``str``
+    dataset: str
         Path to a STIS x1d or sx1 FITS file
 
-    ext : ``int``, optional
+    ext: int, optional
         dataset extension from which to get the temperature.
 
-    tempcorr : ``bool``
-        If True (default), apply the temperature-sensitivity correction
+    tempcorr: bool
+        If ``True`` (default), apply the temperature-sensitivity correction
 
-    output_wavelengths : ``np.ndarray``, optional
+    output_wavelengths: np.ndarray, optional
         Wavelength array (Å) onto which the TDS correction
         should be interpolated. If omitted, the native TDSTAB
         wavelength grid is returned.
 
     Returns
     -------
-    wavelengths : ``np.ndarray``
+    wavelengths: np.ndarray
         Wavelength array in Å.
 
-    throughputs : ``np.ndarray``
+    throughputs: np.ndarray
         TDS throughput correction evaluated at ``wavelengths``.
-    '''
+    """
     with fits.open(dataset) as f:
         mjd = f[0].header['TEXPSTRT']
 
@@ -135,27 +136,28 @@ def eval_tds(dataset, ext=1, tempcorr=True, output_wavelengths=None):
 
 
 def aperture_throughput(dataset, output_wavelengths=None):
-    '''Locate, parse, and interpolate the aperture throughput correction for a
+    """
+    Locate, parse, and interpolate the aperture throughput correction for a
     STIS dataset.
 
     Parameters
     ----------
-    dataset : ``str``
+    dataset: str
         Path to a STIS x1d or sx1 FITS file
 
-    output_wavelengths : ``np.ndarray``, optional
+    output_wavelengths: np.ndarray, optional
         Wavelength array (Å) onto which the throughput correction
         should be interpolated. If omitted, the native APERTAB
         wavelength grid is returned.
 
     Returns
     -------
-    wavelengths : ``np.ndarray``
+    wavelengths: np.ndarray
         Wavelength array in Å.
 
-    throughputs : ``np.ndarray``
+    throughputs: np.ndarray
         Aperture throughput correction evaluated at ``wavelengths``.
-    '''
+    """
     dataset_aperture = fits.getval(dataset, ext=0, keyword='APERTURE')
     apertab_filename = expandFileName(fits.getval(dataset, ext=0, keyword='APERTAB'))
     apertab = Table.read(apertab_filename, hdu=1, unit_parse_strict='silent')
@@ -177,30 +179,31 @@ def aperture_throughput(dataset, output_wavelengths=None):
 
 
 def extraction_height_correction(dataset, ext=1, output_wavelengths=None):
-    '''Locate, parse, and interpolate the PCTAB extraction height correction for a
+    """
+    Locate, parse, and interpolate the PCTAB extraction height correction for a
     STIS dataset.
 
     Parameters
     ----------
-    dataset : ``str``
+    dataset: str
         Path to a STIS x1d or sx1 FITS file
 
-    ext : ``int``, optional
-        Extension of dataset.  Used to look up extraction height used.  Default=1.
+    ext: int, optional
+        Extension of dataset.  Used to look up extraction height used.  Default=``1``.
 
-    output_wavelengths : ``np.ndarray``, optional
+    output_wavelengths: np.ndarray, optional
         Wavelength array (Å) onto which the throughput correction
         should be interpolated. If omitted, the native wavelength
         grid is returned.
 
     Returns
     -------
-    wavelengths : ``np.ndarray``
+    wavelengths: np.ndarray
         Wavelength array in Å.
 
-    throughputs : ``np.ndarray``
+    throughputs: np.ndarray
         Extraction throughput correction evaluated at ``wavelengths``.
-    '''
+    """
     with fits.open(dataset) as f:
         pctab_filename = expandFileName(fits.getval(dataset, ext=0, keyword='PCTAB'))
         pctab = Table.read(pctab_filename, hdu=1, unit_parse_strict='silent')
@@ -254,41 +257,42 @@ def extraction_height_correction(dataset, ext=1, output_wavelengths=None):
 
 
 def calculate_sensitivity(dataset, ext, sporder, blazecorr=True, output_wavelengths=None):
-    '''Calculate the instrument sensitivity corresponding to a specified STIS X1D/SX1
+    """
+    Calculate the instrument sensitivity corresponding to a specified STIS X1D/SX1
     dataset.
 
     Parameters
     ----------
-    dataset : ``str``
+    dataset: str
         Path to a STIS x1d or sx1 FITS file
 
-    ext : ``int``
+    ext: int
         Extension of dataset
 
-    sporder : ``int``
+    sporder: int
         Spectral order number to be calculated
 
-    blazecorr : ``bool``
-        If True (default), perform the blaze shift correction to the throughput.
+    blazecorr: bool
+        If ``True`` (default), perform the blaze shift correction to the throughput.
 
-    output_wavelengths : ``np.ndarray``, optional
+    output_wavelengths: np.ndarray, optional
         Wavelength array (Å) onto which the throughput should be
         interpolated. If omitted, the PHOTTAB's native wavelength
         grid is returned.
 
     Returns
     -------
-    wavelengths : ``np.ndarray``
+    wavelengths: np.ndarray
         Wavelength array in Å.
 
-    sensitivity : ``np.ndarray``
+    sensitivity: np.ndarray
         Sensitivity evaluated at ``wavelengths``.
 
     Notes
     -----
-    Resulting sensitivity matches NET/FLUX well, but is not subject to undefined behavior
-    when the count rate is 0 for a pixel.
-    '''
+    Resulting sensitivity matches ``NET/FLUX`` well, but is not subject to undefined
+    behavior when the count rate is 0 for a pixel.
+    """
     with fits.open(dataset) as f:
         gain = f[0].header.get('ATODGAIN', 1.)  # 1 for MAMAs
         aperture = f[0].header['APERTURE']

@@ -99,14 +99,14 @@ def nearest_index(array, target_value):
 
     Parameters
     ----------
-    array : ``numpy.array``
+    array: numpy.array
         Target array
-    target_value : ``float``
+    target_value: float
         Target value
 
     Returns
     -------
-    index : ``int``
+    index: int
         Index of the value in ``array`` that is closest to ``target_value``.
     """
     return np.abs(array - target_value).argmin()
@@ -120,26 +120,26 @@ def read_spectrum(x1d_input, ext=1, truncate_edge_left=5, truncate_edge_right=5)
 
     Parameters
     ----------
-    x1d_input : ``str``
+    x1d_input: str
         Path and name of the ``*_x1d.fits`` file containing the spectrum.
 
-    ext : ``int``, optional
+    ext: int, optional
         FITS extension to read from the X1D file.  Most X1D files contain only
         one SCI extension (i.e., ``REPEATOBS=1``).  Default is ``1``.
 
-    truncate_edge_left : ``int``, optional
+    truncate_edge_left: int, optional
         Set the number of low-resolution pixels at the left edge of the detector
         where the spectra should be truncated. If ``0``, then no truncation
         is applied. Default is ``5``.
 
-    truncate_edge_right : ``int``, optional
+    truncate_edge_right: int, optional
         Set the number of low-resolution pixels at the right edge of the
         detector where the spectra should be truncated. If ``0``, then no
         truncation is applied. Default is ``5``.
 
     Returns
     -------
-    spectrum : ``list``
+    spectrum: list
         List of all the orders contained in the echelle spectrum and their
         respective fluxes.
     """
@@ -189,24 +189,24 @@ def find_overlap(spectrum, extent=1024):
 
     Parameters
     ----------
-    spectrum : ``list``
+    spectrum: list
         List of dictionaries containing the orders of the echelle spectrum.
         It should resemble the output of ``read_spectrum()``.
 
-    extent : ``int``
+    extent: int
         Pixel extent of a full order after truncation.  Typically
         1024 - truncate_left_edge - truncate_right_edge.  Default is
         ``1024``.
 
     Returns
     -------
-    unique_sections : ``list``
+    unique_sections: list
         List containing the unique sections of the spectrum.
 
-    overlap_pair_sections : ``list``
+    overlap_pair_sections: list
         List containing the overlapping pairs of the spectrum.
 
-    overlap_trio_sections : ``list``
+    overlap_trio_sections: list
         List containing the overlapping trios of the spectrum.
     """
     right_edge = extent - 1
@@ -628,7 +628,7 @@ def merge_overlap(overlap_pair_section,
                   sdqflags=31743,
                   weight='sensitivity',
                   kind='linear'):
-    '''
+    """
     Merges overlapping spectral regions. The basic workflow of this function
     is to interpolate the sections into a common wavelength table and calculate
     the weighted mean flux for each wavelength bin. If the fluxes are
@@ -639,21 +639,21 @@ def merge_overlap(overlap_pair_section,
 
     Parameters
     ----------
-    overlap_pair_section : ``list``
+    overlap_pair_section: list
         List of dictionaries containing the overlapping spectra of neighboring
         orders.
 
-    sdqflags : ``int``, optional
+    sdqflags: int, optional
         Bitwise-OR mask of serious data quality flags (``SDQFLAGS``).  Default=31743,
         which is all flags except 1024.  Flux values are averaged from non-serious-DQ
         input pixels when possible, and from serious-DQ input pixels when required.
 
-    weight : ``str``, optional
+    weight: str, optional
         Defines how to merge the overlapping sections. The options currently
         implemented are ``'sensitivity'``, ``'sensitivity-dataset'`` (NET / FLUX),
         and ``'snr'`` (inverse square of the uncertainties). Default is ``'sensitivity'``.
 
-    kind : ``str``, optional
+    kind: str, optional
         One of {``'linear'``, ``'zero'``, ``'slinear'``, ``'quadratic'``, ``'cubic'``}.
         Interpolation or resampling method used.
         Default is ``'linear'``.  ``'zero'``, ``'slinear'``, ``'quadratic'``
@@ -662,9 +662,9 @@ def merge_overlap(overlap_pair_section,
 
     Returns
     -------
-    overlap_merged : ``dict``
+    overlap_merged: dict
         Dictionary containing the merged overlapping spectrum.
-    '''
+    """
     warnings.filterwarnings('ignore', message='Mean of empty slice', category=RuntimeWarning)  # np.nanmean
 
     reference = overlap_pair_section[0]
@@ -799,24 +799,24 @@ def concatenate_sections(unique_spectra_list, merged_pair_list,
 
     Parameters
     ----------
-    unique_spectra_list : ``list``
+    unique_spectra_list: list
         List of unique spectra.
 
-    merged_pair_list : ``list``
+    merged_pair_list: list
         List of merged overlapping pair spectra.
 
-    merged_trio_list : ``list``
+    merged_trio_list: list
         List of merged overlapping trio spectra.
 
     Returns
     -------
-    spliced_wavelength : ``numpy.ndarray``
+    spliced_wavelength: numpy.ndarray
         Array containing the wavelengths in the entire spectrum.
 
-    spliced_flux : ``numpy.ndarray``
+    spliced_flux: numpy.ndarray
         Array containing the fluxes in the entire spectrum.
 
-    spliced_uncertainty : ``numpy.ndarray``
+    spliced_uncertainty: numpy.ndarray
         Array containing the flux uncertainties in the entire spectrum.
     """
     n_pair_overlap = len(merged_pair_list)
@@ -863,52 +863,52 @@ def splice(x1d_input, ext=1, update_fits=False, output_file=None, weight='sensit
 
     Parameters
     ----------
-    x1d_input : ``str``
+    x1d_input: str
         Path and name of the ``*_x1d.fits`` file containing the spectrum.
 
-    ext : ``int``, optional
+    ext: int, optional
         FITS extension to read from the X1D file.  Most X1D files contain only
         one SCI extension (i.e., ``REPEATOBS=1``).  Default is ``1``.
 
-    update_fits : ``bool``, optional
+    update_fits: bool, optional
         Use carefully, since it can modify fits files permanently. Parameter
         that decides whether to update the ``*_x1d.fits`` file with a new
-        extension containing the spliced spectrum.
+        extension containing the spliced spectrum.  Default is ``False``.
 
-    output_file : ``str`` or ``None``, optional
+    output_file: str or None, optional
         String containing the location to save the output spectrum as an ascii
         file. If ``None``, no output file is saved and the code returns an
         Astropy Table instead. Default is ``None``.
 
-    weight : ``str``, optional
+    weight: str, optional
         Defines how to merge the overlapping sections. The options currently
         implemented are ``'sensitivity'`` and ``'snr'`` (inverse square of the
         uncertainties). Default is ``'sensitivity'``.
 
-    kind : ``str``, optional
+    kind: str, optional
         One of {``'linear'``, ``'zero'``, ``'slinear'``, ``'quadratic'``, ``'cubic'``}.
         Interpolation or resampling method used.
         Default is ``'linear'``.  ``'zero'``, ``'slinear'``, ``'quadratic'``
         and ``'cubic'`` refer to a spline interpolation of zeroth, first,
         second and third order, respectively.
 
-    sdqflags : ``int``, optional
+    sdqflags: int, optional
         Serious data quality flags.  This is a bitwise-or of the flag values
-        to use when excluding data from its source.
+        to use when excluding data from its source.  Default is ``31743``.
 
-    truncate_edge_left : ``int``, optional
+    truncate_edge_left: int, optional
         Set the number of low-resolution pixels at the left edge of the detector
         where the spectra should be truncated. If ``None``, then no truncation
         is applied. Default is ``5``.
 
-    truncate_edge_right : ``int``, optional
+    truncate_edge_right: int, optional
         Set the number of low-resolution pixels at the right edge of the
         detector where the spectra should be truncated. If ``0``, then no
         truncation is applied. Default is ``5``.
 
     Returns
     -------
-    spliced_spectrum_table : ``astropy.Table`` object
+    spliced_spectrum_table: astropy.Table
         Astropy Table containing the spliced spectrum. Only returned if
         ``output_file`` is ``None``.
     """
