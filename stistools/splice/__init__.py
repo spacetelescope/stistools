@@ -13,4 +13,4 @@ from .calculate_sensitivity import (
     aperture_throughput,
     __doc__ as __doc_calculate_sensitivity__)
 
-__doc__ = __doc_splice__ + '\n\n' + __doc_calculate_sensitivity__
+__doc__ = __doc_splice__ + '\n\n' + '-'*50 + '\n\n' + __doc_calculate_sensitivity__

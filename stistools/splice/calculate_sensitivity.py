@@ -6,16 +6,17 @@ from stistools.r_util import expandFileName
 
 
 __doc__ = r"""
-The ``calculate_sensitivity`` module is intended to estimate the instrument sensitivity
-to facilitate weighting in ``splice``.  While sensitivity is proportional to NET / FLUX,
-direct evaluation of this ratio does not work for pixels containing zero counts.  Thus,
-we directly evaluate the sensitivity using information from STIS reference files in the
-header of X1D/SX1 files, including the time- and temperature-dependence, blaze shift,
-aperture throughput, extraction height correction, etc.
+The ``calculate_sensitivity`` sub-module is intended to estimate the instrument
+sensitivity to facilitate weighting in ``splice``.  While sensitivity is proportional to
+``NET`` / ``FLUX`` (and available with the ``weight='sensitivity-dataset'`` option to
+:func:`splice`), direct evaluation of this ratio does not work for pixels containing zero
+counts.  Thus, we directly evaluate the sensitivity using information from STIS reference
+files in the header of X1D/SX1 files, including the time- and temperature-dependence,
+blaze shift, aperture throughput, extraction height correction, etc.
 
-While throughputs are available via the synphot/stsynphot packages, these data do not
-provide accurate inter-order echelle throughput levels.  Furthermore, users would need
-to download and install synphot data.
+While throughputs are available via the ``synphot``/``stsynphot`` packages, these data
+do not provide accurate inter-order Echelle throughput levels.  Furthermore, users would
+need to download and install synphot data.
 
 Notes
 -----
@@ -36,27 +37,27 @@ def eval_tds(dataset, ext=1, tempcorr=True, output_wavelengths=None):
 
     Parameters
     ----------
-    dataset : str
+    dataset : ``str``
         Path to a STIS x1d or sx1 FITS file
 
-    ext : int, optional
+    ext : ``int``, optional
         dataset extension from which to get the temperature.
 
-    tempcorr : bool
+    tempcorr : ``bool``
         If True (default), apply the temperature-sensitivity correction
 
-    output_wavelengths : np.ndarray, optional
+    output_wavelengths : ``np.ndarray``, optional
         Wavelength array (Å) onto which the TDS correction
         should be interpolated. If omitted, the native TDSTAB
         wavelength grid is returned.
 
     Returns
     -------
-    wavelengths : np.ndarray
+    wavelengths : ``np.ndarray``
         Wavelength array in Å.
 
-    throughputs : np.ndarray
-        TDS throughput correction evaluated at `wavelengths`.
+    throughputs : ``np.ndarray``
+        TDS throughput correction evaluated at ``wavelengths``.
     '''
     with fits.open(dataset) as f:
         mjd = f[0].header['TEXPSTRT']
@@ -136,21 +137,21 @@ def aperture_throughput(dataset, output_wavelengths=None):
 
     Parameters
     ----------
-    dataset : str
+    dataset : ``str``
         Path to a STIS x1d or sx1 FITS file
 
-    output_wavelengths : np.ndarray, optional
+    output_wavelengths : ``np.ndarray``, optional
         Wavelength array (Å) onto which the throughput correction
         should be interpolated. If omitted, the native APERTAB
         wavelength grid is returned.
 
     Returns
     -------
-    wavelengths : np.ndarray
+    wavelengths : ``np.ndarray``
         Wavelength array in Å.
 
-    throughputs : np.ndarray
-        Aperture throughput correction evaluated at `wavelengths`.
+    throughputs : ``np.ndarray``
+        Aperture throughput correction evaluated at ``wavelengths``.
     '''
     dataset_aperture = fits.getval(dataset, ext=0, keyword='APERTURE')
     apertab_filename = expandFileName(fits.getval(dataset, ext=0, keyword='APERTAB'))
@@ -178,24 +179,24 @@ def extraction_height_correction(dataset, ext=1, output_wavelengths=None):
 
     Parameters
     ----------
-    dataset : str
+    dataset : ``str``
         Path to a STIS x1d or sx1 FITS file
 
-    ext : int
+    ext : ``int``, optional
         Extension of dataset.  Used to look up extraction height used.  Default=1.
 
-    output_wavelengths : np.ndarray, optional
+    output_wavelengths : ``np.ndarray``, optional
         Wavelength array (Å) onto which the throughput correction
         should be interpolated. If omitted, the native wavelength
         grid is returned.
 
     Returns
     -------
-    wavelengths : np.ndarray
+    wavelengths : ``np.ndarray``
         Wavelength array in Å.
 
-    throughputs : np.ndarray
-        Extraction throughput correction evaluated at `wavelengths`.
+    throughputs : ``np.ndarray``
+        Extraction throughput correction evaluated at ``wavelengths``.
     '''
     with fits.open(dataset) as f:
         pctab_filename = expandFileName(fits.getval(dataset, ext=0, keyword='PCTAB'))
@@ -255,30 +256,30 @@ def calculate_sensitivity(dataset, ext, sporder, blazecorr=True, output_waveleng
 
     Parameters
     ----------
-    dataset : str
+    dataset : ``str``
         Path to a STIS x1d or sx1 FITS file
 
-    ext : int
+    ext : ``int``
         Extension of dataset
 
-    sporder : int
+    sporder : ``int``
         Spectral order number to be calculated
 
-    blazecorr : bool
+    blazecorr : ``bool``
         If True (default), perform the blaze shift correction to the throughput.
 
-    output_wavelengths : np.ndarray, optional
+    output_wavelengths : ``np.ndarray``, optional
         Wavelength array (Å) onto which the throughput should be
         interpolated. If omitted, the PHOTTAB's native wavelength
         grid is returned.
 
     Returns
     -------
-    wavelengths : np.ndarray
+    wavelengths : ``np.ndarray``
         Wavelength array in Å.
 
-    sensitivity : np.ndarray
-        Sensitivity evaluated at `wavelengths`.
+    sensitivity : ``np.ndarray``
+        Sensitivity evaluated at ``wavelengths``.
 
     Notes
     -----
@@ -296,11 +297,11 @@ def calculate_sensitivity(dataset, ext, sporder, blazecorr=True, output_waveleng
         # Filter PHOTTAB to matching rows:
         phottab = phottab[(phottab['OPT_ELEM'] == opt_elem) & (phottab['CENWAVE'] == cenwave)]
 
+        expstart = f[ext].header['EXPSTART']
         if f[ext].header.get('DOPPON', False):
             doppmag = f[ext].header['DOPPMAG']
             doppzero = f[ext].header['DOPPZERO']
             orbitper = f[ext].header['ORBITPER'] / SEC_PER_DAY
-            expstart = f[ext].header['EXPSTART']
             expend = f[ext].header['EXPEND']
             if (expend - expstart) <= 1e-4:  # 8.64 s
                 mid_time = (expend + expstart) / 2.

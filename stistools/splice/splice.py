@@ -22,10 +22,10 @@ an additional extension to the ``_x1d`` file by setting ``update_fits`` to
 a path and filename to ``output_file``.
 
 The codebase from the ULLYSES project, which is also sponsored by STScI, possess
-routines that can be used to co-add and splice STIS echelle spectra. The main
+routines that can be used to co-add and splice STIS Echelle spectra. The main
 differences between these codes are the following: 1) ``splice`` does not change
 the spectra in non-overlap regions; 2) ``splice`` takes into account
-data-quality (DQ) flags and assignes specific DQ values to co-added pixels;
+data-quality (DQ) flags and assigns specific DQ values to co-added pixels;
 3) ``splice`` only works for STIS spectra and does not concatenate or co-add
 COS spectra or multiple STIS spectra.
 
@@ -33,31 +33,44 @@ Examples
 --------
 
 Read a spectrum with :func:`read_spectrum` and plot all the different orders
-using ``matplotlib`` to visualize how an echelle extracted spectrum looks like:
+using ``matplotlib`` to visualize how an Echelle extracted spectrum looks like:
 
->>> import matplotlib.pyplot as plt
->>> from stistools import splice
->>> spectrum = splice.read_spectrum('oblh01040_x1d.fits')
->>> for s in spectrum:
->>>     plt.plot(s['wavelength'], s['flux'])
->>> _ = plt.xlabel(r'Wavelength (${\rm \AA}$)')
->>> _ = plt.ylabel(r'Flux density (erg s$^{-1}$ cm$^{-2}$ ${\rm \AA}^{-1}$)')
+.. code-block:: python
+
+   import matplotlib.pyplot as plt
+   from stistools import splice
+   plt.ion()
+
+   spectrum = splice.read_spectrum('oblh01040_x1d.fits')
+   for s in spectrum:
+       plt.plot(s['wavelength'], s['flux'],
+           linewidth=1, alpha=0.6, color=f"C{s['sporder'] % 2}")
+   plt.xlabel(r'Wavelength (Å)')
+   plt.ylabel(r'Flux Density (erg s$^{-1}$ cm$^{-2}$ Å$^{-1}$)')
+   plt.show()
+
+.. image:: splice_eg1.png
 
 Splice the Echelle spectrum orders with :func:`splice` and plot it
 using ``matplotlib``:
 
->>> import matplotlib.pyplot as plt
->>> from stistools import splice
->>> spliced_spectrum = splice.splice('oblh01040_x1d.fits')
->>> plt.errorbar(spliced_spectrum['WAVELENGTH'], spliced_spectrum['FLUX'],
->>>              yerr=spliced_spectrum['ERROR'])
->>> _ = plt.xlabel(r'Wavelength (${\rm \AA}$)')
->>> _ = plt.ylabel(r'Flux density (erg s$^{-1}$ cm$^{-2}$ ${\rm \AA}^{-1}$)')
+.. code-block:: python
 
+   plt.clf()
+
+   spliced_spectrum = splice.splice('oblh01040_x1d.fits')
+   plt.errorbar(spliced_spectrum['WAVELENGTH'], spliced_spectrum['FLUX'],
+                yerr=spliced_spectrum['ERROR'], linewidth=1)
+   plt.xlabel(r'Wavelength (Å)')
+   plt.ylabel(r'Flux Density (erg s$^{-1}$ cm$^{-2}$ Å$^{-1}$)')
+   plt.show()
+
+.. image:: splice_eg2.png
 """
+
 __taskname__ = "splice"
 __version__ = "1.0"
-__vdate__ = "28-February-2023"
+__vdate__ = "23-June-2026"
 __author__ = "Leonardo Dos Santos"
 __all__ = ["nearest_index", "read_spectrum", "find_overlap", "merge_overlap",
            "concatenate_sections", "splice"]
@@ -71,9 +84,9 @@ def nearest_index(array, target_value):
     Parameters
     ----------
     array : ``numpy.array``
-        Target array.
+        Target array
     target_value : ``float``
-        Target value.
+        Target value
 
     Returns
     -------
@@ -614,7 +627,7 @@ def merge_overlap(overlap_pair_section,
         List of dictionaries containing the overlapping spectra of neighboring
         orders.
 
-    sdqflags : int, optional
+    sdqflags : ``int``, optional
         Bitwise-OR mask of serious data quality flags (``SDQFLAGS``).  Default=31743,
         which is all flags except 1024.  Flux values are averaged from non-serious-DQ
         input pixels when possible, and from serious-DQ input pixels when required.
@@ -857,26 +870,22 @@ def splice(x1d_input, ext=1, update_fits=False, output_file=None, weight='sensit
         uncertainties). Default is ``'sensitivity'``.
 
     kind : ``str``, optional
-        One of {``'linear'``, ``'zero'``, ``'slinear'``, ``'quadratic'``, ``'cubic'``,
-        ``'FluxConservingResampler'``, ``'LinearInterpolatedResampler'``,
-        ``'SplineInterpolatedResampler'``}.
+        One of {``'linear'``, ``'zero'``, ``'slinear'``, ``'quadratic'``, ``'cubic'``}.
         Interpolation or resampling method used.
         Default is ``'linear'``.  ``'zero'``, ``'slinear'``, ``'quadratic'``
         and ``'cubic'`` refer to a spline interpolation of zeroth, first,
         second and third order, respectively.
-        The 'Resampler' options require specutils to be installed.
 
     sdqflags : ``int``, optional
         Serious data quality flags.  This is a bitwise-or of the flag values
         to use when excluding data from its source.
-        # Leo had sdqflags=29503; (0, 64, 128, 1024, 2048) acceptable.
 
-    truncate_edge_left (``int``, optional):
+    truncate_edge_left : ``int``, optional
         Set the number of low-resolution pixels at the left edge of the detector
         where the spectra should be truncated. If ``None``, then no truncation
         is applied. Default is ``5``.
 
-    truncate_edge_right (``int``, optional):
+    truncate_edge_right : ``int``, optional
         Set the number of low-resolution pixels at the right edge of the
         detector where the spectra should be truncated. If ``0``, then no
         truncation is applied. Default is ``5``.
@@ -886,11 +895,6 @@ def splice(x1d_input, ext=1, update_fits=False, output_file=None, weight='sensit
     spliced_spectrum_table : ``astropy.Table`` object
         Astropy Table containing the spliced spectrum. Only returned if
         ``output_file`` is ``None``.
-
-    Notes
-    -----
-    This routine currently only splices together data from the first SCI ext,
-    so data taken with REPEATOBS > 1 are not processed.
     """
     # Read the data
     sections = read_spectrum(x1d_input, ext=ext, truncate_edge_left=truncate_edge_left,
