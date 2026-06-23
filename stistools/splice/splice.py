@@ -77,9 +77,11 @@ And zooming in:
 
 .. image:: splice_eg3b.png
 
-Note the spikes present at the edges of the orders.  These can be trimmed by setting
-the parameters ``truncate_edge_left`` and ``truncate_edge_right`` to a non-zero integer
-number of pixels in splice (the default is 5 pixels for each).
+Note the spikes present at the edges of the orders.  While they are usually flagged with
+a serious DQ flag and safely ignored during splicing, this is not the case when there is
+a gap between echelle orders.  These can be trimmed by setting the parameters
+``truncate_edge_left`` and ``truncate_edge_right`` to a non-zero integer number of pixels
+in ``splice`` (the default is 5 pixels for each).  
 """
 
 __taskname__ = "splice"
