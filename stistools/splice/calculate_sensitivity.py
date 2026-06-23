@@ -15,7 +15,7 @@ files in the header of X1D/SX1 files, including the time- and temperature-depend
 blaze shift, aperture throughput, extraction height correction, etc.
 
 While throughputs are available via the ``synphot``/``stsynphot`` packages, these data
-do not provide accurate inter-order Echelle throughput levels.  Furthermore, users would
+do not provide accurate inter-order echelle throughput levels.  Furthermore, users would
 need to download and install synphot data.
 
 Notes

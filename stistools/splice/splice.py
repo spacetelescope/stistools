@@ -11,10 +11,10 @@ from .calculate_sensitivity import calculate_sensitivity
 
 __doc__ = r"""
 The ``splice`` module concatenates the several orders contained in a STIS
-Echelle ``_x1d`` spectrum while co-adding the overlapping sections. This code
+echelle ``_x1d`` spectrum while co-adding the overlapping sections. This code
 emulates the splice module previously implemented on the STSDAS IRAF package.
 
-The function :func:`splice` takes as input an ``_x1d`` Echelle spectrum
+The function :func:`splice` takes as input an ``_x1d`` echelle spectrum
 (including path) and outputs an Astropy Table containing the wavelength, flux,
 flux uncertainty and data-quality flags. The spliced spectrum can be saved as
 an additional extension to the ``_x1d`` file by setting ``update_fits`` to
@@ -22,7 +22,7 @@ an additional extension to the ``_x1d`` file by setting ``update_fits`` to
 a path and filename to ``output_file``.
 
 The codebase from the ULLYSES project, which is also sponsored by STScI, possess
-routines that can be used to co-add and splice STIS Echelle spectra. The main
+routines that can be used to co-add and splice STIS echelle spectra. The main
 differences between these codes are the following: 1) ``splice`` does not change
 the spectra in non-overlap regions; 2) ``splice`` takes into account
 data-quality (DQ) flags and assigns specific DQ values to co-added pixels;
@@ -33,7 +33,7 @@ Examples
 --------
 
 Read a spectrum with :func:`read_spectrum` and plot all the different orders
-using ``matplotlib`` to visualize how an Echelle extracted spectrum looks like:
+using ``matplotlib`` to visualize what an echelle extracted spectrum looks like:
 
 .. code-block:: python
 
@@ -51,7 +51,7 @@ using ``matplotlib`` to visualize how an Echelle extracted spectrum looks like:
 
 .. image:: splice_eg1.png
 
-Splice the Echelle spectrum orders with :func:`splice` and plot it
+Splice the echelle spectrum orders with :func:`splice` and plot it
 using ``matplotlib``:
 
 .. code-block:: python
@@ -96,7 +96,7 @@ def nearest_index(array, target_value):
     return np.abs(array - target_value).argmin()
 
 
-# Read the Echelle spectrum based on dataset name and a prefix for file location
+# Read the echelle spectrum based on dataset name and a prefix for file location
 def read_spectrum(x1d_input, ext=1, truncate_edge_left=5, truncate_edge_right=5):
     """
     This is a fairly straightforward function to read the spectrum from a `x1d`
@@ -124,7 +124,7 @@ def read_spectrum(x1d_input, ext=1, truncate_edge_left=5, truncate_edge_right=5)
     Returns
     -------
     spectrum : ``list``
-        List of all the orders contained in the Echelle spectrum and their
+        List of all the orders contained in the echelle spectrum and their
         respective fluxes.
     """
     with fits.open(x1d_input) as hdu:
@@ -132,7 +132,7 @@ def read_spectrum(x1d_input, ext=1, truncate_edge_left=5, truncate_edge_right=5)
         data = hdu[ext].data
     optical_element = header['OPT_ELEM']
     if optical_element[0] != 'E':
-        raise TypeError("This is not an Echelle spectrum.")
+        raise TypeError("This is not an echelle spectrum.")
     wavelength = data['WAVELENGTH']
     flux = data['FLUX']
     uncertainty = data['ERROR']
@@ -169,12 +169,12 @@ def read_spectrum(x1d_input, ext=1, truncate_edge_left=5, truncate_edge_right=5)
 # Identify overlaps in the whole spectrum
 def find_overlap(spectrum, extent=1024):
     """
-    Find and return the overlapping sections of the Echelle spectrum.
+    Find and return the overlapping sections of the echelle spectrum.
 
     Parameters
     ----------
     spectrum : ``list``
-        List of dictionaries containing the orders of the Echelle spectrum.
+        List of dictionaries containing the orders of the echelle spectrum.
         It should resemble the output of ``read_spectrum()``.
 
     extent : ``int``
