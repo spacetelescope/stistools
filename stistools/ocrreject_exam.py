@@ -115,10 +115,10 @@ def ocrreject_exam(obs_ids, data_dir='.', plot=False, plot_dir=None, interactive
         Option to print results to the terminal, default=False
     
     alpha: float
-        The desired significance level for rejecting the null hypothesis that the CRs are randomly distributed across the detector. Default=0.00135. 
+        The desired significance level for rejecting the null hypothesis that the CRs are randomly distributed across the detector. Default=0.00135 from right tail of a 3 sigma probability. 
 
     cr_size: float
-        The mean number of pixels each CR is assumed to hit. Effects the threshold ratio used to determine if the CR distribution is significantly different from random. Default=2.4.
+        The mean number of pixels each CR is assumed to hit. Affects the threshold ratio used to determine if the CR distribution is significantly different from random. Default=2.4.
 
     show_plot: bool
         If True, when interactive=False show the generated plot in a notebook session in addition to saving. Default=False.
@@ -138,7 +138,7 @@ def ocrreject_exam(obs_ids, data_dir='.', plot=False, plot_dir=None, interactive
         - ``combined_ratio_threshold``: the maximum combined_ratio set by alpha under the null hypothesis of randomly distributed CRs 
         - ``overflagged_stat``: boolean indicating if the observation is likely overflagged set by alpha based on the combined ratio
 
-    If called from the command line, prints the combined extraction, outside, and ratio values for quick verification similar to the older method shown in STIS ISR 2019-02 Appendix A.
+    If called from the command line, prints the combined extraction, outside, and ratio values for quick verification similar to the older method shown in STIS ISR 2019-02 Appendix A (https://www.stsci.edu/files/live/sites/www/files/home/hst/instrumentation/stis/documentation/instrument-science-reports/_documents/201902.pdf).
     """
     if isinstance(obs_ids, (str,)):
         obs_ids = [obs_ids]
