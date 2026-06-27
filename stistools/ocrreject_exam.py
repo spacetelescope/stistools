@@ -74,8 +74,8 @@ __doc__ = """
     """
 
 __taskname__ = "ocrreject_exam"
-__version__ = "1.1"
-__vdate__ = "12-June-2026"
+__version__ = "1.2"
+__vdate__ = "27-June-2026"
 __author__ = "Matt Dallas, Joleen Carlberg, Sean Lockwood, STScI, December 2024."
 
 
