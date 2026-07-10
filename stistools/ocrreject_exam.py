@@ -112,7 +112,7 @@ def ocrreject_exam(obs_ids, data_dir='.', plot=False, plot_dir=None, interactive
         Option to generate zoomable html plots using plotly if plot=True, default=False
 
     verbose: bool
-        Option to print results to the terminal, default=False
+        Option to print the results discussed in STIS ISR 2019-02 to the terminal, default=False
 
     alpha: float
         The desired significance level for rejecting the null hypothesis that the CRs are randomly distributed across the detector. Default=0.00135 from right tail of a 3 sigma probability.
