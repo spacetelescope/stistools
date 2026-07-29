@@ -26,13 +26,16 @@ class TestOcrrejectExam(BaseSTIS):
         for filename in self.input_list:
             local_file = self.get_data("input", filename)
         
-        expected_output = {'rootname': 'odvkl1040',
-                            'extr_fracs': np.array([0.31530762, 0.32006836]),
-                            'outside_fracs': np.array([0.00884673, 0.00810278]), 
-                            'ratios': np.array([35.64113429, 39.50106762]),
-                            'avg_extr_frac': 0.31768798828125, 
-                            'avg_outside_frac': 0.008474755474901575,
-                            'avg_ratio': 37.486389928547126}
+        expected_output = {{'rootname': 'odvkl1040',
+                            'n_splits': 2,
+                            'detector_box_fraction': 0.0068359375,
+                            'n_cr_pix': array([11787, 11052]),
+                            'n_total_cr_pix': 22839,
+                            'extr_fracs': array([0.36021205, 0.36063058]),
+                            'outside_fracs': array([0.00883899, 0.00813034]),
+                            'combined_ratio': 42.479135678716936,
+                            'combined_ratio_threshold': 1.4027214132251133,
+                            'overflagged_stat': True}}
 
         resulting_output = ocrreject_exam('odvkl1040', data_dir=os.path.dirname(local_file))
 
