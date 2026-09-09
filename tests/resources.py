@@ -17,7 +17,7 @@ from astropy.io.fits import FITSDiff
 from astropy.table import Table
 from astropy.utils.data import conf
 
-os.environ['TEST_BIGDATA'] = os.environ.get('TEST_BIGDATA', 'https://bytesalad.stsci.edu/artifactory/datb-stistools')
+os.environ['TEST_BIGDATA'] = os.environ.get('TEST_BIGDATA', 'https://bytesalad.stsci.edu/artifactory')
 from ci_watson.artifactory_helpers import get_bigdata
 from ci_watson.hst_helpers import download_crds
 
@@ -100,6 +100,7 @@ class BaseCal(object):
     use_ftp_crds = True
     timeout = 30  # seconds
     tree = ''
+    env = 'dev'
     results_root = 'datb-stistools/results'
 
     # Numpy default for allclose comparison
@@ -160,7 +161,7 @@ class BaseCal(object):
         `helpers/io/get_bigdata`.  This will then return the full path to
         the local copy of the file.
         """
-        local_file = get_bigdata(self.tree, self.input_loc, *args)
+        local_file = get_bigdata('datb-stistools', self.env, self.input_loc, *args)
 
         return local_file
 
@@ -304,8 +305,7 @@ class BaseSTIS(BaseCal):
     prevref = os.environ.get(refstr)
     input_loc = ''
     ref_loc = '/ref'
-    ignore_keywords = ['date', 'filename', 'iraf-tlm', 'fitsdate', 'history']
-                #''cal_ver']
+    ignore_keywords = ['date', 'filename', 'iraf-tlm', 'fitsdate', 'history', 'cal_ver']
 
     def read_image(self, filename):
         """
