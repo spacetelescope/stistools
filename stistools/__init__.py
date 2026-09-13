@@ -8,6 +8,7 @@ from . import wavecal
 from . import x1d
 from . import x2d
 from . import mktrace
+from . import splice
 from . import sshift
 from . import stisnoise
 from . import wx2d
